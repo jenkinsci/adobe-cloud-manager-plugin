@@ -1,0 +1,1 @@
+cloud-manager-jenkins-plugin

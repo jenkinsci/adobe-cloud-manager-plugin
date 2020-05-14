@@ -3,6 +3,7 @@ package io.jenkins.plugins.cloudmanager;
 import hudson.Extension;
 import hudson.util.FormValidation;
 import hudson.util.Secret;
+import io.swagger.client.StringUtil;
 import jenkins.model.GlobalConfiguration;
 import org.apache.commons.lang3.StringUtils;
 import org.kohsuke.stapler.DataBoundSetter;
@@ -40,6 +41,9 @@ public class CloudManagerGlobalConfig extends GlobalConfiguration implements Ado
   }
   // GETTERS / SETTERS
   public String getAccessToken() {
+    if (StringUtils.isBlank(accessToken)) {
+      accessToken = refreshAccessToken();
+    }
     return accessToken;
   }
 

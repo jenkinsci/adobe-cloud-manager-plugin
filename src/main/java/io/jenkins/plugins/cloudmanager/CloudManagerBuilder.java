@@ -9,40 +9,51 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
+import hudson.util.ListBoxModel;
 import hudson.util.Secret;
+import io.jenkins.plugins.cloudmanager.client.PipelinesService;
 import io.jenkins.plugins.cloudmanager.client.ProgramsService;
+import io.swagger.client.StringUtil;
 import io.swagger.client.api.ProgramsApi;
 import java.io.IOException;
 import java.io.PrintStream;
+import javax.inject.Inject;
 import jenkins.tasks.SimpleBuildStep;
 import org.apache.commons.lang3.StringUtils;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
+import org.kohsuke.stapler.QueryParameter;
 import retrofit2.Retrofit;
 
 public class CloudManagerBuilder extends Builder implements SimpleBuildStep {
 
-  private final String name;
+  private String program;
+  private String pipeline;
 
   @DataBoundConstructor
-  public CloudManagerBuilder(String name) {
-    this.name = name;
+  public CloudManagerBuilder(String program ,String pipeline) {
+    this.program = program;
+    this.pipeline = pipeline;
   }
 
-  public String getName() {
-    return name;
-  }
 
-  private Secret password;
+  public String getProgram() {
+    return program;
+  }
 
   @DataBoundSetter
-  public void setPassword(Secret password) {
-    this.password = password;
+  public void setProgram(String program) {
+    this.program = program;
   }
 
-  public Secret getPassword() {
-    return password;
+  public String getPipeline() {
+    return pipeline;
+  }
+
+  @DataBoundSetter
+  public void setPipeline(String pipeline) {
+    this.pipeline = pipeline;
   }
 
   @Override
@@ -79,6 +90,9 @@ public class CloudManagerBuilder extends Builder implements SimpleBuildStep {
   @Extension
   public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
 
+    @Inject
+    CloudManagerGlobalConfig config;
+
     @Override
     public boolean isApplicable(Class<? extends AbstractProject> aClass) {
       return true;
@@ -87,6 +101,41 @@ public class CloudManagerBuilder extends Builder implements SimpleBuildStep {
     @Override
     public String getDisplayName() {
       return "Cloud Manager Build Step";
+    }
+
+    public ListBoxModel doFillProgramItems() throws Exception{
+      ListBoxModel items = new ListBoxModel();
+      ProgramsService service = new ProgramsService(config);
+      service.getPrograms()
+          .execute()
+          .body()
+          .getEmbedded()
+          .getPrograms()
+          .forEach(p -> {
+            items.add(p.getName() + "(" + p.getId() + ")", p.getId());
+          });
+      return items;
+    }
+
+    public ListBoxModel doFillPipelineItems(@QueryParameter String program) {
+      ListBoxModel items = new ListBoxModel();
+      PipelinesService service = new PipelinesService(config);
+      if (StringUtils.isBlank(program)) {
+        return items;
+      }
+      try {
+        service.getPipelines(program)
+            .execute()
+            .body()
+            .getEmbedded()
+            .getPipelines()
+            .forEach(p -> {
+              items.add(p.getName() + "(" + p.getId() + ")", p.getId());
+            });
+      } catch (IOException e) {
+        // do nothing for now
+      }
+      return items;
     }
   }
 }

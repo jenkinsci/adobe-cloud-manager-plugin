@@ -1,0 +1,7 @@
+/**
+**/test/java/io/swagger/**
+**/test/java/io/swagger/client/**/**
+!**/api/**
+!**/model/**
+!**/client/CollectionFormats*
+!**/client/StringUtil*

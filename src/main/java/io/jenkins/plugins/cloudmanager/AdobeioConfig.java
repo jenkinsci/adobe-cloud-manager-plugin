@@ -13,4 +13,6 @@ public interface AdobeioConfig {
   Secret getClientSecret();
 
   Secret getPrivateKey();
+
+  String getAccessToken();
 }

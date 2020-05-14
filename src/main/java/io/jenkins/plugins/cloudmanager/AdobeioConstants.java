@@ -1,10 +1,13 @@
 package io.jenkins.plugins.cloudmanager;
 
-// copy of: https://github.com/Adobe-Consulting-Services/acs-aem-commons/blob/59b165575017da39b61a317d89bb303571149bbc/bundle/src/main/java/com/adobe/acs/commons/adobeio/service/impl/AdobeioConstants.java
+// copy of:
+// https://github.com/Adobe-Consulting-Services/acs-aem-commons/blob/59b165575017da39b61a317d89bb303571149bbc/bundle/src/main/java/com/adobe/acs/commons/adobeio/service/impl/AdobeioConstants.java
 public final class AdobeioConstants {
   public static final String IMS_ENDPOINT = "https://ims-na1.adobelogin.com";
   public static final String IMS_JWT_EXCHANGE_ENDPOINT = IMS_ENDPOINT + "/ims/exchange/jwt/";
-  public static final String CLOUD_MANAGER_JWT_SCOPE = "https://ims-na1.adobelogin.com/s/ent_cloudmgr_sdk";
+  public static final String CLOUD_MANAGER_JWT_SCOPE =
+      "https://ims-na1.adobelogin.com/s/ent_cloudmgr_sdk";
+  public static final String CLOUD_MANAGER_BASE_PATH = "https://cloudmanager.adobe.io";
 
   public static final String CONTENT_TYPE_APPLICATION_JSON = "application/json";
 
@@ -35,7 +38,5 @@ public final class AdobeioConstants {
   public static final String RESULT_ERROR = "error";
   public static final String RESULT_NO_DATA = "nodata";
 
-  private AdobeioConstants() {
-  }
-
+  private AdobeioConstants() {}
 }

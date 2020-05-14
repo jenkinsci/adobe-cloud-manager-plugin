@@ -18,7 +18,7 @@
       <f:password field="privateKey"/>
     </f:entry>
     <f:validateButton
-        title="${%Test Connection}" progress="${%Testing...}"
-        method="testConnection" with="apiKey,clientSecret,organizationID,technicalAccountId,privateKey" />
+        title="${%Test Adobe IO Connection}" progress="${%Testing...}"
+        method="testAdobeioConnection" with="apiKey,clientSecret,organizationID,technicalAccountId,privateKey" />
   </f:section>
 </j:jelly>

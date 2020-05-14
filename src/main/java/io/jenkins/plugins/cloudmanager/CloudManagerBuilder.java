@@ -1,5 +1,6 @@
-package io.jenkins.plugins.sample;
+package io.jenkins.plugins.cloudmanager;
 
+import hudson.ExtensionList;
 import hudson.Launcher;
 import hudson.Extension;
 import hudson.FilePath;
@@ -9,6 +10,10 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.tasks.Builder;
 import hudson.tasks.BuildStepDescriptor;
+import hudson.util.Secret;
+import java.util.Optional;
+import jenkins.security.ConfidentialStore;
+import jenkins.security.DefaultConfidentialStore;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
@@ -18,13 +23,13 @@ import jenkins.tasks.SimpleBuildStep;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundSetter;
 
-public class HelloWorldBuilder extends Builder implements SimpleBuildStep {
+public class CloudManagerBuilder extends Builder implements SimpleBuildStep {
 
     private final String name;
     private boolean useFrench;
 
     @DataBoundConstructor
-    public HelloWorldBuilder(String name) {
+    public CloudManagerBuilder(String name) {
         this.name = name;
     }
 
@@ -34,6 +39,17 @@ public class HelloWorldBuilder extends Builder implements SimpleBuildStep {
 
     public boolean isUseFrench() {
         return useFrench;
+    }
+
+    private Secret password;
+
+    @DataBoundSetter
+    public void setPassword(Secret password) {
+        this.password = password;
+    }
+
+    public Secret getPassword() {
+        return password;
     }
 
     @DataBoundSetter
@@ -48,6 +64,16 @@ public class HelloWorldBuilder extends Builder implements SimpleBuildStep {
         } else {
             listener.getLogger().println("Hello, " + name + "!");
         }
+        listener.getLogger().println("your password is, " + password.getPlainText());
+        CloudManagerGlobalConfig config = ExtensionList.lookupSingleton(CloudManagerGlobalConfig.class);
+        if (null != config) {
+            listener.getLogger().println( "apiKey: " + config.getApiKey() + "\n" +
+                " organizationID: "+ config.getOrganizationID() + "\n" +
+                " technicalAccountId" +  config.getTechnicalAccountId() + "\n" +
+                " clientSecret" + Optional.ofNullable(config.getClientSecret()).map(Secret::getPlainText).orElse(null) + "\n" +
+                " privateKey:" + Optional.ofNullable(config.getPrivateKey()).map(Secret::getPlainText).orElse(null) +"\n");
+        }
+
     }
 
     @Symbol("greet")
@@ -57,11 +83,11 @@ public class HelloWorldBuilder extends Builder implements SimpleBuildStep {
         public FormValidation doCheckName(@QueryParameter String value, @QueryParameter boolean useFrench)
                 throws IOException, ServletException {
             if (value.length() == 0)
-                return FormValidation.error(Messages.HelloWorldBuilder_DescriptorImpl_errors_missingName());
+                return FormValidation.error("missing name");
             if (value.length() < 4)
-                return FormValidation.warning(Messages.HelloWorldBuilder_DescriptorImpl_warnings_tooShort());
+                return FormValidation.warning("too short");
             if (!useFrench && value.matches(".*[éáàç].*")) {
-                return FormValidation.warning(Messages.HelloWorldBuilder_DescriptorImpl_warnings_reallyFrench());
+                return FormValidation.warning("are you french");
             }
             return FormValidation.ok();
         }
@@ -73,7 +99,7 @@ public class HelloWorldBuilder extends Builder implements SimpleBuildStep {
 
         @Override
         public String getDisplayName() {
-            return Messages.HelloWorldBuilder_DescriptorImpl_DisplayName();
+            return "Cloud Manager Build Step";
         }
 
     }

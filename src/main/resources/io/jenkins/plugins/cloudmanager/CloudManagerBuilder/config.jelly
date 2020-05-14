@@ -3,6 +3,9 @@
     <f:entry title="${%Name}" field="name">
         <f:textbox />
     </f:entry>
+    <f:entry title="${%Password}" field="password">
+      <f:password />
+    </f:entry>
     <f:advanced>
         <f:entry title="${%French}" field="useFrench"
                  description="${%FrenchDescr}">

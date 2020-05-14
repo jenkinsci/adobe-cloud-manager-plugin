@@ -13,3 +13,11 @@ buildNumber.properties
 .idea/
 
 work/
+
+.classpath
+
+.factorypath
+
+.project
+
+.settings/

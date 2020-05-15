@@ -11,7 +11,7 @@
     <f:entry  title="${%Organization ID}">
       <f:textbox field="organizationID"/>
     </f:entry>
-    <f:entry  title="${%Technical Account Id}">
+    <f:entry  title="${%Technical Account ID}">
       <f:textbox field="technicalAccountId"/>
     </f:entry>
     <f:entry  title="${%Private Key}">

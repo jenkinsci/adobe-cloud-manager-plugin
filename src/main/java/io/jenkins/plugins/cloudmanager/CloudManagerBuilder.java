@@ -10,21 +10,21 @@ import hudson.model.TaskListener;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import hudson.util.ListBoxModel;
-import hudson.util.Secret;
+import io.jenkins.plugins.cloudmanager.client.PipelineExecutionService;
 import io.jenkins.plugins.cloudmanager.client.PipelinesService;
 import io.jenkins.plugins.cloudmanager.client.ProgramsService;
-import io.swagger.client.StringUtil;
-import io.swagger.client.api.ProgramsApi;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.Optional;
 import javax.inject.Inject;
 import jenkins.tasks.SimpleBuildStep;
+import okhttp3.ResponseBody;
 import org.apache.commons.lang3.StringUtils;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
-import retrofit2.Retrofit;
+import retrofit2.Response;
 
 public class CloudManagerBuilder extends Builder implements SimpleBuildStep {
 
@@ -32,11 +32,10 @@ public class CloudManagerBuilder extends Builder implements SimpleBuildStep {
   private String pipeline;
 
   @DataBoundConstructor
-  public CloudManagerBuilder(String program ,String pipeline) {
+  public CloudManagerBuilder(String program, String pipeline) {
     this.program = program;
     this.pipeline = pipeline;
   }
-
 
   public String getProgram() {
     return program;
@@ -63,35 +62,46 @@ public class CloudManagerBuilder extends Builder implements SimpleBuildStep {
     CloudManagerGlobalConfig config = ExtensionList.lookupSingleton(CloudManagerGlobalConfig.class);
     String accessToken = config.getAccessToken();
     if (StringUtils.isNoneBlank(accessToken)) {
-      logger.println("Found already stored access token: " + accessToken);
+      logger.println("[INFO] Using already stored access token.");
     } else {
-      logger.println("No stored access token, attempting to get a new one");
+      logger.println("[INFO] No stored access token, attempting to get a new one.");
       accessToken = config.refreshAccessToken();
       if (StringUtils.isNoneBlank(accessToken)) {
-        logger.println("Got a spanking new token: " + accessToken);
+        logger.println("[INFO] Got a spanking new token!");
       } else {
-        logger.println("Could not get a new token ;(");
+        logger.println("[ERROR] Could not get a new token ;(");
       }
     }
 
-    ProgramsService service = new ProgramsService(config);
-    service.getPrograms()
-        .execute()
-        .body()
-        .getEmbedded()
-        .getPrograms()
-        .stream()
-        .forEach(p -> {
-          logger.println("got program: " + p.getId() + " " + p.getName());
-        });
+    if (StringUtils.isBlank(getProgram())) {
+      throw new IllegalStateException("Program Value is not configured");
+    } else if (StringUtils.isBlank(getPipeline())) {
+      throw new IllegalStateException("Pipeline Value is not configured");
+    }
+
+    logger.println("[INFO] Starting pipeline with programId: " +
+        getProgram() +
+        " and pipelineId: " +
+        getPipeline());
+
+    PipelineExecutionService executionService = new PipelineExecutionService(config);
+    Response<Void> execResponse = executionService.startPipeline(getProgram(), getPipeline())
+        .execute();
+
+    if (execResponse.isSuccessful()) {
+      logger.println("[SUCCESS] Pipeline was started successfully! You can monitor it's progress in cloud manager.");
+    } else {
+      throw new IllegalStateException("Pipeline was not started, service responded with status: " +
+          execResponse.code() +
+          "and error body: "+ execResponse.errorBody().string());
+    }
   }
 
   @Symbol("greet")
   @Extension
   public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
 
-    @Inject
-    CloudManagerGlobalConfig config;
+    @Inject CloudManagerGlobalConfig config;
 
     @Override
     public boolean isApplicable(Class<? extends AbstractProject> aClass) {
@@ -103,17 +113,17 @@ public class CloudManagerBuilder extends Builder implements SimpleBuildStep {
       return "Cloud Manager Build Step";
     }
 
-    public ListBoxModel doFillProgramItems() throws Exception{
+    public ListBoxModel doFillProgramItems() throws Exception {
       ListBoxModel items = new ListBoxModel();
       ProgramsService service = new ProgramsService(config);
-      service.getPrograms()
+      service
+          .getPrograms()
           .execute()
           .body()
           .getEmbedded()
           .getPrograms()
-          .forEach(p -> {
-            items.add(p.getName() + "(" + p.getId() + ")", p.getId());
-          });
+          .stream()
+          .forEach(p -> items.add(p.getName() + "(" + p.getId() + ")", p.getId()));
       return items;
     }
 
@@ -124,14 +134,16 @@ public class CloudManagerBuilder extends Builder implements SimpleBuildStep {
         return items;
       }
       try {
-        service.getPipelines(program)
+        service
+            .getPipelines(program)
             .execute()
             .body()
             .getEmbedded()
             .getPipelines()
-            .forEach(p -> {
-              items.add(p.getName() + "(" + p.getId() + ")", p.getId());
-            });
+            .forEach(
+                p -> {
+                  items.add(p.getName() + "(" + p.getId() + ")", p.getId());
+                });
       } catch (IOException e) {
         // do nothing for now
       }

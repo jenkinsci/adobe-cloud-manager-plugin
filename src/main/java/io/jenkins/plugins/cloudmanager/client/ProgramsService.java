@@ -6,8 +6,7 @@ import io.swagger.client.model.Program;
 import io.swagger.client.model.ProgramList;
 import retrofit2.Call;
 
-public class ProgramsService extends AbstractService<ProgramsApi>{
-
+public class ProgramsService extends AbstractService<ProgramsApi> {
 
   public ProgramsService(AdobeioConfig config) {
     super(config, ProgramsApi.class);

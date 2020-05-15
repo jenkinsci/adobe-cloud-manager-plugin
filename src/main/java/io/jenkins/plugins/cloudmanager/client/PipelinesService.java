@@ -2,7 +2,6 @@ package io.jenkins.plugins.cloudmanager.client;
 
 import io.jenkins.plugins.cloudmanager.AdobeioConfig;
 import io.swagger.client.api.PipelinesApi;
-import io.swagger.client.api.ProgramsApi;
 import io.swagger.client.model.Pipeline;
 import io.swagger.client.model.PipelineList;
 import retrofit2.Call;

@@ -4,8 +4,8 @@ import hudson.util.Secret;
 
 public class AdobeioConfigImpl implements AdobeioConfig {
 
- private String apiKey, organizationID,technicalAccountId, accessToken;
- private Secret clientSecret, privateKey;
+  private String apiKey, organizationID, technicalAccountId, accessToken;
+  private Secret clientSecret, privateKey;
 
   public AdobeioConfigImpl(
       String apiKey,

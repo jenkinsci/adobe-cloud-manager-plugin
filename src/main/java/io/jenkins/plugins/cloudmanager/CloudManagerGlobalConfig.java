@@ -3,7 +3,6 @@ package io.jenkins.plugins.cloudmanager;
 import hudson.Extension;
 import hudson.util.FormValidation;
 import hudson.util.Secret;
-import io.swagger.client.StringUtil;
 import jenkins.model.GlobalConfiguration;
 import org.apache.commons.lang3.StringUtils;
 import org.kohsuke.stapler.DataBoundSetter;
@@ -20,14 +19,18 @@ public class CloudManagerGlobalConfig extends GlobalConfiguration implements Ado
   // not tied to a field, contains the runtime secret
   private String accessToken;
 
+  public CloudManagerGlobalConfig() {
+    // When Jenkins is restarted, load any saved configuration from disk.
+    load();
+  }
+
   /** @return the singleton instance */
   public static CloudManagerGlobalConfig get() {
     return GlobalConfiguration.all().get(CloudManagerGlobalConfig.class);
   }
 
-  public CloudManagerGlobalConfig() {
-    // When Jenkins is restarted, load any saved configuration from disk.
-    load();
+  private static String getFreshAccessToken(AdobeioConfig config) {
+    return CloudManagerAuthUtil.getAccessToken(config);
   }
 
   public String refreshAccessToken() {
@@ -36,9 +39,6 @@ public class CloudManagerGlobalConfig extends GlobalConfiguration implements Ado
     return this.accessToken;
   }
 
-  private static String getFreshAccessToken(AdobeioConfig config) {
-    return CloudManagerAuthUtil.getAccessToken(config);
-  }
   // GETTERS / SETTERS
   public String getAccessToken() {
     if (StringUtils.isBlank(accessToken)) {
@@ -114,7 +114,8 @@ public class CloudManagerGlobalConfig extends GlobalConfiguration implements Ado
 
     // test that we can successfully get an access token.
     AdobeioConfig config =
-        new AdobeioConfigImpl(apiKey, organizationID, technicalAccountId, clientSecret, privateKey, null);
+        new AdobeioConfigImpl(
+            apiKey, organizationID, technicalAccountId, clientSecret, privateKey, null);
     String token = getFreshAccessToken(config);
     if (StringUtils.isNoneBlank(token)) {
       return FormValidation.okWithMarkup("Success! Save this configuration page.");

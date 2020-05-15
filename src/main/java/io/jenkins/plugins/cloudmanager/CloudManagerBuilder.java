@@ -15,10 +15,8 @@ import io.jenkins.plugins.cloudmanager.client.PipelinesService;
 import io.jenkins.plugins.cloudmanager.client.ProgramsService;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.util.Optional;
 import javax.inject.Inject;
 import jenkins.tasks.SimpleBuildStep;
-import okhttp3.ResponseBody;
 import org.apache.commons.lang3.StringUtils;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -143,7 +141,7 @@ public class CloudManagerBuilder extends Builder implements SimpleBuildStep {
             .getPipelines()
             .forEach(
                 p -> {
-                  items.add(p.getName() + "(" + p.getId() + ")", p.getId());
+                  items.add(p.getName() + " (" + p.getId() + ")", p.getId());
                 });
       } catch (IOException e) {
         // do nothing for now

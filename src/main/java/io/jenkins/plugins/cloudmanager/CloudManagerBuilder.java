@@ -59,16 +59,12 @@ public class CloudManagerBuilder extends Builder implements SimpleBuildStep {
     PrintStream logger = listener.getLogger();
     CloudManagerGlobalConfig config = ExtensionList.lookupSingleton(CloudManagerGlobalConfig.class);
     String accessToken = config.getAccessToken();
-    if (StringUtils.isNoneBlank(accessToken)) {
-      logger.println("[INFO] Using already stored access token.");
-    } else {
-      logger.println("[INFO] No stored access token, attempting to get a new one.");
-      accessToken = config.refreshAccessToken();
-      if (StringUtils.isNoneBlank(accessToken)) {
-        logger.println("[INFO] Got a spanking new token!");
-      } else {
-        logger.println("[ERROR] Could not get a new token ;(");
-      }
+
+    if (StringUtils.isBlank(accessToken)) {
+      throw new IllegalStateException(
+          "Could not get an acess token for the cloud manager API."
+              + "Check the plugin configuration in Jenkins system config and "
+              + "ensure the authentication values are correct");
     }
 
     if (StringUtils.isBlank(getProgram())) {

@@ -115,6 +115,7 @@ public class CloudManagerBuilder extends Builder implements SimpleBuildStep {
 
     public ListBoxModel doFillProgramItems() throws Exception {
       ListBoxModel items = new ListBoxModel();
+      items.add("Select Program", "");
       ProgramsService service = new ProgramsService(config);
       service
           .getPrograms()
@@ -123,7 +124,7 @@ public class CloudManagerBuilder extends Builder implements SimpleBuildStep {
           .getEmbedded()
           .getPrograms()
           .stream()
-          .forEach(p -> items.add(p.getName() + "(" + p.getId() + ")", p.getId()));
+          .forEach(p -> items.add(p.getName() + " (" + p.getId() + ")", p.getId()));
       return items;
     }
 

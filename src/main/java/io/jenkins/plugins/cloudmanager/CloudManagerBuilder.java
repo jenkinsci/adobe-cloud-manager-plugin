@@ -83,7 +83,7 @@ public class CloudManagerBuilder extends Builder implements SimpleBuildStep {
         .execute();
 
     if (execResponse.isSuccessful()) {
-      logger.println("[SUCCESS] Pipeline was started successfully! You can monitor it's progress in cloud manager.");
+      logger.println("[SUCCESS] Pipeline was started successfully! You can monitor its progress in cloud manager.");
     } else {
       throw new IllegalStateException("Pipeline was not started, service responded with status: " +
           execResponse.code() +

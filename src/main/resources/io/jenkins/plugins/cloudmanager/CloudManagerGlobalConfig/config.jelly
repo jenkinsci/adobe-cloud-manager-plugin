@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
-  <f:section title="${%Cloud Manager Plugin}" help="/plugin/ARTIFACT_ID_GOES_HERE/help-projectConfig.html">
+  <f:section title="${%Cloud Manager Plugin}" >
+    <f:entry help="/plugin/adobe-cloud-manager/help.html">
+    </f:entry>
     <f:entry  title="${%Api Key}">
       <f:textbox field="apiKey"/>
     </f:entry>

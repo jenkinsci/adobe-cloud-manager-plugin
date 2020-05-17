@@ -13,18 +13,23 @@ import hudson.util.ListBoxModel;
 import io.jenkins.plugins.cloudmanager.client.PipelineExecutionService;
 import io.jenkins.plugins.cloudmanager.client.PipelinesService;
 import io.jenkins.plugins.cloudmanager.client.ProgramsService;
+import io.swagger.client.model.PipelineList;
+import io.swagger.client.model.ProgramList;
 import java.io.IOException;
 import java.io.PrintStream;
 import javax.inject.Inject;
 import jenkins.tasks.SimpleBuildStep;
 import org.apache.commons.lang3.StringUtils;
-import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import retrofit2.Response;
 
 public class CloudManagerBuilder extends Builder implements SimpleBuildStep {
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(CloudManagerBuilder.class);
 
   private String program;
   private String pipeline;
@@ -73,25 +78,28 @@ public class CloudManagerBuilder extends Builder implements SimpleBuildStep {
       throw new IllegalStateException("Pipeline Value is not configured");
     }
 
-    logger.println("[INFO] Starting pipeline with programId: " +
-        getProgram() +
-        " and pipelineId: " +
-        getPipeline());
+    logger.println(
+        "[INFO] Starting pipeline with programId: "
+            + getProgram()
+            + " and pipelineId: "
+            + getPipeline());
 
     PipelineExecutionService executionService = new PipelineExecutionService(config);
-    Response<Void> execResponse = executionService.startPipeline(getProgram(), getPipeline())
-        .execute();
+    Response<Void> execResponse =
+        executionService.startPipeline(getProgram(), getPipeline()).execute();
 
     if (execResponse.isSuccessful()) {
-      logger.println("[SUCCESS] Pipeline was started successfully! You can monitor its progress in cloud manager.");
+      logger.println(
+          "[SUCCESS] Pipeline was started successfully! You can monitor its progress in cloud manager.");
     } else {
-      throw new IllegalStateException("Pipeline was not started, service responded with status: " +
-          execResponse.code() +
-          "and error body: "+ execResponse.errorBody().string());
+      throw new IllegalStateException(
+          "Pipeline was not started, service responded with status: "
+              + execResponse.code()
+              + "and error body: "
+              + execResponse.errorBody().string());
     }
   }
 
-  @Symbol("greet")
   @Extension
   public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
 
@@ -107,31 +115,36 @@ public class CloudManagerBuilder extends Builder implements SimpleBuildStep {
       return "Cloud Manager Build Step";
     }
 
-    public ListBoxModel doFillProgramItems() throws Exception {
+    public ListBoxModel doFillProgramItems() throws IOException {
       ListBoxModel items = new ListBoxModel();
       items.add("Select Program", "");
       ProgramsService service = new ProgramsService(config);
-      service
-          .getPrograms()
-          .execute()
-          .body()
-          .getEmbedded()
-          .getPrograms()
-          .stream()
-          .forEach(p -> items.add(p.getName() + " (" + p.getId() + ")", p.getId()));
+      Response<ProgramList> response = service.getPrograms().execute();
+
+      if (response.isSuccessful()) {
+        response.body().getEmbedded().getPrograms().stream()
+            .forEach(p -> items.add(p.getName() + " (" + p.getId() + ")", p.getId()));
+      } else {
+        LOGGER.error(
+            "Request to get programs was not successful. "
+                + "Response code: "
+                + response.code()
+                + "Raw Response: "
+                + response.toString());
+        items.add("Could not get programs. Check Jenkins logs", "");
+      }
       return items;
     }
 
-    public ListBoxModel doFillPipelineItems(@QueryParameter String program) {
+    public ListBoxModel doFillPipelineItems(@QueryParameter String program) throws IOException {
       ListBoxModel items = new ListBoxModel();
       PipelinesService service = new PipelinesService(config);
       if (StringUtils.isBlank(program)) {
         return items;
       }
-      try {
-        service
-            .getPipelines(program)
-            .execute()
+      Response<PipelineList> response = service.getPipelines(program).execute();
+      if (response.isSuccessful()) {
+        response
             .body()
             .getEmbedded()
             .getPipelines()
@@ -139,8 +152,14 @@ public class CloudManagerBuilder extends Builder implements SimpleBuildStep {
                 p -> {
                   items.add(p.getName() + " (" + p.getId() + ")", p.getId());
                 });
-      } catch (IOException e) {
-        // do nothing for now
+      } else {
+        LOGGER.error(
+            "Request to get pipelines was not successful. "
+                + "Response code: "
+                + response.code()
+                + "Raw Response: "
+                + response.toString());
+        items.add("Could not get pipelines. Check Jenkins logs", "");
       }
       return items;
     }

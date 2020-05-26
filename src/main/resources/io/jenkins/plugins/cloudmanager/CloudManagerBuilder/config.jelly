@@ -1,19 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form" xmlns:l="/lib/layout">
-    <style>
-        .cm-loading:after {
-            content: 'loading...';
-            color: #00f;
-        }
-    </style>
     <f:section title="${%Select Pipeline To Trigger}">
         <f:entry title="${%Program}" field="program">
-            <f:select clazz="cm-select select-ajax-pending"/>
+            <f:select clazz="select-ajax-pending"/>
         </f:entry>
         <f:entry title="${%Pipeline}" field="pipeline">
-            <f:select clazz="cm-select"/>
+            <f:select/>
         </f:entry>
     </f:section>
-    <script class="cloud-manager-script" src="${rootURL}/plugin/adobe-cloud-manager/main.js"></script>
 </j:jelly>

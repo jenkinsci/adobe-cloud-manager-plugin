@@ -13,10 +13,10 @@ public class ProgramsService extends AbstractService<ProgramsApi> {
   }
 
   public Call<Program> getProgram(String programId) {
-    return api.getProgram(programId, organizationId, authorization, apiKey);
+    return api.getProgram(programId, organizationId, authorization, getApiKey());
   }
 
   public Call<ProgramList> getPrograms() {
-    return api.getPrograms(organizationId, authorization, apiKey);
+    return api.getPrograms(organizationId, authorization, getApiKey());
   }
 }

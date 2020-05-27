@@ -63,6 +63,7 @@ public class CloudManagerBuilder extends Builder implements SimpleBuildStep {
       throws InterruptedException, IOException {
     PrintStream logger = listener.getLogger();
     CloudManagerGlobalConfig config = ExtensionList.lookupSingleton(CloudManagerGlobalConfig.class);
+
     String accessToken = config.getAccessToken();
 
     if (StringUtils.isBlank(accessToken)) {

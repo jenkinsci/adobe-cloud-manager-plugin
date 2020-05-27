@@ -4,7 +4,7 @@ import hudson.util.Secret;
 
 public interface AdobeioConfig {
 
-  String getApiKey();
+  Secret getApiKey();
 
   String getOrganizationID();
 
@@ -14,5 +14,5 @@ public interface AdobeioConfig {
 
   Secret getPrivateKey();
 
-  String getAccessToken();
+  String getAccessToken() throws AdobeIOException ;
 }

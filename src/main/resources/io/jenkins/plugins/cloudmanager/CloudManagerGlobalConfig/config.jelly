@@ -4,8 +4,8 @@
   <f:section title="${%Cloud Manager Plugin}" >
     <f:entry help="/plugin/adobe-cloud-manager/help.html">
     </f:entry>
-    <f:entry  title="${%Api Key}">
-      <f:textbox field="apiKey"/>
+    <f:entry  title="${%API Key}">
+      <f:password field="apiKey"/>
     </f:entry>
     <f:entry  title="${%Client Secret}">
       <f:password field="clientSecret"/>

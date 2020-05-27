@@ -12,6 +12,6 @@ public class PipelineExecutionService extends AbstractService<PipelineExecutionA
 
   public Call<Void> startPipeline(String programId, String pipelineId) {
     return api.startPipeline(
-        programId, pipelineId, organizationId, authorization, apiKey, "application/json");
+        programId, pipelineId, organizationId, authorization, getApiKey(), "application/json");
   }
 }

@@ -4,11 +4,12 @@ import hudson.util.Secret;
 
 public class AdobeioConfigImpl implements AdobeioConfig {
 
-  private String apiKey, organizationID, technicalAccountId, accessToken;
-  private Secret clientSecret, privateKey;
+  private String organizationID, technicalAccountId;
+  private Secret clientSecret, privateKey, apiKey;
+  private transient String accessToken;
 
   public AdobeioConfigImpl(
-      String apiKey,
+      Secret apiKey,
       String organizationID,
       String technicalAccountId,
       Secret clientSecret,
@@ -23,7 +24,7 @@ public class AdobeioConfigImpl implements AdobeioConfig {
   }
 
   @Override
-  public String getApiKey() {
+  public Secret getApiKey() {
     return apiKey;
   }
 

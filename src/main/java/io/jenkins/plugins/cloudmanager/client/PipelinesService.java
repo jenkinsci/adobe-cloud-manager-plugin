@@ -8,15 +8,15 @@ import retrofit2.Call;
 
 public class PipelinesService extends AbstractService<PipelinesApi> {
 
-  public PipelinesService(AdobeioConfig config) {
+  public PipelinesService(AdobeioConfig config)  {
     super(config, PipelinesApi.class);
   }
 
   public Call<Pipeline> getPipeline(String programId, String pipelineId) {
-    return this.api.getPipeline(programId, pipelineId, organizationId, authorization, apiKey);
+    return this.api.getPipeline(programId, pipelineId, organizationId, authorization, getApiKey());
   }
 
   public Call<PipelineList> getPipelines(String programId) {
-    return this.api.getPipelines(programId, organizationId, authorization, apiKey);
+    return this.api.getPipelines(programId, organizationId, authorization, getApiKey());
   }
 }

@@ -9,8 +9,11 @@ import com.google.gson.JsonParseException;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
+import hudson.util.Secret;
+import io.jenkins.plugins.cloudmanager.AdobeIOException;
 import io.jenkins.plugins.cloudmanager.AdobeioConfig;
 import io.jenkins.plugins.cloudmanager.AdobeioConstants;
+import io.jenkins.plugins.cloudmanager.CloudManagerAuthUtil;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
@@ -27,26 +30,38 @@ import retrofit2.converter.scalars.ScalarsConverterFactory;
 
 public abstract class AbstractService<T> {
 
-  protected String organizationId, authorization, apiKey;
+  protected String organizationId, authorization;
+  protected Secret apiKey;
   protected T api;
 
   public AbstractService(AdobeioConfig config, Class<T> apiClazz) {
     this.organizationId = config.getOrganizationID();
-    this.authorization = AdobeioConstants.BEARER + config.getAccessToken();
+    try {
+      this.authorization = AdobeioConstants.BEARER + config.getAccessToken();
+    } catch (AdobeIOException e) {
+      throw new IllegalStateException("Could not get access token", e);
+    }
+
     this.apiKey = config.getApiKey();
-    Gson gson =
-        new GsonBuilder()
-            .registerTypeAdapter(OffsetDateTime.class, new OffsetDateTimeConverter())
-            .setPrettyPrinting()
-            .create();
+    Gson gson = new GsonBuilder()
+        .registerTypeAdapter(OffsetDateTime.class, new OffsetDateTimeConverter())
+        .setPrettyPrinting()
+        .create();
     this.api =
         new Retrofit.Builder()
             .baseUrl(AdobeioConstants.CLOUD_MANAGER_BASE_PATH)
             .addConverterFactory(ScalarsConverterFactory.create())
             .addConverterFactory(GsonCustomConverterFactory.create(gson))
-            .client(new OkHttpClient.Builder().addInterceptor(new RetryInterceptor()).build())
+            .client(
+                new OkHttpClient.Builder()
+                    .addInterceptor(new RetryInterceptor())
+                    .build())
             .build()
             .create(apiClazz);
+  }
+
+  protected String getApiKey() {
+    return CloudManagerAuthUtil.safeGetPlainText(apiKey);
   }
 
   public static class OffsetDateTimeConverter
@@ -96,14 +111,14 @@ public abstract class AbstractService<T> {
     private final Gson gson;
     private final GsonConverterFactory gsonConverterFactory;
 
+    public static GsonCustomConverterFactory create(Gson gson) {
+      return new GsonCustomConverterFactory(gson);
+    }
+
     private GsonCustomConverterFactory(Gson gson) {
       if (gson == null) throw new NullPointerException("gson == null");
       this.gson = gson;
       this.gsonConverterFactory = GsonConverterFactory.create(gson);
-    }
-
-    public static GsonCustomConverterFactory create(Gson gson) {
-      return new GsonCustomConverterFactory(gson);
     }
 
     @Override

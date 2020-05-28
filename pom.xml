@@ -140,23 +140,21 @@
         </dependency>
     </dependencies>
 
-    <!-- If you want this to appear on the wiki page:
     <developers>
       <developer>
-        <id>bhacker</id>
-        <name>Bob Q. Hacker</name>
-        <email>bhacker@nowhere.net</email>
+        <id>ahmedmusallam</id>
+        <name>Ahmed Musallam</name>
+        <email>ahmed@ahmedmusallam.com</email>
       </developer>
-    </developers> -->
+    </developers>
 
-    <!-- Assuming you want to host on @jenkinsci:
     <url>https://github.com/jenkinsci/${project.artifactId}-plugin</url>
     <scm>
         <connection>scm:git:git://github.com/jenkinsci/${project.artifactId}-plugin.git</connection>
         <developerConnection>scm:git:git@github.com:jenkinsci/${project.artifactId}-plugin.git</developerConnection>
         <url>https://github.com/jenkinsci/${project.artifactId}-plugin</url>
     </scm>
-    -->
+
     <repositories>
         <repository>
             <id>repo.jenkins-ci.org</id>

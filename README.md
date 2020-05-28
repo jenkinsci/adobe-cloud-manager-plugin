@@ -1,18 +1,7 @@
 # Adobe Cloud Manager Jenkins Plugin
 
-
 This plugin integrates with [Adobe Cloud Manager API](https://www.adobe.io/apis/experiencecloud/cloud-manager/docs.html) to allow a Jenkins job to start a specific pipeline.
 
-## Installation
-
-### Manual
-
-1. Download latest version `.hpi` file from this repos releases section
-2. Manually install that into Jenkins. [See Advanced Installtion Docs](https://www.jenkins.io/doc/book/managing/plugins#advanced-installation)
-
-### As an official Jenkins plugin
-
-Coming as soon as I figure out how to publish it.
 
 ## Usage
 

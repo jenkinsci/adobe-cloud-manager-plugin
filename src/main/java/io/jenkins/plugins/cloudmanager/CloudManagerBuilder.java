@@ -1,5 +1,13 @@
 package io.jenkins.plugins.cloudmanager;
 
+import java.io.IOException;
+import java.io.PrintStream;
+import java.util.List;
+
+import javax.inject.Inject;
+
+import org.apache.commons.lang3.StringUtils;
+
 import hudson.Extension;
 import hudson.ExtensionList;
 import hudson.FilePath;
@@ -10,22 +18,18 @@ import hudson.model.TaskListener;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import hudson.util.ListBoxModel;
-import io.jenkins.plugins.cloudmanager.client.PipelineExecutionService;
-import io.jenkins.plugins.cloudmanager.client.PipelinesService;
-import io.jenkins.plugins.cloudmanager.client.ProgramsService;
-import io.swagger.client.model.PipelineList;
-import io.swagger.client.model.ProgramList;
-import java.io.IOException;
-import java.io.PrintStream;
-import javax.inject.Inject;
+import hudson.util.Secret;
+import io.adobe.cloudmanager.CloudManagerApi;
+import io.adobe.cloudmanager.CloudManagerApiException;
+import io.adobe.cloudmanager.impl.CloudManagerApiImpl;
+import io.adobe.cloudmanager.model.EmbeddedProgram;
+import io.adobe.cloudmanager.model.Pipeline;
 import jenkins.tasks.SimpleBuildStep;
-import org.apache.commons.lang3.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import retrofit2.Response;
 
 public class CloudManagerBuilder extends Builder implements SimpleBuildStep {
 
@@ -59,16 +63,15 @@ public class CloudManagerBuilder extends Builder implements SimpleBuildStep {
   }
 
   @Override
-  public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener)
-      throws InterruptedException, IOException {
+  public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener) {
     PrintStream logger = listener.getLogger();
     CloudManagerGlobalConfig config = ExtensionList.lookupSingleton(CloudManagerGlobalConfig.class);
 
-    String accessToken = config.getAccessToken();
+    Secret accessToken = config.retrieveAccessToken();
 
-    if (StringUtils.isBlank(accessToken)) {
+    if (accessToken == null) {
       throw new IllegalStateException(
-          "Could not get an acess token for the cloud manager API."
+          "Could not get an access token for the cloud manager API."
               + "Check the plugin configuration in Jenkins system config and "
               + "ensure the authentication values are correct");
     }
@@ -85,26 +88,21 @@ public class CloudManagerBuilder extends Builder implements SimpleBuildStep {
             + " and pipelineId: "
             + getPipeline());
 
-    PipelineExecutionService executionService = new PipelineExecutionService(config);
-    Response<Void> execResponse =
-        executionService.startPipeline(getProgram(), getPipeline()).execute();
-
-    if (execResponse.isSuccessful()) {
-      logger.println(
-          "[SUCCESS] Pipeline was started successfully! You can monitor its progress in cloud manager.");
-    } else {
-      throw new IllegalStateException(
-          "Pipeline was not started, service responded with status: "
-              + execResponse.code()
-              + "and error body: "
-              + execResponse.errorBody().string());
+    try {
+      CloudManagerApi cmapi = new CloudManagerApiImpl(config.getOrganizationID(), config.getApiKey().getPlainText(), accessToken.getPlainText());
+      cmapi.startExecution(getProgram(), getPipeline());
+    } catch (CloudManagerApiException e) {
+      throw new IllegalStateException("Pipeline was not started", e);
     }
+    logger.println(
+          "[SUCCESS] Pipeline was started successfully! You can monitor its progress in cloud manager.");
   }
 
   @Extension
   public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
 
-    @Inject CloudManagerGlobalConfig config;
+    @Inject
+    CloudManagerGlobalConfig config;
 
     @Override
     public boolean isApplicable(Class<? extends AbstractProject> aClass) {
@@ -117,50 +115,44 @@ public class CloudManagerBuilder extends Builder implements SimpleBuildStep {
     }
 
     public ListBoxModel doFillProgramItems() throws IOException {
+      Secret accessToken = config.retrieveAccessToken();
       ListBoxModel items = new ListBoxModel();
       items.add("Select Program", "");
-      ProgramsService service = new ProgramsService(config);
-      Response<ProgramList> response = service.getPrograms().execute();
+      if (accessToken == null) {
+        items.add("Could not get AdobeIO Access Token. Check Jenkins logs", "");
+        return items;
+      }
 
-      if (response.isSuccessful()) {
-        response.body().getEmbedded().getPrograms().stream()
-            .forEach(p -> items.add(p.getName() + " (" + p.getId() + ")", p.getId()));
-      } else {
-        LOGGER.error(
-            "Request to get programs was not successful. "
-                + "Response code: "
-                + response.code()
-                + "Raw Response: "
-                + response.toString());
+      CloudManagerApi cmapi = new CloudManagerApiImpl(config.getOrganizationID(), config.getApiKey().getPlainText(), accessToken.getPlainText());
+      try {
+        List<EmbeddedProgram> list = cmapi.listPrograms();
+        list.forEach(p -> items.add(String.format("%s (%s)", p.getName(), p.getId()), p.getId()));
+      } catch (CloudManagerApiException e) {
         items.add("Could not get programs. Check Jenkins logs", "");
+        LOGGER.error("Request to get programs was not successful: {}", e.getMessage());
       }
       return items;
     }
 
     public ListBoxModel doFillPipelineItems(@QueryParameter String program) throws IOException {
       ListBoxModel items = new ListBoxModel();
-      PipelinesService service = new PipelinesService(config);
       if (StringUtils.isBlank(program)) {
         return items;
       }
-      Response<PipelineList> response = service.getPipelines(program).execute();
-      if (response.isSuccessful()) {
-        response
-            .body()
-            .getEmbedded()
-            .getPipelines()
-            .forEach(
-                p -> {
-                  items.add(p.getName() + " (" + p.getId() + ")", p.getId());
-                });
-      } else {
-        LOGGER.error(
-            "Request to get pipelines was not successful. "
-                + "Response code: "
-                + response.code()
-                + "Raw Response: "
-                + response.toString());
+
+      Secret accessToken = config.retrieveAccessToken();
+      if (accessToken == null) {
+        items.add("Could not get AdobeIO Access Token. Check Jenkins logs", "");
+        return items;
+      }
+
+      try {
+        CloudManagerApi cmapi = new CloudManagerApiImpl(config.getOrganizationID(), config.getApiKey().getPlainText(), accessToken.getPlainText());
+        List<Pipeline> pipelines = cmapi.listPipelines(program);
+        pipelines.forEach(p -> items.add(String.format("%s (%s)", p.getName(), p.getId()), p.getId()));
+      } catch (CloudManagerApiException e) {
         items.add("Could not get pipelines. Check Jenkins logs", "");
+        LOGGER.error("Request to get pipelines was not successful. {}", e.getMessage());
       }
       return items;
     }

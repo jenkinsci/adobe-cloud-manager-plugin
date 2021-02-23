@@ -58,7 +58,10 @@
             <version>0.4.0</version>
             <classifier>java8</classifier>
         </dependency>
-
+        <dependency>
+            <groupId>org.jenkins-ci.plugins.workflow</groupId>
+            <artifactId>workflow-step-api</artifactId>
+        </dependency>
         <!-- Test dependencies-->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
@@ -99,6 +102,11 @@
             <id>bryanstopp</id>
             <name>Bryan Stopp</name>
             <url>https://github.com/bstopp</url>
+        </developer>
+        <developer>
+            <id>kwin</id>
+            <name>Konrad Windszus</name>
+            <url>https://github.com/kwin</url>
         </developer>
     </developers>
 

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form" xmlns:c="/lib/credentials">
+    <j:getStatic var="defaultApiUrl"  className="io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOProjectConfig" field="ADOBE_IO_URL"/>
+    <f:entry title="${%name.title}" field="name">
+        <f:textbox />
+    </f:entry>
+    <f:entry title="${%apiUrl.title}" field="apiUrl">
+        <f:textbox default="${apiUrl}" />
+    </f:entry>
+    <f:entry title="${%clientId.title}" field="clientId">
+        <f:textbox />
+    </f:entry>
+    <f:entry title="${%orgId.title}" field="imsOrganizationId">
+        <f:textbox />
+    </f:entry>
+    <f:entry title="${%techAccId.title}" field="technicalAccountId">
+        <f:textbox />
+    </f:entry>
+    <f:entry title="${%clientSecret.title}" field="clientSecretCredentialsId">
+        <c:select context="app" includeUser="false" expressionAllowed="false" />
+    </f:entry>
+    <f:entry title="${%privateKey.title}" field="privateKeyCredentialsId">
+        <c:select context="app" includeUser="false" expressionAllowed="false" />
+    </f:entry>
+    <f:entry title="${%validateSignatures.title}" field="validateSignatures">
+        <f:checkbox default="true" />
+    </f:entry>
+    <f:block>
+        <f:validateButton title="${%validate.title}" progress="${%progress}" method="verifyCredentials" with="apiUrl,imsOrganizationId,technicalAccountId,clientId,clientSecretCredentialsId,privateKeyCredentialsId" />
+    </f:block>
+</j:jelly>

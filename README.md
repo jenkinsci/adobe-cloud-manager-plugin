@@ -38,3 +38,16 @@ After installing the plugin: In your Jenkins instance,
   <img src="doc/build-step.gif">
   <br>
 </p>
+
+## Issues
+
+Report issues and enhancements in the [Jenkins issue tracker](https://issues.jenkins-ci.org/). The Component is `adobe-cloud-manager-plugin`.
+
+## Contributing
+
+Refer to our [contribution guidelines](https://github.com/jenkinsci/.github/blob/master/CONTRIBUTING.md)
+
+## LICENSE
+
+Licensed under MIT, see [LICENSE](LICENSE.md)
+

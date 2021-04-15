@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core">
+    ${%helptext}
+    <br/>
+    <a href="https://console.adobe.io">Adobe IO Console</a>
+</j:jelly>

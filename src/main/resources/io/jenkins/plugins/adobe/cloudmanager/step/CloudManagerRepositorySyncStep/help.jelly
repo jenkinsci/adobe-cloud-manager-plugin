@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core">
+    ${%description}
+    <br />
+    ${%help.text}
+    <br/>
+    <a href="https://experienceleague.adobe.com/docs/experience-manager-cloud-manager/using/managing-code/accessing-git.html?lang=en">${%link.text}</a>
+</j:jelly>

@@ -12,15 +12,13 @@ import org.kohsuke.stapler.StaplerRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Global Configuration panel for Adobe IO projects.
+ */
 @Extension
 public class AdobeIOConfig extends GlobalConfiguration {
   private static final Logger LOGGER = LoggerFactory.getLogger(AdobeIOConfig.class);
   public static final String CLOUD_MANAGER_CONFIGURATION_ID = "adobe-cloud-manager-plugin-config";
-
-  /**
-   * Helps to avoid null in {@link CloudManagerPlugin#configuration()}
-   */
-  public static final AdobeIOConfig EMPTY_CONFIG = new AdobeIOConfig(Collections.emptyList());
 
   private List<AdobeIOProjectConfig> projectConfigs = new ArrayList<>();
 

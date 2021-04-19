@@ -1,20 +1,14 @@
 package io.jenkins.plugins.adobe.cloudmanager.config;
 
-import java.io.IOException;
-import java.nio.charset.Charset;
 import java.security.PrivateKey;
 import java.util.Optional;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 
-import com.cloudbees.plugins.credentials.Credentials;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
-import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
-import com.cloudbees.plugins.credentials.domains.HostnameRequirement;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import hudson.Extension;
 import hudson.model.AbstractDescribableImpl;
@@ -22,10 +16,10 @@ import hudson.model.Descriptor;
 import hudson.security.ACL;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
-import hudson.util.Secret;
 import io.adobe.cloudmanager.AdobeClientCredentials;
 import io.adobe.cloudmanager.IdentityManagementApi;
 import io.adobe.cloudmanager.IdentityManagementApiException;
+import io.jenkins.plugins.adobe.cloudmanager.util.CredentialsUtil;
 import jenkins.model.Jenkins;
 import org.jenkinsci.plugins.plaincredentials.FileCredentials;
 import org.jenkinsci.plugins.plaincredentials.StringCredentials;
@@ -38,6 +32,9 @@ import org.kohsuke.stapler.interceptor.RequirePOST;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * A single Adobe IO Project configuration.
+ */
 public class AdobeIOProjectConfig extends AbstractDescribableImpl<AdobeIOProjectConfig> {
 
   /**
@@ -73,34 +70,6 @@ public class AdobeIOProjectConfig extends AbstractDescribableImpl<AdobeIOProject
 
   @DataBoundConstructor
   public AdobeIOProjectConfig() {
-
-  }
-
-  @Nonnull
-  public static Optional<String> clientSecretFor(String credentialsId) {
-    return credentialsFor(credentialsId, StringCredentials.class)
-        .map(StringCredentials::getSecret).map(Secret::getPlainText);
-  }
-
-  @Nonnull
-  public static Optional<String> privateKeyFor(String credentialsId) {
-    return credentialsFor(credentialsId, FileCredentials.class)
-        .map(creds -> {
-          try {
-            return IOUtils.toString(creds.getContent(), Charset.defaultCharset());
-          } catch (IOException e) {
-            Messages.AdobeIOProjectConfig_errors_privateKeyError(credentialsId);
-            return null;
-          }
-        });
-  }
-
-  @Nonnull
-  public static <C extends Credentials> Optional<C> credentialsFor(String credentialsId, Class<C> type) {
-    return CredentialsMatchers.filter(
-        CredentialsProvider.lookupCredentials(type, Jenkins.get(), ACL.SYSTEM, new HostnameRequirement(ADOBE_IO_DOMAIN)),
-        CredentialsMatchers.withId(StringUtils.trimToEmpty(credentialsId))
-    ).stream().findFirst();
   }
 
   public String getName() {
@@ -117,7 +86,7 @@ public class AdobeIOProjectConfig extends AbstractDescribableImpl<AdobeIOProject
   }
 
   @DataBoundSetter
-  public void setApiUrl(String apiUrl) {
+  public void setApiUrl(@CheckForNull String apiUrl) {
     this.apiUrl = StringUtils.defaultIfBlank(apiUrl, ADOBE_IO_URL);
   }
 
@@ -185,6 +154,9 @@ public class AdobeIOProjectConfig extends AbstractDescribableImpl<AdobeIOProject
     return Messages.AdobeIOProjectConfig_displayName(getName(), getImsOrganizationId());
   }
 
+  /**
+   * Descriptor for the form to manage the Adobe IO Projects.
+   */
   @Extension
   public static class DescriptorImpl extends Descriptor<AdobeIOProjectConfig> {
 
@@ -194,6 +166,12 @@ public class AdobeIOProjectConfig extends AbstractDescribableImpl<AdobeIOProject
       return Messages.AdobeIOProjectConfig_DescriptorImpl_displayName();
     }
 
+    /**
+     * Check that the name is provided.
+     *
+     * @param name the name of the configuration
+     * @return form status
+     */
     @SuppressWarnings("unused")
     public FormValidation doCheckName(@QueryParameter String name) {
       if (StringUtils.isBlank(name)) {
@@ -202,6 +180,12 @@ public class AdobeIOProjectConfig extends AbstractDescribableImpl<AdobeIOProject
       return FormValidation.ok();
     }
 
+    /**
+     * Check that the client id (aka API Key) is provided.
+     *
+     * @param clientId the client id
+     * @return form status
+     */
     @SuppressWarnings("unused")
     public FormValidation doCheckClientId(@QueryParameter String clientId) {
       if (StringUtils.isBlank(clientId)) {
@@ -210,6 +194,12 @@ public class AdobeIOProjectConfig extends AbstractDescribableImpl<AdobeIOProject
       return FormValidation.ok();
     }
 
+    /**
+     * Check that the IMS Org id is provided.
+     *
+     * @param imsOrganizationId the IMS Org Id
+     * @return form status
+     */
     @SuppressWarnings("unused")
     public FormValidation doCheckImsOrganizationId(@QueryParameter String imsOrganizationId) {
       if (StringUtils.isBlank(imsOrganizationId)) {
@@ -218,6 +208,12 @@ public class AdobeIOProjectConfig extends AbstractDescribableImpl<AdobeIOProject
       return FormValidation.ok();
     }
 
+    /**
+     * Checks if the Technical account Id is provided.
+     *
+     * @param technicalAccountId the technical account id
+     * @return form status
+     */
     @SuppressWarnings("unused")
     public FormValidation doCheckTechnicalAccountId(@QueryParameter String technicalAccountId) {
       if (StringUtils.isBlank(technicalAccountId)) {
@@ -226,30 +222,48 @@ public class AdobeIOProjectConfig extends AbstractDescribableImpl<AdobeIOProject
       return FormValidation.ok();
     }
 
+    /**
+     * Checks if the Client Secret credentials id is provided and is of the correct type.
+     *
+     * @param clientSecretCredentialsId the client secret credentials reference
+     * @return the form status
+     */
     @SuppressWarnings("unused")
     public FormValidation doCheckClientSecretCredentialsId(@QueryParameter String clientSecretCredentialsId) {
       if (StringUtils.isBlank(clientSecretCredentialsId)) {
         return FormValidation.error(Messages.AdobeIOProjectConfig_DescriptorImpl_errors_missingClientSecret());
       }
-      Optional<String> clientSecret = clientSecretFor(clientSecretCredentialsId);
+      Optional<String> clientSecret = CredentialsUtil.clientSecretFor(clientSecretCredentialsId);
       if (!clientSecret.isPresent()) {
         return FormValidation.error(Messages.AdobeIOProjectConfig_DescriptorImpl_errors_unresolvableClientSecret(clientSecretCredentialsId));
       }
       return FormValidation.ok();
     }
 
+    /**
+     * Checks if the Private Key credential id is provided and of the correct type.
+     *
+     * @param privateKeyCredentialsId the private key credential reference
+     * @return form status
+     */
     @SuppressWarnings("unused")
     public FormValidation doCheckPrivateKeyCredentialsId(@QueryParameter String privateKeyCredentialsId) {
       if (StringUtils.isBlank(privateKeyCredentialsId)) {
         return FormValidation.error(Messages.AdobeIOProjectConfig_DescriptorImpl_errors_missingPrivateKey());
       }
-      Optional<String> privateKey = privateKeyFor(privateKeyCredentialsId);
+      Optional<String> privateKey = CredentialsUtil.privateKeyFor(privateKeyCredentialsId);
       if (!privateKey.isPresent()) {
         return FormValidation.error(Messages.AdobeIOProjectConfig_DescriptorImpl_errors_unresolvablePrivateKey(privateKeyCredentialsId));
       }
       return FormValidation.ok();
     }
 
+    /**
+     * List all of the possible Credentials that can be used for the Client Secret.
+     *
+     * @param credentialsId the current client secret credential id
+     * @return list of credential ids
+     */
     @SuppressWarnings("unused")
     public ListBoxModel doFillClientSecretCredentialsIdItems(@QueryParameter String credentialsId) {
       if (!Jenkins.get().hasPermission(Jenkins.ADMINISTER)) {
@@ -265,6 +279,12 @@ public class AdobeIOProjectConfig extends AbstractDescribableImpl<AdobeIOProject
               CredentialsMatchers.always());
     }
 
+    /**
+     * List all of the possible Credentials that can be used for the Private Key.
+     *
+     * @param credentialsId the current private key credential id
+     * @return list of credential ids
+     */
     @SuppressWarnings("unused")
     public ListBoxModel doFillPrivateKeyCredentialsIdItems(@QueryParameter String credentialsId) {
       if (!Jenkins.get().hasPermission(Jenkins.ADMINISTER)) {
@@ -280,6 +300,17 @@ public class AdobeIOProjectConfig extends AbstractDescribableImpl<AdobeIOProject
               CredentialsMatchers.always());
     }
 
+    /**
+     * Verify that the provided information is able to authenticate to Adobe IO.
+     *
+     * @param apiUrl                    the Adobe IO URL endpoint
+     * @param imsOrganizationId         the IMS Org Id
+     * @param technicalAccountId        the Technical Account Id
+     * @param clientId                  the client id (aka API Key)
+     * @param clientSecretCredentialsId the client secret credentials id
+     * @param privateKeyCredentialsId   the private key credentials id
+     * @return the form validation
+     */
     @RequirePOST
     @Restricted(DoNotUse.class)
     @SuppressWarnings("unused")
@@ -292,13 +323,13 @@ public class AdobeIOProjectConfig extends AbstractDescribableImpl<AdobeIOProject
         @QueryParameter String privateKeyCredentialsId) {
       Jenkins.get().checkPermission(Jenkins.ADMINISTER);
 
-      Optional<String> clientSecret = clientSecretFor(clientSecretCredentialsId);
+      Optional<String> clientSecret = CredentialsUtil.clientSecretFor(clientSecretCredentialsId);
       if (!clientSecret.isPresent()) {
         return FormValidation.error(
             Messages.AdobeIOProjectConfig_DescriptorImpl_errors_unresolvableClientSecret(clientSecretCredentialsId));
       }
 
-      Optional<String> privateKey = privateKeyFor(privateKeyCredentialsId);
+      Optional<String> privateKey = CredentialsUtil.privateKeyFor(privateKeyCredentialsId);
       if (!privateKey.isPresent()) {
         return FormValidation.error(
             Messages.AdobeIOProjectConfig_DescriptorImpl_errors_unresolvablePrivateKey(privateKeyCredentialsId));

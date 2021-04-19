@@ -33,8 +33,8 @@ f.entry(title: _("privateKey.title"), field: "privateKeyCredentialsId") {
   c.select(context:app, includeUser:false, expressionAllowed:false)
 }
 
-f.entry() {
-  f.checkbox(title: _("validateSignatures.title"), field: "validateSignatures")
+f.entry(title: _("validateSignatures.title"), field: "validateSignatures") {
+  f.checkbox(default: true)
 }
 
 f.block() {

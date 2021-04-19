@@ -13,7 +13,6 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javax.crypto.Cipher;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -48,7 +47,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.For;
 import org.jvnet.hudson.test.JenkinsRule;
-
 import static org.junit.Assert.*;
 
 /*
@@ -137,7 +135,7 @@ public class AdobeIOProjectConfigIntegrationTest {
     strategy.add(Jenkins.READ, "user");
     rule.jenkins.setAuthorizationStrategy(strategy);
 
-    {// Read Only User
+    { // Read Only User
       JenkinsRule.WebClient wc = rule.createWebClient();
       wc.getOptions().setThrowExceptionOnFailingStatusCode(false);
       wc.login("user");

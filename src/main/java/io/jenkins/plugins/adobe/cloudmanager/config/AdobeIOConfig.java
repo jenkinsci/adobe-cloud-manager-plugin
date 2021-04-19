@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import javax.annotation.Nonnull;
+
 import hudson.Extension;
 import jenkins.model.GlobalConfiguration;
 import net.sf.json.JSONObject;
@@ -27,7 +29,7 @@ public class AdobeIOConfig extends GlobalConfiguration {
     load();
   }
 
-  public AdobeIOConfig(List<AdobeIOProjectConfig> projectConfigs) {
+  public AdobeIOConfig(@Nonnull List<AdobeIOProjectConfig> projectConfigs) {
     this.projectConfigs = projectConfigs;
   }
 
@@ -53,10 +55,11 @@ public class AdobeIOConfig extends GlobalConfiguration {
   }
 
   @DataBoundSetter
-  public void setProjectConfigs(List<AdobeIOProjectConfig> projectConfigs) {
+  public void setProjectConfigs(@Nonnull List<AdobeIOProjectConfig> projectConfigs) {
     this.projectConfigs = projectConfigs;
   }
 
+  @Nonnull
   public List<AdobeIOProjectConfig> getProjectConfigs() {
     return Collections.unmodifiableList(projectConfigs);
   }

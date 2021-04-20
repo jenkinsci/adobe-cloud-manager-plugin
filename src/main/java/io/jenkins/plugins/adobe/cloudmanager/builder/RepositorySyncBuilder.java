@@ -1,5 +1,31 @@
 package io.jenkins.plugins.adobe.cloudmanager.builder;
 
+/*
+
+MIT License
+
+Copyright (c) 2020 Adobe Inc
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+ */
+
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.URISyntaxException;
@@ -41,14 +67,14 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 
-public class CloudManagerRepositorySyncBuilder extends Builder implements SimpleBuildStep {
+public class RepositorySyncBuilder extends Builder implements SimpleBuildStep {
 
   private final String url;
   private final String credentialsId;
   private boolean force = false;
 
   @DataBoundConstructor
-  public CloudManagerRepositorySyncBuilder(@Nonnull String url, @Nonnull String credentialsId) {
+  public RepositorySyncBuilder(@Nonnull String url, @Nonnull String credentialsId) {
     this.url = url;
     this.credentialsId = credentialsId;
   }
@@ -80,16 +106,16 @@ public class CloudManagerRepositorySyncBuilder extends Builder implements Simple
   private GitSCM findFirst(@Nonnull List<SCM> list, @Nonnull PrintStream log) throws AbortException {
 
     if (list.isEmpty()) {
-      throw new AbortException(Messages.CloudManagerRepositorySyncBuilder_error_missingGitRepository());
+      throw new AbortException(Messages.RepositorySyncBuilder_error_missingGitRepository());
     }
 
     SCM scm = list.get(0);
     if (!(scm instanceof GitSCM)) {
-      throw new AbortException(Messages.CloudManagerRepositorySyncBuilder_error_notGitRepo());
+      throw new AbortException(Messages.RepositorySyncBuilder_error_notGitRepo());
     }
     GitSCM git = (GitSCM) scm;
     if (list.size() > 1) {
-      log.println(Messages.CloudManagerRepositorySyncBuilder_warning_multipleScms(git.getUserRemoteConfigs().get(0).getUrl()));
+      log.println(Messages.RepositorySyncBuilder_warning_multipleScms(git.getUserRemoteConfigs().get(0).getUrl()));
     }
     return git;
   }
@@ -110,7 +136,7 @@ public class CloudManagerRepositorySyncBuilder extends Builder implements Simple
 
     GitClient git = scm.createClient(listener, env, run, workspace);
     if (!git.hasGitRepo(false)) {
-      throw new AbortException(Messages.CloudManagerRepositorySyncBuilder_error_missingGitRepository());
+      throw new AbortException(Messages.RepositorySyncBuilder_error_missingGitRepository());
     }
     return git;
   }
@@ -118,7 +144,7 @@ public class CloudManagerRepositorySyncBuilder extends Builder implements Simple
   private StandardUsernameCredentials getCreds() throws AbortException {
     Optional<StandardUsernameCredentials> creds = CredentialsUtil.credentialsFor(credentialsId, StandardUsernameCredentials.class);
     if (!creds.isPresent()) {
-      throw new AbortException(Messages.CloudManagerRepositorySyncBuilder_error_missingGitCredentials(credentialsId));
+      throw new AbortException(Messages.RepositorySyncBuilder_error_missingGitCredentials(credentialsId));
     }
     return creds.get();
   }
@@ -128,19 +154,19 @@ public class CloudManagerRepositorySyncBuilder extends Builder implements Simple
     String branch = env.get(GitSCM.GIT_BRANCH, "");
     String sha1 = env.get(GitSCM.GIT_COMMIT, "");
     if (StringUtils.isBlank(branch) || StringUtils.isBlank(sha1)) {
-      throw new AbortException(Messages.CloudManagerRepositorySyncBuilder_error_missingGitInfo(branch, sha1));
+      throw new AbortException(Messages.RepositorySyncBuilder_error_missingGitInfo(branch, sha1));
     } else {
       branch = StringUtils.remove(branch, "origin/");
     }
 
     try {
-      log.println(Messages.CloudManagerRepositorySyncBuilder_pushMessage(url));
+      log.println(Messages.RepositorySyncBuilder_pushMessage(url));
       client.setCredentials(getCreds());
       client.push().to(new URIish(url)).ref(sha1 + ":refs/heads/" + branch).force(isForce()).execute();
     } catch (URISyntaxException e) {
-      throw new AbortException(Messages.CloudManagerRepositorySyncBuilder_error_invalidRemoteRepository(url));
+      throw new AbortException(Messages.RepositorySyncBuilder_error_invalidRemoteRepository(url));
     } catch (GitException | InterruptedException ex) {
-      throw new AbortException(Messages.CloudManagerRepositorySyncBuilder_error_pushFailed(ex.getMessage()));
+      throw new AbortException(Messages.RepositorySyncBuilder_error_pushFailed(ex.getMessage()));
     }
   }
 
@@ -158,7 +184,7 @@ public class CloudManagerRepositorySyncBuilder extends Builder implements Simple
     } else if (run instanceof AbstractBuild) {
       scm = getScm((AbstractBuild<?, ?>) run, log);
     } else {
-      throw new AbortException(Messages.CloudManagerRepositorySyncBuilder_error_invalidRunType());
+      throw new AbortException(Messages.RepositorySyncBuilder_error_invalidRunType());
     }
     scm.buildEnvironment(run, env);
     GitClient client = createClient(scm, run, workspace, env, listener);
@@ -170,7 +196,7 @@ public class CloudManagerRepositorySyncBuilder extends Builder implements Simple
     return true;
   }
 
-  @Symbol("cloudManagerRepoSync")
+  @Symbol("acmRepoSync")
   @Extension
   public static class DescriptorImpl extends BuildStepDescriptor<Builder> {
 
@@ -208,7 +234,7 @@ public class CloudManagerRepositorySyncBuilder extends Builder implements Simple
 
     @Nonnull
     @Override
-    public String getDisplayName() { return Messages.CloudManagerRepositorySyncBuilder_displayName();
+    public String getDisplayName() { return Messages.RepositorySyncBuilder_displayName();
     }
   }
 }

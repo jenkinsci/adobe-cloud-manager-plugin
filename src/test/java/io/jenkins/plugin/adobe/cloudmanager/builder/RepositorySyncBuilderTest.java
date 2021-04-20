@@ -1,5 +1,31 @@
 package io.jenkins.plugin.adobe.cloudmanager.builder;
 
+/*
+
+MIT License
+
+Copyright (c) 2020 Adobe Inc
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+ */
+
 import org.apache.commons.lang3.StringUtils;
 
 import com.cloudbees.plugins.credentials.Credentials;
@@ -16,7 +42,7 @@ import hudson.model.queue.QueueTaskFuture;
 import hudson.plugins.git.GitSCM;
 import hudson.scm.SCM;
 import hudson.tasks.Builder;
-import io.jenkins.plugins.adobe.cloudmanager.builder.CloudManagerRepositorySyncBuilder;
+import io.jenkins.plugins.adobe.cloudmanager.builder.RepositorySyncBuilder;
 import io.jenkins.plugins.adobe.cloudmanager.builder.Messages;
 import jenkins.plugins.git.CliGitCommand;
 import jenkins.plugins.git.GitSampleRepoRule;
@@ -36,7 +62,7 @@ import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import static org.junit.Assert.*;
 
-public class CloudManagerRepositorySyncBuilderTest {
+public class RepositorySyncBuilderTest {
 
   @Rule
   public JenkinsRule rule = new JenkinsRule();
@@ -68,8 +94,8 @@ public class CloudManagerRepositorySyncBuilderTest {
 
   @Test
   public void roundTrip() throws Exception {
-    CloudManagerRepositorySyncBuilder builder = new CloudManagerRepositorySyncBuilder("https://git.cloudmanager.adobe.com/dummyrepo/dummyrepo", "weretail-credentials");
-    CloudManagerRepositorySyncBuilder roundtrip = rule.configRoundtrip(builder);
+    RepositorySyncBuilder builder = new RepositorySyncBuilder("https://git.cloudmanager.adobe.com/dummyrepo/dummyrepo", "weretail-credentials");
+    RepositorySyncBuilder roundtrip = rule.configRoundtrip(builder);
     rule.assertEqualDataBoundBeans(builder, roundtrip);
   }
 
@@ -82,7 +108,7 @@ public class CloudManagerRepositorySyncBuilderTest {
     CpsFlowDefinition flow = new CpsFlowDefinition(
         "node('runner') {\n" +
             "  ws {\n" +
-            "    cloudManagerRepoSync(url: '" + srcRepo + "', credentialsId: 'credentials')\n" +
+            "    acmRepoSync(url: '" + srcRepo + "', credentialsId: 'credentials')\n" +
             "  }\n" +
             "}",
         true);
@@ -91,7 +117,7 @@ public class CloudManagerRepositorySyncBuilderTest {
     QueueTaskFuture<WorkflowRun> run = job.scheduleBuild2(0);
     rule.assertBuildStatus(Result.FAILURE, run);
     assertNotNull(run);
-    assertTrue(StringUtils.contains(run.get().getLog(), Messages.CloudManagerRepositorySyncBuilder_error_missingGitRepository()));
+    assertTrue(StringUtils.contains(run.get().getLog(), Messages.RepositorySyncBuilder_error_missingGitRepository()));
   }
 
   @Test
@@ -104,7 +130,7 @@ public class CloudManagerRepositorySyncBuilderTest {
             "  ws {\n" +
             "    git($/" + srcRepo + "/$)\n" +
             "    dir('subdir') {\n" +
-            "      cloudManagerRepoSync(url: '" + destRepo + "', credentialsId: 'credentials')\n" +
+            "      acmRepoSync(url: '" + destRepo + "', credentialsId: 'credentials')\n" +
             "    }\n" +
             "  }\n" +
             "}",
@@ -113,7 +139,7 @@ public class CloudManagerRepositorySyncBuilderTest {
 
     QueueTaskFuture<WorkflowRun> run = job.scheduleBuild2(0);
     rule.assertBuildStatus(Result.FAILURE, run);
-    assertTrue(StringUtils.contains(run.get().getLog(), Messages.CloudManagerRepositorySyncBuilder_error_missingGitRepository()));
+    assertTrue(StringUtils.contains(run.get().getLog(), Messages.RepositorySyncBuilder_error_missingGitRepository()));
   }
 
   @Test
@@ -136,7 +162,7 @@ public class CloudManagerRepositorySyncBuilderTest {
         "node('runner') {\n" +
             "  ws {\n" +
             "    git(url: $/" + srcRepo + "/$,)\n" +
-            "    cloudManagerRepoSync(url: '" + bareDestRepo + "', credentialsId: 'credentials')\n" +
+            "    acmRepoSync(url: '" + bareDestRepo + "', credentialsId: 'credentials')\n" +
             "  }\n" +
             "}",
         true);
@@ -167,7 +193,7 @@ public class CloudManagerRepositorySyncBuilderTest {
         "node('runner') {\n" +
             "  ws {\n" +
             "    git(url: $/" + srcRepo + "/$,)\n" +
-            "    cloudManagerRepoSync(url: '" + bareDestRepo + "', credentialsId: 'credentials', force: true)\n" +
+            "    acmRepoSync(url: '" + bareDestRepo + "', credentialsId: 'credentials', force: true)\n" +
             "  }\n" +
             "}",
         true);
@@ -201,7 +227,7 @@ public class CloudManagerRepositorySyncBuilderTest {
         "node('runner') {\n" +
             "  ws {\n" +
             "    git(url: $/" + srcRepo + "/$, branch: 'notdefault')\n" +
-            "    cloudManagerRepoSync(url: '" + bareDestRepo + "', credentialsId: 'credentials')\n" +
+            "    acmRepoSync(url: '" + bareDestRepo + "', credentialsId: 'credentials')\n" +
             "  }\n" +
             "}",
         true);
@@ -226,7 +252,7 @@ public class CloudManagerRepositorySyncBuilderTest {
             "  ws {\n" +
             "    git($/" + srcRepo + "/$)\n" +
             "    git($/" + destRepo + "/$)\n" +
-            "    cloudManagerRepoSync(url: '" + bareDestRepo + "', credentialsId: 'credentials')\n" +
+            "    acmRepoSync(url: '" + bareDestRepo + "', credentialsId: 'credentials')\n" +
             "  }\n" +
             "}",
         true);
@@ -235,7 +261,7 @@ public class CloudManagerRepositorySyncBuilderTest {
     QueueTaskFuture<WorkflowRun> run = job.scheduleBuild2(0);
     rule.assertBuildStatus(Result.SUCCESS, run);
     String log = run.get().getLog();
-    assertTrue(StringUtils.contains(log, Messages.CloudManagerRepositorySyncBuilder_warning_multipleScms(srcRepo.toString())));
+    assertTrue(StringUtils.contains(log, Messages.RepositorySyncBuilder_warning_multipleScms(srcRepo.toString())));
   }
 
   @Test
@@ -248,7 +274,7 @@ public class CloudManagerRepositorySyncBuilderTest {
         "node('runner') {\n" +
             "  ws {\n" +
             "    git($/" + srcRepo + "/$)\n" +
-            "    cloudManagerRepoSync(url: '" + bareDestRepo + "', credentialsId: 'credentials')\n" +
+            "    acmRepoSync(url: '" + bareDestRepo + "', credentialsId: 'credentials')\n" +
             "  }\n" +
             "}",
         true);
@@ -269,7 +295,7 @@ public class CloudManagerRepositorySyncBuilderTest {
         "    stages {\n" +
         "        stage('sync') {\n" +
         "            steps {\n" +
-        "                cloudManagerRepoSync(url: '" + bareDestRepo + "', credentialsId: 'credentials')\n" +
+        "                acmRepoSync(url: '" + bareDestRepo + "', credentialsId: 'credentials')\n" +
         "            }\n" +
         "        }\n" +
         "    }\n" +
@@ -315,7 +341,7 @@ public class CloudManagerRepositorySyncBuilderTest {
         "    stages {\n" +
         "        stage('sync') {\n" +
         "            steps {\n" +
-        "                cloudManagerRepoSync(url: '" + repoUrl + "', credentialsId: 'credentials')\n" +
+        "                acmRepoSync(url: '" + repoUrl + "', credentialsId: 'credentials')\n" +
         "            }\n" +
         "        }\n" +
         "    }\n" +
@@ -344,7 +370,7 @@ public class CloudManagerRepositorySyncBuilderTest {
     bareDestRepo.git("--bare", "init");
 
     FreeStyleProject project = rule.createProject(FreeStyleProject.class, "test");
-    Builder builder = new CloudManagerRepositorySyncBuilder(bareDestRepo.toString(), "credentials");
+    Builder builder = new RepositorySyncBuilder(bareDestRepo.toString(), "credentials");
     project.getBuildersList().add(builder);
 
     project.setScm(new GitSCM(srcRepo.toString()));

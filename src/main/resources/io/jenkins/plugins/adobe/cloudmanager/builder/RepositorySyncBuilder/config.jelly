@@ -1,4 +1,4 @@
-<?jelly escape-by-default='true'?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!--
 
   MIT License
@@ -24,6 +24,16 @@
   SOFTWARE.
 
 -->
-<div>
-    This plugin integrates <a href="https://www.adobe.io/apis/experiencecloud/cloud-manager/docs.html#!AdobeDocs/cloudmanager-api-docs/master/README.md">Adobe Cloud Manager</a> with Jenkins.
-</div>
+
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form" xmlns:c="/lib/credentials">
+    <f:entry field="url" title="${%repository.title}">
+        <f:textbox checkMethod="post"/>
+    </f:entry>
+    <f:entry field="credentialsId" title="${%credentialsId.title}">
+        <c:select/>
+    </f:entry>
+    <f:entry field="force" title="${%force.title}">
+        <f:checkbox default="false" />
+    </f:entry>
+</j:jelly>

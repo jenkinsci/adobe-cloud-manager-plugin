@@ -1,4 +1,4 @@
-package io.jenkins.plugin.adobe.cloudmanager.step;
+package io.jenkins.plugin.adobe.cloudmanager.builder;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -8,13 +8,16 @@ import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.CredentialsStore;
 import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
+import hudson.model.FreeStyleBuild;
+import hudson.model.FreeStyleProject;
 import hudson.model.Label;
 import hudson.model.Result;
 import hudson.model.queue.QueueTaskFuture;
 import hudson.plugins.git.GitSCM;
 import hudson.scm.SCM;
-import io.jenkins.plugins.adobe.cloudmanager.step.CloudManagerRepositorySyncStep;
-import io.jenkins.plugins.adobe.cloudmanager.step.Messages;
+import hudson.tasks.Builder;
+import io.jenkins.plugins.adobe.cloudmanager.builder.CloudManagerRepositorySyncBuilder;
+import io.jenkins.plugins.adobe.cloudmanager.builder.Messages;
 import jenkins.plugins.git.CliGitCommand;
 import jenkins.plugins.git.GitSampleRepoRule;
 import org.eclipse.jetty.server.Server;
@@ -26,8 +29,6 @@ import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
-import org.jenkinsci.plugins.workflow.steps.Step;
-import org.jenkinsci.plugins.workflow.steps.StepConfigTester;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -35,7 +36,7 @@ import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import static org.junit.Assert.*;
 
-public class CloudManagerRepositorySyncStepTest {
+public class CloudManagerRepositorySyncBuilderTest {
 
   @Rule
   public JenkinsRule rule = new JenkinsRule();
@@ -66,11 +67,13 @@ public class CloudManagerRepositorySyncStepTest {
   }
 
   @Test
-  public void roundtrip() throws Exception {
-    CloudManagerRepositorySyncStep step = new CloudManagerRepositorySyncStep("https://git.cloudmanager.adobe.com/weretail/weretail", "weretail-credentials");
-    Step roundtrip = new StepConfigTester(rule).configRoundTrip(step);
-    rule.assertEqualDataBoundBeans(step, roundtrip);
+  public void roundTrip() throws Exception {
+    CloudManagerRepositorySyncBuilder builder = new CloudManagerRepositorySyncBuilder("https://git.cloudmanager.adobe.com/dummyrepo/dummyrepo", "weretail-credentials");
+    CloudManagerRepositorySyncBuilder roundtrip = rule.configRoundtrip(builder);
+    rule.assertEqualDataBoundBeans(builder, roundtrip);
   }
+
+
 
   @Test
   public void noSCMFailure() throws Exception {
@@ -88,7 +91,7 @@ public class CloudManagerRepositorySyncStepTest {
     QueueTaskFuture<WorkflowRun> run = job.scheduleBuild2(0);
     rule.assertBuildStatus(Result.FAILURE, run);
     assertNotNull(run);
-    assertTrue(StringUtils.contains(run.get().getLog(), Messages.CloudManagerRepositorySyncStep_error_missingGitRepository()));
+    assertTrue(StringUtils.contains(run.get().getLog(), Messages.CloudManagerRepositorySyncBuilder_error_missingGitRepository()));
   }
 
   @Test
@@ -110,7 +113,7 @@ public class CloudManagerRepositorySyncStepTest {
 
     QueueTaskFuture<WorkflowRun> run = job.scheduleBuild2(0);
     rule.assertBuildStatus(Result.FAILURE, run);
-    assertTrue(StringUtils.contains(run.get().getLog(), Messages.CloudManagerRepositorySyncStep_error_missingGitRepository()));
+    assertTrue(StringUtils.contains(run.get().getLog(), Messages.CloudManagerRepositorySyncBuilder_error_missingGitRepository()));
   }
 
   @Test
@@ -232,7 +235,7 @@ public class CloudManagerRepositorySyncStepTest {
     QueueTaskFuture<WorkflowRun> run = job.scheduleBuild2(0);
     rule.assertBuildStatus(Result.SUCCESS, run);
     String log = run.get().getLog();
-    assertTrue(StringUtils.contains(log, Messages.CloudManagerRepositorySyncStep_warning_multipleScms(srcRepo.toString())));
+    assertTrue(StringUtils.contains(log, Messages.CloudManagerRepositorySyncBuilder_warning_multipleScms(srcRepo.toString())));
   }
 
   @Test
@@ -335,4 +338,20 @@ public class CloudManagerRepositorySyncStepTest {
     assertTrue(StringUtils.contains(run.getLog(), "using GIT_ASKPASS to set credentials "));
   }
 
+  @Test
+  public void asBuildStep() throws Exception {
+    srcRepo.init();
+    bareDestRepo.git("--bare", "init");
+
+    FreeStyleProject project = rule.createProject(FreeStyleProject.class, "test");
+    Builder builder = new CloudManagerRepositorySyncBuilder(bareDestRepo.toString(), "credentials");
+    project.getBuildersList().add(builder);
+
+    project.setScm(new GitSCM(srcRepo.toString()));
+
+    QueueTaskFuture<FreeStyleBuild> run = project.scheduleBuild2(0);
+    rule.assertBuildStatus(Result.SUCCESS, run);
+    destRepo.git("clone", bareDestRepo.toString(), ".");
+    assertEquals(srcRepo.head(), destRepo.head());
+  }
 }

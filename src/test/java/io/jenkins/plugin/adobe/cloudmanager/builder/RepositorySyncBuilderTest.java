@@ -80,13 +80,13 @@ public class RepositorySyncBuilderTest {
   public GitSampleRepoRule updatedDestRepo = new GitSampleRepoRule();
 
   @BeforeClass
-  public static void before() throws Exception {
+  public static void beforeClass() throws Exception {
     CliGitCommand cmd = new CliGitCommand(null);
     cmd.setDefaults();
   }
 
   @Before
-  public void beforeEach() throws Exception {
+  public void before() throws Exception {
     CredentialsStore store = CredentialsProvider.lookupStores(rule.jenkins).iterator().next();
     Credentials credentials = new UsernamePasswordCredentialsImpl(CredentialsScope.SYSTEM, "credentials", "", "username", "test-password");
     store.addCredentials(Domain.global(), credentials);
@@ -98,8 +98,6 @@ public class RepositorySyncBuilderTest {
     RepositorySyncBuilder roundtrip = rule.configRoundtrip(builder);
     rule.assertEqualDataBoundBeans(builder, roundtrip);
   }
-
-
 
   @Test
   public void noSCMFailure() throws Exception {

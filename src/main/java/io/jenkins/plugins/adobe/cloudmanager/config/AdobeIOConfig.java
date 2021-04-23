@@ -29,8 +29,10 @@ SOFTWARE.
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
+import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
+
+import org.apache.commons.lang3.StringUtils;
 
 import hudson.Extension;
 import jenkins.model.GlobalConfiguration;
@@ -45,9 +47,9 @@ import org.slf4j.LoggerFactory;
  */
 @Extension
 public class AdobeIOConfig extends GlobalConfiguration {
-  private static final Logger LOGGER = LoggerFactory.getLogger(AdobeIOConfig.class);
   public static final String CLOUD_MANAGER_CONFIGURATION_ID = "adobe-cloud-manager-plugin-config";
-
+  private static final Logger LOGGER = LoggerFactory.getLogger(AdobeIOConfig.class);
+  private static final AdobeIOConfig EMPTY_CONFIG = new AdobeIOConfig(Collections.emptyList());
   private List<AdobeIOProjectConfig> projectConfigs = new ArrayList<>();
 
   public AdobeIOConfig() {
@@ -57,6 +59,28 @@ public class AdobeIOConfig extends GlobalConfiguration {
 
   public AdobeIOConfig(@Nonnull List<AdobeIOProjectConfig> projectConfigs) {
     this.projectConfigs = projectConfigs;
+  }
+
+  /**
+   * Helper for looking up this configuration.
+   *
+   * @return Adobe IO Configuration
+   */
+  @Nonnull
+  public static AdobeIOConfig configuration() {
+    AdobeIOConfig config = AdobeIOConfig.all().get(AdobeIOConfig.class);
+    if (config == null) {
+      config = EMPTY_CONFIG;
+    }
+    return config;
+  }
+
+  @CheckForNull
+  public static AdobeIOProjectConfig projectConfigFor(String name) {
+    return AdobeIOConfig.configuration().getProjectConfigs()
+        .stream()
+        .filter(c -> StringUtils.equals(name, c.getName()))
+        .findFirst().orElse(null);
   }
 
   /**
@@ -80,13 +104,14 @@ public class AdobeIOConfig extends GlobalConfiguration {
     return true;
   }
 
+  @Nonnull
+  public List<AdobeIOProjectConfig> getProjectConfigs() {
+    return Collections.unmodifiableList(projectConfigs);
+  }
+
   @DataBoundSetter
   public void setProjectConfigs(@Nonnull List<AdobeIOProjectConfig> projectConfigs) {
     this.projectConfigs = projectConfigs;
   }
 
-  @Nonnull
-  public List<AdobeIOProjectConfig> getProjectConfigs() {
-    return Collections.unmodifiableList(projectConfigs);
-  }
 }

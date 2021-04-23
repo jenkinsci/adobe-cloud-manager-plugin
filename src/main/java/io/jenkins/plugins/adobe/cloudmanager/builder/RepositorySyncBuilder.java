@@ -73,6 +73,11 @@ public class RepositorySyncBuilder extends Builder implements SimpleBuildStep {
   private final String credentialsId;
   private boolean force = false;
 
+  /**
+   * Create an new Repository Sync Builder using the specified Cloud Manager URL and Credentials.
+   * @param url the Cloud Manager Git URL
+   * @param credentialsId the repository credentials
+   */
   @DataBoundConstructor
   public RepositorySyncBuilder(@Nonnull String url, @Nonnull String credentialsId) {
     this.url = url;
@@ -100,8 +105,6 @@ public class RepositorySyncBuilder extends Builder implements SimpleBuildStep {
   public void setForce(boolean force) {
     this.force = force;
   }
-
-
 
   private GitSCM findFirst(@Nonnull List<SCM> list, @Nonnull PrintStream log) throws AbortException {
 
@@ -165,8 +168,8 @@ public class RepositorySyncBuilder extends Builder implements SimpleBuildStep {
       client.push().to(new URIish(url)).ref(sha1 + ":refs/heads/" + branch).force(isForce()).execute();
     } catch (URISyntaxException e) {
       throw new AbortException(Messages.RepositorySyncBuilder_error_invalidRemoteRepository(url));
-    } catch (GitException | InterruptedException ex) {
-      throw new AbortException(Messages.RepositorySyncBuilder_error_pushFailed(ex.getMessage()));
+    } catch (GitException | InterruptedException e) {
+      throw new AbortException(Messages.RepositorySyncBuilder_error_pushFailed(e.getLocalizedMessage()));
     }
   }
 
@@ -230,7 +233,9 @@ public class RepositorySyncBuilder extends Builder implements SimpleBuildStep {
     }
 
     @Override
-    public boolean isApplicable(Class<? extends AbstractProject> jobType) { return true; }
+    public boolean isApplicable(Class<? extends AbstractProject> jobType) {
+      return true;
+    }
 
     @Nonnull
     @Override

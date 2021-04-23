@@ -49,7 +49,7 @@ public class ConfigAsCodeTest {
   @Test
   @ConfiguredWithCode("configuration-as-code.yaml")
   public void shouldSupportConfigurationAsCode() {
-    AdobeIOConfig aioconfig = AdobeIOConfig.all().get(AdobeIOConfig.class);
+    AdobeIOConfig aioconfig = AdobeIOConfig.configuration();
 
     assertEquals("Configurations were loaded", 2, aioconfig.getProjectConfigs().size());
 
@@ -77,7 +77,7 @@ public class ConfigAsCodeTest {
   @Test
   @ConfiguredWithCode("configuration-as-code.yaml")
   public void exportConfiguration() throws Exception {
-    AdobeIOConfig aioconfig = AdobeIOConfig.all().get(AdobeIOConfig.class);
+    AdobeIOConfig aioconfig = AdobeIOConfig.configuration();
     ConfiguratorRegistry registry = ConfiguratorRegistry.get();
     ConfigurationContext context = new ConfigurationContext(registry);
     Configurator<AdobeIOConfig> configurator = context.lookupOrFail(AdobeIOConfig.class);

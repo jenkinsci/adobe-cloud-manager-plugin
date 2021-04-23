@@ -64,3 +64,6 @@ reports/
 # Jenkins local runs
 work/
 *.log
+
+# JEnv
+.java-version

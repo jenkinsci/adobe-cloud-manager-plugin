@@ -30,14 +30,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.charset.Charset;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.PrivateKey;
-import java.security.PublicKey;
-import java.util.ArrayList;
-import java.util.Base64;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -46,19 +39,11 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 
-import com.cloudbees.plugins.credentials.Credentials;
-import com.cloudbees.plugins.credentials.CredentialsProvider;
-import com.cloudbees.plugins.credentials.CredentialsScope;
-import com.cloudbees.plugins.credentials.CredentialsStore;
-import com.cloudbees.plugins.credentials.SecretBytes;
-import com.cloudbees.plugins.credentials.domains.Domain;
-import com.cloudbees.plugins.credentials.domains.DomainSpecification;
-import com.cloudbees.plugins.credentials.domains.HostnameSpecification;
 import com.gargoylesoftware.htmlunit.HttpMethod;
 import com.gargoylesoftware.htmlunit.Page;
 import com.gargoylesoftware.htmlunit.WebRequest;
 import hudson.security.GlobalMatrixAuthorizationStrategy;
-import hudson.util.Secret;
+import io.jenkins.plugin.adobe.cloudmanager.test.TestHelper;
 import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOProjectConfig;
 import jenkins.model.Jenkins;
 import org.eclipse.jetty.server.Server;
@@ -66,14 +51,14 @@ import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlet.DefaultServlet;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
-import org.jenkinsci.plugins.plaincredentials.impl.FileCredentialsImpl;
-import org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.For;
 import org.jvnet.hudson.test.JenkinsRule;
 import static org.junit.Assert.*;
+import static io.jenkins.plugin.adobe.cloudmanager.test.TestHelper.*;
 
 /*
   Modeled after GitHubServerConfigIntegrationTest.
@@ -81,21 +66,22 @@ import static org.junit.Assert.*;
 @For(AdobeIOProjectConfig.class)
 public class AdobeIOProjectConfigIntegrationTest {
 
-  private final String clientSecret = "Client Secret";
   @Rule
   public JenkinsRule rule = new JenkinsRule();
+
   private Server server;
   private AttackerServlet attackerServlet;
   private String attackerUrl;
-  private String clientSecretCredId = "client-secret";
-  private String privateKeyCredId = "private-key";
-  private PrivateKey privateKey;
-  private PublicKey publicKey;
 
   @Before
-  public void setup() throws Exception {
+  public void before() throws Exception {
     setupAttacker();
-    createKeys();
+    TestHelper.setupAdobeIOConfigs(rule.jenkins);
+  }
+
+  @After
+  public void after() throws Exception {
+    server.stop();
   }
 
   private void setupAttacker() throws Exception {
@@ -115,33 +101,9 @@ public class AdobeIOProjectConfigIntegrationTest {
     this.attackerUrl = "http://" + host + ":" + connector.getLocalPort();
   }
 
-  private void createKeys() throws Exception {
-    KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
-    kpg.initialize(2048);
-    KeyPair kp = kpg.generateKeyPair();
-    privateKey = kp.getPrivate();
-    publicKey = kp.getPublic();
-  }
-
-  private void setupCredentials() throws Exception {
-    CredentialsStore store = CredentialsProvider.lookupStores(rule.jenkins).iterator().next();
-    DomainSpecification ds = new HostnameSpecification(AdobeIOProjectConfig.ADOBE_IO_DOMAIN, null);
-    List<DomainSpecification> specifications = new ArrayList<>();
-    specifications.add(ds);
-    Domain domain = new Domain("AdobeIO", null, specifications);
-    store.addDomain(domain);
-
-    Credentials credentials = new StringCredentialsImpl(CredentialsScope.SYSTEM, clientSecretCredId, "", Secret.fromString(clientSecret));
-    store.addCredentials(domain, credentials);
-
-    String pk = Base64.getEncoder().encodeToString(privateKey.getEncoded());
-    credentials = new FileCredentialsImpl(CredentialsScope.SYSTEM, privateKeyCredId, "", "private.key", SecretBytes.fromBytes(pk.getBytes()));
-    store.addCredentials(domain, credentials);
-  }
-
   @Test
   public void shouldNotAllow_CredentialsLeakage_usingVerifyCredentials() throws Exception {
-    setupCredentials();
+    TestHelper.setupCredentials(rule.jenkins);
     final URL url = new URL(
         rule.getURL() +
             "descriptorByName/io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOProjectConfig/verifyCredentials?" +
@@ -149,8 +111,8 @@ public class AdobeIOProjectConfigIntegrationTest {
             "&imsOrganizationId=imsOrganizationId" +
             "&technicalAccountId=technicalAccountId" +
             "&clientId=clientId" +
-            "&clientSecretCredentialsId=" + clientSecretCredId +
-            "&privateKeyCredentialsId=" + privateKeyCredId
+            "&clientSecretCredentialsId=" +  CLIENT_SECRET_CRED_ID +
+            "&privateKeyCredentialsId=" + PRIVATE_KEY_CRED_ID
     );
 
     rule.jenkins.setCrumbIssuer(null);
@@ -178,7 +140,7 @@ public class AdobeIOProjectConfigIntegrationTest {
       Page page = wc.getPage(new WebRequest(url, HttpMethod.POST));
       assertEquals(200, page.getWebResponse().getStatusCode());
       assertTrue(StringUtils.isNotEmpty(attackerServlet.clientSecret));
-      assertEquals(clientSecret, attackerServlet.clientSecret);
+      assertEquals(CLIENT_SECRET, attackerServlet.clientSecret);
       attackerServlet.clientSecret = null;
     }
     { // Admin Must use POST

@@ -26,7 +26,11 @@ SOFTWARE.
 
  */
 
+import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
+import java.security.spec.InvalidKeySpecException;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
@@ -42,6 +46,7 @@ import hudson.model.Descriptor;
 import hudson.security.ACL;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
+import hudson.util.Secret;
 import io.adobe.cloudmanager.AdobeClientCredentials;
 import io.adobe.cloudmanager.IdentityManagementApi;
 import io.adobe.cloudmanager.IdentityManagementApiException;
@@ -168,6 +173,31 @@ public class AdobeIOProjectConfig extends AbstractDescribableImpl<AdobeIOProject
   @DataBoundSetter
   public void setValidateSignatures(boolean validateSignatures) {
     this.validateSignatures = validateSignatures;
+  }
+
+  /**
+   * Attempts to authenticate to the Adobe IO project and return an Access Token.
+   *
+   * @return an access token or {@code null} if authentication fails
+   */
+  @CheckForNull
+  public Secret authenticate() {
+    try {
+      PrivateKey pk = AdobeClientCredentials.getKeyFromPem(CredentialsUtil.privateKeyFor(privateKeyCredentialsId).get());
+      AdobeClientCredentials creds = new AdobeClientCredentials(imsOrganizationId,
+          technicalAccountId,
+          clientId,
+          CredentialsUtil.clientSecretFor(clientSecretCredentialsId).get(),
+          pk);
+      return Secret.fromString(IdentityManagementApi.create(apiUrl).authenticate(creds));
+    } catch (IOException| NoSuchAlgorithmException|InvalidKeySpecException e) {
+      LOGGER.error(Messages.AdobeIOProjectConfig_errors_privateKeyError(privateKeyCredentialsId));
+    } catch (NoSuchElementException e) {
+      LOGGER.error(Messages.AdobeIOProjectConfig_errors_unresolvableCredentials());
+    } catch (IdentityManagementApiException e) {
+      LOGGER.error(Messages.AdobeIOProjectConfig_errors_authenticationError(e.getLocalizedMessage()));
+    }
+    return null;
   }
 
   /**
@@ -364,7 +394,7 @@ public class AdobeIOProjectConfig extends AbstractDescribableImpl<AdobeIOProject
       PrivateKey pk;
       try {
         pk = AdobeClientCredentials.getKeyFromPem(privateKey.get());
-      } catch (Exception e) {
+      } catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException e) {
         return FormValidation.error(
             Messages.AdobeIOProjectConfig_DescriptorImpl_errors_unresolvablePrivateKey(privateKeyCredentialsId));
       }

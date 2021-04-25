@@ -30,6 +30,7 @@ import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
@@ -57,19 +58,25 @@ public class TestHelper {
   public static final String TECH_ACCT_ID = "1234567890abcdef0987654321@techacct.adobe.com";
   public static final String CLIENT_SECRET = "Client Secret";
   public static PrivateKey privateKey;
+  public static PublicKey publicKey;
   public static final String CLIENT_SECRET_CRED_ID = "client-secret";
   public static final String PRIVATE_KEY_CRED_ID = "private-key";
+  public static final String PUBLIC_KEY_CRED_ID = "private-key";
 
   public static final String ACCESS_TOKEN = "Secret Access Token";
 
   public static List<AdobeIOProjectConfig> AIO_PROJECT_CONFIGS;
 
+  public static Domain aioDomain;
+
   static {
     try {
+
       KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
       kpg.initialize(2048);
       KeyPair kp = kpg.generateKeyPair();
       privateKey = kp.getPrivate();
+      publicKey = kp.getPublic();
 
       AIO_PROJECT_CONFIGS = new ArrayList<>();
       AdobeIOProjectConfig config = new AdobeIOProjectConfig();
@@ -86,6 +93,12 @@ public class TestHelper {
       config.setName("Another AdobeIO Project");
       config.setImsOrganizationId("IMS Org");
       AIO_PROJECT_CONFIGS.add(config);
+      DomainSpecification ds = new HostnameSpecification(AdobeIOProjectConfig.ADOBE_IO_DOMAIN, null);
+
+      List<DomainSpecification> specifications = new ArrayList<>();
+      specifications.add(ds);
+      aioDomain = new Domain("AdobeIO", null, specifications);
+
     } catch (NoSuchAlgorithmException e) {
       e.printStackTrace();
     }
@@ -99,17 +112,17 @@ public class TestHelper {
 
   public static void setupCredentials(Jenkins jenkins) throws Exception {
     CredentialsStore store = CredentialsProvider.lookupStores(jenkins).iterator().next();
-    DomainSpecification ds = new HostnameSpecification(AdobeIOProjectConfig.ADOBE_IO_DOMAIN, null);
-    List<DomainSpecification> specifications = new ArrayList<>();
-    specifications.add(ds);
-    Domain domain = new Domain("AdobeIO", null, specifications);
-    store.addDomain(domain);
+    store.addDomain(aioDomain);
 
     Credentials credentials = new StringCredentialsImpl(CredentialsScope.SYSTEM, CLIENT_SECRET_CRED_ID, "", Secret.fromString(CLIENT_SECRET));
-    store.addCredentials(domain, credentials);
+    store.addCredentials(aioDomain, credentials);
 
     String pk = Base64.getEncoder().encodeToString(privateKey.getEncoded());
     credentials = new FileCredentialsImpl(CredentialsScope.SYSTEM, PRIVATE_KEY_CRED_ID, "", "private.key", SecretBytes.fromBytes(pk.getBytes()));
-    store.addCredentials(domain, credentials);
+    store.addCredentials(aioDomain, credentials);
+
+    pk = Base64.getEncoder().encodeToString(publicKey.getEncoded());
+    credentials = new FileCredentialsImpl(CredentialsScope.SYSTEM, PUBLIC_KEY_CRED_ID, "", "public.key", SecretBytes.fromBytes(pk.getBytes()));
+    store.addCredentials(aioDomain, credentials);
   }
 }

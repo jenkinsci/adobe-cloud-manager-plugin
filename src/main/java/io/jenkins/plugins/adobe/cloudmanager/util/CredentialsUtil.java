@@ -38,7 +38,6 @@ import org.apache.commons.lang.StringUtils;
 import com.cloudbees.plugins.credentials.Credentials;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
-import com.cloudbees.plugins.credentials.domains.HostnameRequirement;
 import hudson.security.ACL;
 import hudson.util.Secret;
 import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOProjectConfig;
@@ -93,7 +92,7 @@ public class CredentialsUtil {
   @Nonnull
   public static <C extends Credentials> Optional<C> credentialsFor(String credentialsId, Class<C> type) {
     return CredentialsMatchers.filter(
-        CredentialsProvider.lookupCredentials(type, Jenkins.get(), ACL.SYSTEM, Collections.emptyList()),
+        CredentialsProvider.lookupCredentials(type, Jenkins.get(), null, Collections.emptyList()),
         CredentialsMatchers.withId(StringUtils.trimToEmpty(credentialsId))
     ).stream().findFirst();
 
@@ -110,7 +109,7 @@ public class CredentialsUtil {
   @Nonnull
   public static <C extends Credentials> Optional<C> aioScopedCredentialsFor(String credentialsId, Class<C> type) {
     return CredentialsMatchers.filter(
-        CredentialsProvider.lookupCredentials(type, Jenkins.get(), ACL.SYSTEM, new HostnameRequirement(AdobeIOProjectConfig.ADOBE_IO_DOMAIN)),
+        CredentialsProvider.lookupCredentials(type, Jenkins.get(), null, AdobeIOProjectConfig.getAIODomainRequirement()),
         CredentialsMatchers.withId(StringUtils.trimToEmpty(credentialsId))
     ).stream().findFirst();
   }

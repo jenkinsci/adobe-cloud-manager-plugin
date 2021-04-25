@@ -12,10 +12,10 @@ package io.jenkins.plugin.adobe.cloudmanager.config;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,23 +26,12 @@ package io.jenkins.plugin.adobe.cloudmanager.config;
  * #L%
  */
 
-
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.PrivateKey;
-import java.security.PublicKey;
-import java.util.ArrayList;
-import java.util.Base64;
 import java.util.List;
 
 import com.cloudbees.plugins.credentials.Credentials;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.CredentialsStore;
-import com.cloudbees.plugins.credentials.SecretBytes;
-import com.cloudbees.plugins.credentials.domains.Domain;
-import com.cloudbees.plugins.credentials.domains.DomainSpecification;
-import com.cloudbees.plugins.credentials.domains.HostnameSpecification;
 import hudson.util.Secret;
 import io.adobe.cloudmanager.AdobeClientCredentials;
 import io.adobe.cloudmanager.IdentityManagementApi;
@@ -53,102 +42,45 @@ import mockit.Expectations;
 import mockit.Mock;
 import mockit.MockUp;
 import mockit.Mocked;
-import org.jenkinsci.plugins.plaincredentials.impl.FileCredentialsImpl;
+import org.jenkinsci.plugins.plaincredentials.StringCredentials;
 import org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import static io.jenkins.plugin.adobe.cloudmanager.test.TestHelper.*;
 import static org.junit.Assert.*;
 
 public class AdobeIOProjectConfigTest {
 
-
-  private static final String AIO_PROJECT_NAME = "AdobeIO Project";
-  private static final String IMS_ORG_ID = "1234567890@AdobeOrg";
-  private static final String CLIENT_ID = "1234567890abcdef0987654321";
-  private static final String TECH_ACCT_ID = "1234567890abcdef0987654321@techacct.adobe.com";
-  private static final String CLIENT_SECRET = "Client Secret";
-  private static PrivateKey privateKey;
-  private static PublicKey publicKey;
-  private static final String CLIENT_SECRET_CRED_ID = "client-secret";
-  private static final String PRIVATE_KEY_CRED_ID = "private-key";
-  public static final String PUBLIC_KEY_CRED_ID = "public-key";
-
-  private static final String ACCESS_TOKEN = "Secret Access Token";
-
-
+  public static List<AdobeIOProjectConfig> configs;
+  @Rule
+  public JenkinsRule rule = new JenkinsRule();
   @Mocked
   private IdentityManagementApi imApi;
 
-  @Rule
-  public JenkinsRule rule = new JenkinsRule();
-
-  public static List<AdobeIOProjectConfig> configs;
-
-  @BeforeClass
-  public static void beforeClass() throws Exception {
-    KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
-    kpg.initialize(2048);
-    KeyPair kp = kpg.generateKeyPair();
-    privateKey = kp.getPrivate();
-    publicKey = kp.getPublic();
-
-    configs = new ArrayList<>();
-    AdobeIOProjectConfig config = new AdobeIOProjectConfig();
-    config.setName(AIO_PROJECT_NAME);
-    config.setImsOrganizationId(IMS_ORG_ID);
-    config.setClientId(CLIENT_ID);
-    config.setTechnicalAccountId(TECH_ACCT_ID);
-    config.setClientSecretCredentialsId(CLIENT_SECRET_CRED_ID);
-    config.setPrivateKeyCredentialsId(PRIVATE_KEY_CRED_ID);
-    configs.add(config);
-
-    config = new AdobeIOProjectConfig();
-    config.setName("Another AdobeIO Project");
-    config.setImsOrganizationId("IMS Org");
-    configs.add(config);
-  }
+  private AdobeClientCredentials creds = new AdobeClientCredentials(IMS_ORG_ID, TECH_ACCT_ID, CLIENT_ID, CLIENT_SECRET, privateKey);
 
   @Before
   public void before() throws Exception {
     AdobeIOConfig adobeIOConfig = AdobeIOConfig.configuration();
     adobeIOConfig.setProjectConfigs(configs);
-    setupCredentials();
-  }
-
-  private void setupCredentials() throws Exception {
-    CredentialsStore store = CredentialsProvider.lookupStores(rule.jenkins).iterator().next();
-    DomainSpecification ds = new HostnameSpecification(AdobeIOProjectConfig.ADOBE_IO_DOMAIN, null);
-    List<DomainSpecification> specifications = new ArrayList<>();
-    specifications.add(ds);
-    Domain domain = new Domain("AdobeIO", null, specifications);
-    store.addDomain(domain);
-
-    Credentials credentials = new StringCredentialsImpl(CredentialsScope.SYSTEM, CLIENT_SECRET_CRED_ID, "", Secret.fromString(CLIENT_SECRET));
-    store.addCredentials(domain, credentials);
-
-    String pk = Base64.getEncoder().encodeToString(privateKey.getEncoded());
-    credentials = new FileCredentialsImpl(CredentialsScope.SYSTEM, PRIVATE_KEY_CRED_ID, "", "private.key", SecretBytes.fromBytes(pk.getBytes()));
-    store.addCredentials(domain, credentials);
-
-    pk = Base64.getEncoder().encodeToString(publicKey.getEncoded());
-    credentials = new FileCredentialsImpl(CredentialsScope.SYSTEM, PUBLIC_KEY_CRED_ID, "", "public.key", SecretBytes.fromBytes(pk.getBytes()));
-    store.addCredentials(domain, credentials);
+    setupAdobeIOConfigs(rule.jenkins);
+    setupCredentials(rule.jenkins);
   }
 
   @Test
   public void shouldMatchDisplayName() {
-    AdobeIOProjectConfig cfg = new AdobeIOProjectConfig();
-    cfg.setName("Test Name");
-    cfg.setImsOrganizationId("IMS Org Id");
-    assertEquals("Test Name (IMS Org Id)", cfg.getDisplayName());
+    AdobeIOProjectConfig config = new AdobeIOProjectConfig();
+    config.setName("Test Name");
+    config.setImsOrganizationId("IMS Org Id");
+    assertEquals("Test Name (IMS Org Id)", config.getDisplayName());
   }
 
   @Test
   public void authenticateMissingPrivateKey() {
     AdobeIOProjectConfig config = new AdobeIOProjectConfig();
+    config.setName("Test Name");
     config.setPrivateKeyCredentialsId("MISSING");
     Secret result = config.authenticate();
     assertNull(result);
@@ -157,6 +89,7 @@ public class AdobeIOProjectConfigTest {
   @Test
   public void authenticateBadPrivateKey() {
     AdobeIOProjectConfig config = new AdobeIOProjectConfig();
+    config.setName("Test Name");
     config.setPrivateKeyCredentialsId(PUBLIC_KEY_CRED_ID);
     Secret result = config.authenticate();
     assertNull(result);
@@ -165,6 +98,7 @@ public class AdobeIOProjectConfigTest {
   @Test
   public void authenticateMissingClientSecret() {
     AdobeIOProjectConfig config = new AdobeIOProjectConfig();
+    config.setName("Test Name");
     config.setPrivateKeyCredentialsId(PRIVATE_KEY_CRED_ID);
     config.setClientSecretCredentialsId("MISSING");
     Secret result = config.authenticate();
@@ -175,38 +109,120 @@ public class AdobeIOProjectConfigTest {
   public void authenticateApiError() throws Exception {
     new MockUp<IdentityManagementApi>() {
       @Mock
-      public IdentityManagementApi create() { return imApi; }
+      public IdentityManagementApi create(String baseUrl) {
+        assertEquals(AdobeIOProjectConfig.ADOBE_IO_URL, baseUrl);
+        return imApi;
+      }
     };
 
     new Expectations() {{
-      imApi.authenticate(withInstanceOf(AdobeClientCredentials.class));
+      imApi.authenticate(withEqual(creds));
       result = new IdentityManagementApiException("Authentication Failed", null);
     }};
 
-    AdobeIOProjectConfig config = new AdobeIOProjectConfig();
-    config.setPrivateKeyCredentialsId(PRIVATE_KEY_CRED_ID);
-    config.setClientSecretCredentialsId(CLIENT_SECRET_CRED_ID);
-    Secret result = config.authenticate();
+    Secret result = AdobeIOConfig.projectConfigFor(AIO_PROJECT_NAME).authenticate();
     assertNull(result);
   }
 
-
   @Test
-  public void authenticateSuccess() throws Exception {
-    AdobeClientCredentials creds = new AdobeClientCredentials(IMS_ORG_ID, TECH_ACCT_ID, CLIENT_ID, CLIENT_SECRET, privateKey);
+  public void authenticateSuccessNewToken() throws Exception {
 
     new MockUp<IdentityManagementApi>() {
       @Mock
-      public IdentityManagementApi create() { return imApi; }
+      public IdentityManagementApi create(String baseUrl) {
+        assertEquals(AdobeIOProjectConfig.ADOBE_IO_URL, baseUrl);
+        return imApi;
+      }
     };
 
     new Expectations() {{
       imApi.authenticate(withEqual(creds));
       result = ACCESS_TOKEN;
     }};
-
+    String configId = AIO_PROJECT_NAME.replaceAll("[^a-zA-Z0-9_.-]+", "");
     Secret result = AdobeIOConfig.projectConfigFor(AIO_PROJECT_NAME).authenticate();
     assertNotNull(result);
     assertEquals(ACCESS_TOKEN, result.getPlainText());
+    CredentialsStore store = CredentialsProvider.lookupStores(rule.jenkins).iterator().next();
+    List<Credentials> credentialsList = store.getCredentials(aioDomain);
+    Credentials found = credentialsList.stream().filter(c -> ((c instanceof StringCredentials) && configId.equals(((StringCredentials) c).getId()))).findFirst().orElse(null);
+    assertNotNull(found);
+    assertEquals(ACCESS_TOKEN, ((StringCredentials) found).getSecret().getPlainText());
+  }
+
+  @Test
+  public void authenticateSuccessExistingToken() throws Exception {
+    new MockUp<IdentityManagementApi>() {
+      @Mock
+      public IdentityManagementApi create(String baseUrl) {
+        assertEquals(AdobeIOProjectConfig.ADOBE_IO_URL, baseUrl);
+        return imApi;
+      }
+    };
+
+    new Expectations() {{
+      imApi.isValid(withEqual(creds), ACCESS_TOKEN);
+      result = true;
+    }};
+    String configId = AIO_PROJECT_NAME.replaceAll("[^a-zA-Z0-9_.-]+", "");
+    CredentialsStore store = CredentialsProvider.lookupStores(rule.jenkins).iterator().next();
+    store.addCredentials(aioDomain, new StringCredentialsImpl(CredentialsScope.SYSTEM, configId,"", Secret.fromString(ACCESS_TOKEN)));
+    Secret result = AdobeIOConfig.projectConfigFor(AIO_PROJECT_NAME).authenticate();
+    assertNotNull(result);
+    assertEquals(ACCESS_TOKEN, result.getPlainText());
+  }
+
+  @Test
+  public void validateApiError() throws Exception {
+    new MockUp<IdentityManagementApi>() {
+      @Mock
+      public IdentityManagementApi create(String baseUrl) {
+        assertEquals(AdobeIOProjectConfig.ADOBE_IO_URL, baseUrl);
+        return imApi;
+      }
+    };
+
+    new Expectations() {{
+      imApi.isValid(withEqual(creds), ACCESS_TOKEN);
+      result = new IdentityManagementApiException("Authentication Failed", null);
+      imApi.authenticate(withEqual(creds));
+      result = new IdentityManagementApiException("Authentication Failed", null);
+    }};
+    String configId = AIO_PROJECT_NAME.replaceAll("[^a-zA-Z0-9_.-]+", "");
+    CredentialsStore store = CredentialsProvider.lookupStores(rule.jenkins).iterator().next();
+    store.addCredentials(aioDomain, new StringCredentialsImpl(CredentialsScope.SYSTEM, configId,"", Secret.fromString(ACCESS_TOKEN)));
+    Secret result = AdobeIOConfig.projectConfigFor(AIO_PROJECT_NAME).authenticate();
+    assertNull(result);
+  }
+
+  @Test
+  public void authenticateSuccessExpiredToken() throws Exception {
+    String newAccessToken = "New Access Token";
+    new MockUp<IdentityManagementApi>() {
+      @Mock
+      public IdentityManagementApi create(String baseUrl) {
+        assertEquals(AdobeIOProjectConfig.ADOBE_IO_URL, baseUrl);
+        return imApi;
+      }
+    };
+
+    new Expectations() {{
+      imApi.isValid(withEqual(creds), ACCESS_TOKEN);
+      result = false;
+      imApi.authenticate(withEqual(creds));
+      result = newAccessToken;
+    }};
+    String configId = AIO_PROJECT_NAME.replaceAll("[^a-zA-Z0-9_.-]+", "");
+    CredentialsStore store = CredentialsProvider.lookupStores(rule.jenkins).iterator().next();
+    store.addCredentials(aioDomain, new StringCredentialsImpl(CredentialsScope.SYSTEM, configId,"", Secret.fromString(ACCESS_TOKEN)));
+
+    Secret result = AdobeIOConfig.projectConfigFor(AIO_PROJECT_NAME).authenticate();
+    assertNotNull(result);
+    assertEquals(newAccessToken, result.getPlainText());
+    List<Credentials> credentialsList = store.getCredentials(aioDomain);
+    Credentials found = credentialsList.stream().filter(c -> ((c instanceof StringCredentials) && configId.equals(((StringCredentials) c).getId()))).findFirst().orElse(null);
+    assertNotNull(found);
+    assertEquals(newAccessToken, ((StringCredentials) found).getSecret().getPlainText());
+
   }
 }

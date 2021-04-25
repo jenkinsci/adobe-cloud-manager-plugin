@@ -29,7 +29,8 @@ package io.jenkins.plugins.adobe.cloudmanager.builder;
 import java.io.IOException;
 import java.io.PrintStream;
 
-import edu.umd.cs.findbugs.annotations.NonNull;
+import javax.annotation.Nonnull;
+
 import hudson.AbortException;
 import hudson.EnvVars;
 import hudson.Extension;
@@ -52,7 +53,7 @@ public class StartPipelineBuilder extends CloudManagerBuilder {
   }
 
   @Override
-  public void perform(@NonNull Run<?, ?> run, @NonNull EnvVars env, @NonNull TaskListener listener) throws InterruptedException, IOException {
+  public void perform(@Nonnull Run<?, ?> run, @Nonnull EnvVars env, @Nonnull TaskListener listener) throws InterruptedException, IOException {
     CloudManagerApi api = createApi();
     String programId = getProgramId(api);
     String pipelineId = getPipelineId(api, programId);
@@ -74,7 +75,7 @@ public class StartPipelineBuilder extends CloudManagerBuilder {
   @Extension
   public static class DescriptorImpl extends CloudManagerBuilderDescriptor {
 
-    @NonNull
+    @Nonnull
     @Override
     public String getDisplayName() {
       return Messages.StartPipelineBuilder_displayName();

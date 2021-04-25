@@ -12,10 +12,10 @@ package io.jenkins.plugins.adobe.cloudmanager.config;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -37,8 +37,15 @@ import javax.annotation.Nonnull;
 
 import org.apache.commons.lang.StringUtils;
 
+import com.cloudbees.plugins.credentials.Credentials;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
+import com.cloudbees.plugins.credentials.CredentialsProvider;
+import com.cloudbees.plugins.credentials.CredentialsScope;
+import com.cloudbees.plugins.credentials.CredentialsStore;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
+import com.cloudbees.plugins.credentials.domains.Domain;
+import com.cloudbees.plugins.credentials.domains.DomainRequirement;
+import com.cloudbees.plugins.credentials.domains.HostnameRequirement;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import hudson.Extension;
 import hudson.model.AbstractDescribableImpl;
@@ -54,6 +61,7 @@ import io.jenkins.plugins.adobe.cloudmanager.util.CredentialsUtil;
 import jenkins.model.Jenkins;
 import org.jenkinsci.plugins.plaincredentials.FileCredentials;
 import org.jenkinsci.plugins.plaincredentials.StringCredentials;
+import org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.DoNotUse;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -101,6 +109,10 @@ public class AdobeIOProjectConfig extends AbstractDescribableImpl<AdobeIOProject
 
   @DataBoundConstructor
   public AdobeIOProjectConfig() {
+  }
+
+  public static DomainRequirement getAIODomainRequirement() {
+    return new HostnameRequirement(AdobeIOProjectConfig.ADOBE_IO_DOMAIN);
   }
 
   public String getName() {
@@ -183,21 +195,73 @@ public class AdobeIOProjectConfig extends AbstractDescribableImpl<AdobeIOProject
   @CheckForNull
   public Secret authenticate() {
     try {
-      PrivateKey pk = AdobeClientCredentials.getKeyFromPem(CredentialsUtil.privateKeyFor(privateKeyCredentialsId).get());
       AdobeClientCredentials creds = new AdobeClientCredentials(imsOrganizationId,
           technicalAccountId,
           clientId,
           CredentialsUtil.clientSecretFor(clientSecretCredentialsId).get(),
-          pk);
-      return Secret.fromString(IdentityManagementApi.create(apiUrl).authenticate(creds));
-    } catch (IOException| NoSuchAlgorithmException|InvalidKeySpecException e) {
-      LOGGER.error(Messages.AdobeIOProjectConfig_errors_privateKeyError(privateKeyCredentialsId));
+          AdobeClientCredentials.getKeyFromPem(CredentialsUtil.privateKeyFor(privateKeyCredentialsId).get()));
+
+      if (!isValidToken(creds)) {
+        generateNewToken(creds);
+      }
+      return getToken();
     } catch (NoSuchElementException e) {
       LOGGER.error(Messages.AdobeIOProjectConfig_errors_unresolvableCredentials());
+    } catch (IOException e) {
+      LOGGER.error(Messages.AdobeIOProjectConfig_errors_credentialsAccess(e.getLocalizedMessage()));
+    } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+      LOGGER.error(Messages.AdobeIOProjectConfig_errors_privateKeyError(privateKeyCredentialsId));
     } catch (IdentityManagementApiException e) {
       LOGGER.error(Messages.AdobeIOProjectConfig_errors_authenticationError(e.getLocalizedMessage()));
     }
     return null;
+  }
+
+  private boolean isValidToken(AdobeClientCredentials credentials) throws IdentityManagementApiException {
+    Secret token = getToken();
+    if (token != null) {
+      try {
+        return IdentityManagementApi.create(getApiUrl()).isValid(credentials, token.getPlainText());
+      } catch (IdentityManagementApiException e) {
+        LOGGER.warn(Messages.AdobeIOProjectConfig_warn_checkToken(e.getMessage()));
+      }
+    }
+    return false;
+  }
+
+  private void generateNewToken(AdobeClientCredentials credentials) throws IdentityManagementApiException, IOException {
+    Secret token = Secret.fromString(IdentityManagementApi.create(apiUrl).authenticate(credentials));
+
+    CredentialsStore store = null;
+    Domain domain = null;
+    for (CredentialsStore s : CredentialsProvider.lookupStores(Jenkins.get())) {
+      if (s == null) { continue; }
+      domain = s.getDomains().stream().filter(d -> !d.getSpecifications().isEmpty() && d.test(AdobeIOProjectConfig.getAIODomainRequirement())).findFirst().orElse(null);
+      store = s;
+      if (domain != null) {
+        break;
+      }
+    }
+    if (store == null || domain == null) {
+      throw new NoSuchElementException(Messages.AdobeIOProjectConfig_errors_unresolvableCredentials());
+    }
+
+    Optional<StringCredentials> current = CredentialsUtil.aioScopedCredentialsFor(generateCredentialsId(), StringCredentials.class);
+    StringCredentials replacement = new StringCredentialsImpl(CredentialsScope.SYSTEM, generateCredentialsId(), Messages.AdobeIOProjectConfig_accessToken_description(getDisplayName()), token);
+    if (current.isPresent()) {
+      store.updateCredentials(domain, current.get(), replacement);
+    } else {
+      store.addCredentials(domain, replacement);
+    }
+  }
+
+  @CheckForNull
+  private Secret getToken() {
+     return CredentialsUtil.aioScopedCredentialsFor(generateCredentialsId(), StringCredentials.class).map(StringCredentials::getSecret).orElse(null);
+  }
+
+  private String generateCredentialsId() {
+    return getName().replaceAll("[^a-zA-Z0-9_.-]+", "");
   }
 
   /**

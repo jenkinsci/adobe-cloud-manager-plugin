@@ -39,6 +39,7 @@ import hudson.model.TaskListener;
 import io.adobe.cloudmanager.CloudManagerApi;
 import io.adobe.cloudmanager.CloudManagerApiException;
 import io.adobe.cloudmanager.PipelineExecution;
+import io.jenkins.plugins.adobe.cloudmanager.util.CloudManagerBuildData;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.slf4j.Logger;
@@ -60,6 +61,8 @@ public class StartPipelineBuilder extends CloudManagerBuilder {
     try {
       PrintStream log = listener.getLogger();
       PipelineExecution execution = api.startExecution(programId, pipelineId);
+      CloudManagerBuildData data = new CloudManagerBuildData(execution.getProgramId(), execution.getPipelineId(), execution.getId());
+      run.addAction(data);
       log.println(Messages.StartPipelineBuilder_started(execution.getId(), pipeline));
     } catch (CloudManagerApiException e) {
       throw new AbortException(Messages.CloudManagerBuilder_error_CloudManagerApiException(e.getLocalizedMessage()));

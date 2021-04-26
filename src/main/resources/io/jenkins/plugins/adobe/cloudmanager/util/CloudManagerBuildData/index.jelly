@@ -1,0 +1,15 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout">
+    <l:layout title="Adobe Cloud Manager">
+        <j:if test="${it.owningRun != null}">
+            <st:include page="sidepanel" it="${it.owningRun}" optional="true"/>
+        </j:if>
+        <l:main-panel>
+            <h1>${%page.title}</h1>
+
+            <strong>Program</strong>: ${it.programId}
+            <strong>Pipeline</strong>: ${it.pipelineId}
+            <strong>Execution</strong>: ${it.executionId}
+        </l:main-panel>
+    </l:layout>
+</j:jelly>

@@ -41,6 +41,7 @@ import io.adobe.cloudmanager.Program;
 import io.jenkins.plugins.adobe.cloudmanager.builder.Messages;
 import io.jenkins.plugins.adobe.cloudmanager.builder.StartPipelineBuilder;
 import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOProjectConfig;
+import io.jenkins.plugins.adobe.cloudmanager.util.CloudManagerBuildData;
 import mockit.Expectations;
 import mockit.Mock;
 import mockit.MockUp;
@@ -53,6 +54,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import static io.jenkins.plugin.adobe.cloudmanager.test.TestHelper.*;
+import static org.junit.Assert.*;
 
 public class StartPipelineBuilderTest {
 
@@ -142,6 +144,10 @@ public class StartPipelineBuilderTest {
     new Expectations() {{
       api.startExecution(programId, pipelineId);
       result = execution;
+      execution.getProgramId();
+      result = programId;
+      execution.getPipelineId();
+      result = pipelineId;
       execution.getId();
       result = executionId;
     }};
@@ -155,6 +161,9 @@ public class StartPipelineBuilderTest {
         true);
     job.setDefinition(flow);
     QueueTaskFuture<WorkflowRun> run = job.scheduleBuild2(0);
+    CloudManagerBuildData action = run.get().getAction(CloudManagerBuildData.class);
+    assertNotNull(action);
+    assertEquals(new CloudManagerBuildData(programId, pipelineId, executionId), action);
     rule.waitForMessage(Messages.StartPipelineBuilder_started(executionId, pipelineId), run.get());
     rule.assertBuildStatus(Result.SUCCESS, run);
   }

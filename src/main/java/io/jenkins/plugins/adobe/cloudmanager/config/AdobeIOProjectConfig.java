@@ -37,7 +37,6 @@ import javax.annotation.Nonnull;
 
 import org.apache.commons.lang.StringUtils;
 
-import com.cloudbees.plugins.credentials.Credentials;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.CredentialsScope;
@@ -257,11 +256,11 @@ public class AdobeIOProjectConfig extends AbstractDescribableImpl<AdobeIOProject
 
   @CheckForNull
   private Secret getToken() {
-     return CredentialsUtil.aioScopedCredentialsFor(generateCredentialsId(), StringCredentials.class).map(StringCredentials::getSecret).orElse(null);
+    return CredentialsUtil.aioScopedCredentialsFor(generateCredentialsId(), StringCredentials.class).map(StringCredentials::getSecret).orElse(null);
   }
 
   private String generateCredentialsId() {
-    return getName().replaceAll("[^a-zA-Z0-9_.-]+", "");
+    return StringUtils.join(new String[]{ getName(), getClientId() }).replaceAll("[^a-zA-Z0-9_.-]+", "");
   }
 
   /**

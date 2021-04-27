@@ -6,7 +6,7 @@
         </j:if>
         <l:main-panel>
             <h1>${%page.title}</h1>
-
+            <br/>
             <strong>Program</strong>: ${it.programId}
             <strong>Pipeline</strong>: ${it.pipelineId}
             <strong>Execution</strong>: ${it.executionId}

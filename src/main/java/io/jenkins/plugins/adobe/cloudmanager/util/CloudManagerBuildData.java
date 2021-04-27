@@ -4,7 +4,7 @@ package io.jenkins.plugins.adobe.cloudmanager.util;
  * #%L
  * Adobe Cloud Manager Plugin
  * %%
- * Copyright (C) 2020 - 2021
+ * Copyright (C) 2020 - 2021 Adobe Inc.
  * %%
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -28,8 +28,12 @@ package io.jenkins.plugins.adobe.cloudmanager.util;
 
 import java.io.Serializable;
 
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import hudson.model.Action;
+import hudson.model.Run;
 import lombok.Data;
+import org.kohsuke.stapler.Stapler;
+import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.export.ExportedBean;
 
 @Data
@@ -64,5 +68,14 @@ public class CloudManagerBuildData implements Action, Serializable, Cloneable {
   @Override
   public String getUrlName() {
     return "adobe-cloud-manager-" + programId + pipelineId + executionId;
+  }
+
+  @CheckForNull
+  public Run<?,?> getOwningRun() {
+    StaplerRequest req = Stapler.getCurrentRequest();
+    if (req == null) {
+      return null;
+    }
+    return req.findAncestorObject(Run.class);
   }
 }

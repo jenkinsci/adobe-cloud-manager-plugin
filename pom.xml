@@ -319,6 +319,7 @@
                             <failOnNotUptodateHeader>true</failOnNotUptodateHeader>
                             <excludes>
                                 **/*.json,
+                                **/*.groovy,
                                 **/*.properties,
                                 **/localizer/**
                             </excludes>

@@ -205,13 +205,13 @@ public class AdobeIOProjectConfig extends AbstractDescribableImpl<AdobeIOProject
       }
       return getToken();
     } catch (NoSuchElementException e) {
-      LOGGER.error(Messages.AdobeIOProjectConfig_errors_unresolvableCredentials());
+      LOGGER.error(Messages.AdobeIOProjectConfig_error_unresolvableCredentials());
     } catch (IOException e) {
-      LOGGER.error(Messages.AdobeIOProjectConfig_errors_credentialsAccess(e.getLocalizedMessage()));
+      LOGGER.error(Messages.AdobeIOProjectConfig_error_credentialsAccess(e.getLocalizedMessage()));
     } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
-      LOGGER.error(Messages.AdobeIOProjectConfig_errors_privateKeyError(privateKeyCredentialsId));
+      LOGGER.error(Messages.AdobeIOProjectConfig_error_privateKeyError(privateKeyCredentialsId));
     } catch (IdentityManagementApiException e) {
-      LOGGER.error(Messages.AdobeIOProjectConfig_errors_authenticationError(e.getLocalizedMessage()));
+      LOGGER.error(Messages.AdobeIOProjectConfig_error_authenticationError(e.getLocalizedMessage()));
     }
     return null;
   }
@@ -242,7 +242,7 @@ public class AdobeIOProjectConfig extends AbstractDescribableImpl<AdobeIOProject
       }
     }
     if (store == null || domain == null) {
-      throw new NoSuchElementException(Messages.AdobeIOProjectConfig_errors_unresolvableCredentials());
+      throw new NoSuchElementException(Messages.AdobeIOProjectConfig_error_unresolvableCredentials());
     }
 
     Optional<StringCredentials> current = CredentialsUtil.aioScopedCredentialsFor(generateCredentialsId(), StringCredentials.class);
@@ -294,7 +294,7 @@ public class AdobeIOProjectConfig extends AbstractDescribableImpl<AdobeIOProject
     @SuppressWarnings("unused")
     public FormValidation doCheckName(@QueryParameter String name) {
       if (StringUtils.isBlank(name)) {
-        return FormValidation.error(Messages.AdobeIOProjectConfig_DescriptorImpl_errors_missingName());
+        return FormValidation.error(Messages.AdobeIOProjectConfig_DescriptorImpl_error_missingName());
       }
       return FormValidation.ok();
     }
@@ -308,7 +308,7 @@ public class AdobeIOProjectConfig extends AbstractDescribableImpl<AdobeIOProject
     @SuppressWarnings("unused")
     public FormValidation doCheckClientId(@QueryParameter String clientId) {
       if (StringUtils.isBlank(clientId)) {
-        return FormValidation.error(Messages.AdobeIOProjectConfig_DescriptorImpl_errors_missingClientId());
+        return FormValidation.error(Messages.AdobeIOProjectConfig_DescriptorImpl_error_missingClientId());
       }
       return FormValidation.ok();
     }
@@ -322,7 +322,7 @@ public class AdobeIOProjectConfig extends AbstractDescribableImpl<AdobeIOProject
     @SuppressWarnings("unused")
     public FormValidation doCheckImsOrganizationId(@QueryParameter String imsOrganizationId) {
       if (StringUtils.isBlank(imsOrganizationId)) {
-        return FormValidation.error(Messages.AdobeIOProjectConfig_DescriptorImpl_errors_missingImsOrg());
+        return FormValidation.error(Messages.AdobeIOProjectConfig_DescriptorImpl_error_missingImsOrg());
       }
       return FormValidation.ok();
     }
@@ -336,7 +336,7 @@ public class AdobeIOProjectConfig extends AbstractDescribableImpl<AdobeIOProject
     @SuppressWarnings("unused")
     public FormValidation doCheckTechnicalAccountId(@QueryParameter String technicalAccountId) {
       if (StringUtils.isBlank(technicalAccountId)) {
-        return FormValidation.error(Messages.AdobeIOProjectConfig_DescriptorImpl_errors_missingTechnicalAccountId());
+        return FormValidation.error(Messages.AdobeIOProjectConfig_DescriptorImpl_error_missingTechnicalAccountId());
       }
       return FormValidation.ok();
     }
@@ -350,11 +350,11 @@ public class AdobeIOProjectConfig extends AbstractDescribableImpl<AdobeIOProject
     @SuppressWarnings("unused")
     public FormValidation doCheckClientSecretCredentialsId(@QueryParameter String clientSecretCredentialsId) {
       if (StringUtils.isBlank(clientSecretCredentialsId)) {
-        return FormValidation.error(Messages.AdobeIOProjectConfig_DescriptorImpl_errors_missingClientSecret());
+        return FormValidation.error(Messages.AdobeIOProjectConfig_DescriptorImpl_error_missingClientSecret());
       }
       Optional<String> clientSecret = CredentialsUtil.clientSecretFor(clientSecretCredentialsId);
       if (!clientSecret.isPresent()) {
-        return FormValidation.error(Messages.AdobeIOProjectConfig_DescriptorImpl_errors_unresolvableClientSecret(clientSecretCredentialsId));
+        return FormValidation.error(Messages.AdobeIOProjectConfig_DescriptorImpl_error_unresolvableClientSecret(clientSecretCredentialsId));
       }
       return FormValidation.ok();
     }
@@ -368,11 +368,11 @@ public class AdobeIOProjectConfig extends AbstractDescribableImpl<AdobeIOProject
     @SuppressWarnings("unused")
     public FormValidation doCheckPrivateKeyCredentialsId(@QueryParameter String privateKeyCredentialsId) {
       if (StringUtils.isBlank(privateKeyCredentialsId)) {
-        return FormValidation.error(Messages.AdobeIOProjectConfig_DescriptorImpl_errors_missingPrivateKey());
+        return FormValidation.error(Messages.AdobeIOProjectConfig_DescriptorImpl_error_missingPrivateKey());
       }
       Optional<String> privateKey = CredentialsUtil.privateKeyFor(privateKeyCredentialsId);
       if (!privateKey.isPresent()) {
-        return FormValidation.error(Messages.AdobeIOProjectConfig_DescriptorImpl_errors_unresolvablePrivateKey(privateKeyCredentialsId));
+        return FormValidation.error(Messages.AdobeIOProjectConfig_DescriptorImpl_error_unresolvablePrivateKey(privateKeyCredentialsId));
       }
       return FormValidation.ok();
     }
@@ -445,13 +445,13 @@ public class AdobeIOProjectConfig extends AbstractDescribableImpl<AdobeIOProject
       Optional<String> clientSecret = CredentialsUtil.clientSecretFor(clientSecretCredentialsId);
       if (!clientSecret.isPresent()) {
         return FormValidation.error(
-            Messages.AdobeIOProjectConfig_DescriptorImpl_errors_unresolvableClientSecret(clientSecretCredentialsId));
+            Messages.AdobeIOProjectConfig_DescriptorImpl_error_unresolvableClientSecret(clientSecretCredentialsId));
       }
 
       Optional<String> privateKey = CredentialsUtil.privateKeyFor(privateKeyCredentialsId);
       if (!privateKey.isPresent()) {
         return FormValidation.error(
-            Messages.AdobeIOProjectConfig_DescriptorImpl_errors_unresolvablePrivateKey(privateKeyCredentialsId));
+            Messages.AdobeIOProjectConfig_DescriptorImpl_error_unresolvablePrivateKey(privateKeyCredentialsId));
       }
 
       PrivateKey pk;
@@ -459,7 +459,7 @@ public class AdobeIOProjectConfig extends AbstractDescribableImpl<AdobeIOProject
         pk = AdobeClientCredentials.getKeyFromPem(privateKey.get());
       } catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException e) {
         return FormValidation.error(
-            Messages.AdobeIOProjectConfig_DescriptorImpl_errors_unresolvablePrivateKey(privateKeyCredentialsId));
+            Messages.AdobeIOProjectConfig_DescriptorImpl_error_unresolvablePrivateKey(privateKeyCredentialsId));
       }
       AdobeClientCredentials creds = new AdobeClientCredentials(imsOrganizationId, technicalAccountId, clientId, clientSecret.get(), pk);
 
@@ -469,7 +469,7 @@ public class AdobeIOProjectConfig extends AbstractDescribableImpl<AdobeIOProject
             .AdobeIOProjectConfig_DescriptorImpl_validate_credentialsVerified(imsOrganizationId));
       } catch (IdentityManagementApiException e) {
         return FormValidation.error(
-            Messages.AdobeIOProjectConfig_DescriptorImpl_errors_credentialValidationFailed());
+            Messages.AdobeIOProjectConfig_DescriptorImpl_error_credentialValidationFailed());
       }
     }
   }

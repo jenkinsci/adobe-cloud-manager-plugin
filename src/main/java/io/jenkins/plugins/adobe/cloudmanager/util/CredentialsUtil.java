@@ -75,7 +75,7 @@ public class CredentialsUtil {
           try {
             return IOUtils.toString(creds.getContent(), Charset.defaultCharset());
           } catch (IOException e) {
-            Messages.AdobeIOProjectConfig_errors_privateKeyError(credentialsId);
+            Messages.AdobeIOProjectConfig_error_privateKeyError(credentialsId);
             return null;
           }
         });

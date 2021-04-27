@@ -160,11 +160,11 @@ public class StartPipelineBuilderTest {
             "}",
         true);
     job.setDefinition(flow);
-    QueueTaskFuture<WorkflowRun> run = job.scheduleBuild2(0);
-    CloudManagerBuildData action = run.get().getAction(CloudManagerBuildData.class);
-    assertNotNull(action);
-    assertEquals(new CloudManagerBuildData(programId, pipelineId, executionId), action);
-    rule.waitForMessage(Messages.StartPipelineBuilder_started(executionId, pipelineId), run.get());
+    WorkflowRun run = job.scheduleBuild2(0).get();
+    rule.waitForMessage(Messages.StartPipelineBuilder_started(executionId, pipelineId), run);
     rule.assertBuildStatus(Result.SUCCESS, run);
+    CloudManagerBuildData action = run.getAction(CloudManagerBuildData.class);
+    assertNotNull(action);
+    assertEquals(new CloudManagerBuildData(AIO_PROJECT_NAME, programId, pipelineId, executionId), action);
   }
 }

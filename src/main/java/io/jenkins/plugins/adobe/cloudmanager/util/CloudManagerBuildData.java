@@ -30,15 +30,13 @@ import java.io.Serializable;
 
 import hudson.model.Action;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
 import org.kohsuke.stapler.export.ExportedBean;
 
 @Data
 @ExportedBean(defaultVisibility = 1500)
 public class CloudManagerBuildData implements Action, Serializable, Cloneable {
 
-
+  private String aioProjectName;
   private String programId;
   private String pipelineId;
   private String executionId;
@@ -46,7 +44,8 @@ public class CloudManagerBuildData implements Action, Serializable, Cloneable {
   public CloudManagerBuildData() {
   }
 
-  public CloudManagerBuildData(String programId, String pipelineId, String executionId) {
+  public CloudManagerBuildData(String aioProjectName, String programId, String pipelineId, String executionId) {
+    this.aioProjectName = aioProjectName;
     this.programId = programId;
     this.pipelineId = pipelineId;
     this.executionId = executionId;

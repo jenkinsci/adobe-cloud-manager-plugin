@@ -76,7 +76,7 @@ public class AdobeIOConfig extends GlobalConfiguration {
   }
 
   @CheckForNull
-  public static AdobeIOProjectConfig projectConfigFor(String name) {
+  public static AdobeIOProjectConfig projectConfigFor(@Nonnull String name) {
     return AdobeIOConfig.configuration().getProjectConfigs()
         .stream()
         .filter(c -> StringUtils.equals(name, c.getName()))

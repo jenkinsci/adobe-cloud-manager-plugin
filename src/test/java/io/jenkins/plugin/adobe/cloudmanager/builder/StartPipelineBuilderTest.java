@@ -38,6 +38,7 @@ import io.adobe.cloudmanager.CloudManagerApiException;
 import io.adobe.cloudmanager.Pipeline;
 import io.adobe.cloudmanager.PipelineExecution;
 import io.adobe.cloudmanager.Program;
+import io.jenkins.plugin.adobe.cloudmanager.util.DescriptorHelperTest;
 import io.jenkins.plugins.adobe.cloudmanager.builder.Messages;
 import io.jenkins.plugins.adobe.cloudmanager.builder.StartPipelineBuilder;
 import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOProjectConfig;
@@ -92,10 +93,10 @@ public class StartPipelineBuilderTest {
     setupAdobeIOConfigs(rule.jenkins);
     AdobeIOProjectConfig aioConfig = AIO_PROJECT_CONFIGS.get(0);
     List<Program> programs = new ArrayList<>();
-    programs.add(new CloudManagerBuilderTest.ProgramImpl("1", "Program"));
+    programs.add(new DescriptorHelperTest.ProgramImpl("1", "Program"));
 
     List<Pipeline> pipelines = new ArrayList<>();
-    pipelines.add(new CloudManagerBuilderTest.PipelineImpl("2", "Pipeline"));
+    pipelines.add(new DescriptorHelperTest.PipelineImpl("2", "Pipeline"));
 
     new Expectations(aioConfig) {{
       aioConfig.authenticate();

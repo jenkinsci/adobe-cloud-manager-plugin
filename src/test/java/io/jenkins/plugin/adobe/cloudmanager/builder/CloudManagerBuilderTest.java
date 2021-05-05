@@ -33,6 +33,7 @@ import java.util.List;
 import org.apache.commons.lang.StringUtils;
 
 import hudson.AbortException;
+import hudson.util.ListBoxModel;
 import hudson.util.Secret;
 import io.adobe.cloudmanager.CloudManagerApi;
 import io.adobe.cloudmanager.CloudManagerApiException;
@@ -42,12 +43,16 @@ import io.adobe.cloudmanager.PipelineUpdate;
 import io.adobe.cloudmanager.Program;
 import io.adobe.cloudmanager.Variable;
 import io.jenkins.plugin.adobe.cloudmanager.test.TestHelper;
+import io.jenkins.plugin.adobe.cloudmanager.util.DescriptorHelperTest;
 import io.jenkins.plugins.adobe.cloudmanager.builder.CloudManagerBuilder;
 import io.jenkins.plugins.adobe.cloudmanager.builder.Messages;
 import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOConfig;
 import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOProjectConfig;
+import io.jenkins.plugins.adobe.cloudmanager.util.DescriptorHelper;
 import mockit.Expectations;
 import mockit.Injectable;
+import mockit.Mock;
+import mockit.MockUp;
 import mockit.Mocked;
 import mockit.Tested;
 import org.junit.BeforeClass;
@@ -85,9 +90,9 @@ public class CloudManagerBuilderTest {
 
   @BeforeClass
   public static void beforeClass() {
-    programs.add(new ProgramImpl("1", "Another Program"));
-    programs.add(new ProgramImpl(PROGRAM_ID, "Program Name"));
-    pipelines.add(new PipelineImpl(PIPELINE_ID, "Pipeline Name"));
+    programs.add(new DescriptorHelperTest.ProgramImpl("1", "Another Program"));
+    programs.add(new DescriptorHelperTest.ProgramImpl(PROGRAM_ID, "Program Name"));
+    pipelines.add(new DescriptorHelperTest.PipelineImpl(PIPELINE_ID, "Pipeline Name"));
   }
 
   @Test
@@ -200,99 +205,4 @@ public class CloudManagerBuilderTest {
     assertEquals(PIPELINE_ID, localBuilder.getPipelineId(api, PROGRAM_ID));
   }
 
-  public static class ProgramImpl implements Program {
-
-    private final String id;
-    private final String name;
-
-    public ProgramImpl(String id, String name) {
-      this.id = id;
-      this.name = name;
-    }
-    @Override
-    public String getId() {
-      return id;
-    }
-
-    @Override
-    public String getName() {
-      return name;
-    }
-
-    @Override
-    public String getSelfLink() {
-      return null;
-    }
-
-    @Override
-    public void delete() throws CloudManagerApiException {
-
-    }
-  }
-
-  public static class PipelineImpl implements Pipeline {
-
-    private final String id;
-    private final String name;
-
-    public PipelineImpl(String id, String name) {
-      this.id = id;
-      this.name = name;
-    }
-
-    @Override
-    public String getId() {
-      return id;
-    }
-
-    @Override
-    public String getProgramId() {
-      return null;
-    }
-
-    @Override
-    public String getName() {
-      return name;
-    }
-
-    @Override
-    public Status getStatusState() {
-      return null;
-    }
-
-    @Override
-    public PipelineExecution startExecution() throws CloudManagerApiException {
-      return null;
-    }
-
-    @Override
-    public PipelineExecution getExecution(String executionId) throws CloudManagerApiException {
-      return null;
-    }
-
-    @Override
-    public Pipeline update(PipelineUpdate update) throws CloudManagerApiException {
-      return null;
-    }
-
-    @Override
-    public void delete() throws CloudManagerApiException {
-
-    }
-
-    @Override
-    public List<Variable> listVariables() throws CloudManagerApiException {
-      return null;
-    }
-
-    @Override
-    public List<Variable> setVariables(Variable... variables) throws CloudManagerApiException {
-      return null;
-    }
-
-    @Override
-    public String getSelfLink() {
-      return null;
-    }
-  }
 }

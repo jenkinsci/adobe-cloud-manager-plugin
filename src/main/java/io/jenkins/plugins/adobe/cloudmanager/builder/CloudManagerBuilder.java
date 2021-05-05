@@ -26,11 +26,7 @@ package io.jenkins.plugins.adobe.cloudmanager.builder;
  * #L%
  */
 
-import java.util.Collections;
-import java.util.List;
 import javax.annotation.Nonnull;
-
-import org.apache.commons.lang3.StringUtils;
 
 import hudson.AbortException;
 import hudson.model.AbstractProject;
@@ -41,9 +37,9 @@ import hudson.util.Secret;
 import io.adobe.cloudmanager.CloudManagerApi;
 import io.adobe.cloudmanager.CloudManagerApiException;
 import io.adobe.cloudmanager.Pipeline;
-import io.adobe.cloudmanager.Program;
 import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOConfig;
 import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOProjectConfig;
+import io.jenkins.plugins.adobe.cloudmanager.util.DescriptorHelper;
 import jenkins.tasks.SimpleBuildStep;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
@@ -185,48 +181,15 @@ public abstract class CloudManagerBuilder extends Builder implements SimpleBuild
     }
 
     public ListBoxModel doFillAioProjectItems() {
-      ListBoxModel lbm = new ListBoxModel();
-      lbm.add(Messages.CloudManagerBuilderDescriptor_defaultListItem(), "");
-      AdobeIOConfig aio = AdobeIOConfig.configuration();
-      for (AdobeIOProjectConfig cfg : aio.getProjectConfigs()) {
-        lbm.add(cfg.getDisplayName(), cfg.getName());
-      }
-      return lbm;
+      return DescriptorHelper.fillAioProjectItems();
     }
 
     public ListBoxModel doFillProgramItems(@QueryParameter String aioProject) {
-      ListBoxModel lbm = new ListBoxModel();
-      lbm.add(Messages.CloudManagerBuilderDescriptor_defaultListItem(), "");
-      try {
-        if (StringUtils.isNotBlank(aioProject)) {
-          CloudManagerApi api = createApi(aioProject);
-          List<Program> programs = api == null ? Collections.emptyList() : api.listPrograms();
-          for (Program p : programs) {
-            lbm.add(p.getName(), p.getId());
-          }
-        }
-      } catch (CloudManagerApiException e) {
-        LOGGER.error(Messages.CloudManagerBuilder_error_CloudManagerApiException(e.getLocalizedMessage()));
-      }
-      return lbm;
+      return DescriptorHelper.fillProgramItems(aioProject);
     }
 
     public ListBoxModel doFillPipelineItems(@QueryParameter String aioProject, @QueryParameter String program) {
-      CloudManagerApi api = createApi(aioProject);
-      ListBoxModel lbm = new ListBoxModel();
-      lbm.add(Messages.CloudManagerBuilderDescriptor_defaultListItem(), "");
-
-      try {
-        if (StringUtils.isNotBlank(program)) {
-          List<Pipeline> pipelines = api == null ? Collections.emptyList() : api.listPipelines(program);
-          for (Pipeline p : pipelines) {
-            lbm.add(p.getName(), p.getId());
-          }
-        }
-      } catch (CloudManagerApiException e) {
-        LOGGER.error(Messages.CloudManagerBuilder_error_CloudManagerApiException(e.getLocalizedMessage()));
-      }
-      return lbm;
+      return DescriptorHelper.fillPipelineItems(aioProject, program);
     }
 
     @Override

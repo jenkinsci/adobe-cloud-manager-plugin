@@ -138,21 +138,21 @@ public class PollPipelineStep extends Step {
 
     private void setupCheck() {
       getContext().saveState();
-      task = Timer.get().schedule(() -> {
+      task = Timer.get().scheduleWithFixedDelay(() -> {
         try {
           AdobeIOProjectConfig aioProject = getAioProject();
           Secret token = getAccessToken(aioProject);
           if (checkExecution(aioProject, token)) {
             getContext().onSuccess(null);
+            task.cancel(true);
             task = null;
-          } else {
-            setupCheck();
           }
         } catch (AbortException e) {
           getContext().onFailure(e);
+          task.cancel(true);
           task = null;
         }
-      }, recurrencePeriod, TimeUnit.MILLISECONDS);
+      }, 0, recurrencePeriod, TimeUnit.MILLISECONDS);
     }
 
     @Nonnull

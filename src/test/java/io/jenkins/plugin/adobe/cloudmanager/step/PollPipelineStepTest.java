@@ -32,7 +32,6 @@ import java.util.concurrent.TimeUnit;
 
 import hudson.Util;
 import hudson.model.Result;
-import hudson.model.queue.QueueTaskFuture;
 import hudson.util.Secret;
 import io.adobe.cloudmanager.CloudManagerApi;
 import io.adobe.cloudmanager.CloudManagerApiException;
@@ -87,7 +86,6 @@ public class PollPipelineStepTest {
   public void buildDataMissingInContext() {
 
     story.then(rule -> {
-
       new MockUp<AdobeIOConfig>() {
         @Mock
         public AdobeIOProjectConfig projectConfigFor(String name) {
@@ -313,16 +311,4 @@ public class PollPipelineStepTest {
       rule.assertBuildStatusSuccess(run);
     });
   }
-
-//  @Test
-//  public void pollWithRestart() {
-//    rule.then(r -> {
-//      WorkflowJob job = r.jenkins.createProject(WorkflowJob.class, "test");
-//      job.setDefinition(new CpsFlowDefinition("semaphore 'poll'; sleep 10", true));
-//      WorkflowRun run = job.scheduleBuild2(0).waitForStart();
-//      SemaphoreStep.waitForStart("start/1", b);
-//      SemaphoreStep.success("start/1", null);
-//      ((CpsFlowExecution) run.getExecution()).waitForSuspension();
-//    });
-//  }
 }

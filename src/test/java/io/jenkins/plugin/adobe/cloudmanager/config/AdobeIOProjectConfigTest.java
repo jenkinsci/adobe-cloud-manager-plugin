@@ -26,7 +26,6 @@ package io.jenkins.plugin.adobe.cloudmanager.config;
  * #L%
  */
 
-import java.util.ArrayList;
 import java.util.List;
 
 import com.cloudbees.plugins.credentials.Credentials;
@@ -37,8 +36,6 @@ import hudson.util.Secret;
 import io.adobe.cloudmanager.AdobeClientCredentials;
 import io.adobe.cloudmanager.IdentityManagementApi;
 import io.adobe.cloudmanager.IdentityManagementApiException;
-import io.adobe.cloudmanager.Program;
-import io.jenkins.plugin.adobe.cloudmanager.builder.CloudManagerBuilderTest;
 import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOConfig;
 import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOProjectConfig;
 import mockit.Expectations;

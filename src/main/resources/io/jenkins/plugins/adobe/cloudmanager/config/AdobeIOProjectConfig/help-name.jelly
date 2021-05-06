@@ -26,5 +26,5 @@
 -->
 <?jelly escape-by-default='true'?>
 <div>
-    ${%name.help}
+    ${%help.text}
 </div>

@@ -26,7 +26,7 @@
 -->
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core">
-    ${%helptext}
+    ${%help.text}
     <br/>
-    <a href="https://www.adobe.io/apis/experienceplatform/events/docs.html#!adobedocs/adobeio-events/master/intro/webhooks_intro.md#authenticating-events">${%helplink}</a>
+    <a href="https://www.adobe.io/apis/experienceplatform/events/docs.html#!adobedocs/adobeio-events/master/intro/webhooks_intro.md#receiving-events-for-users">Adobe IO WebHooks</a>
 </j:jelly>

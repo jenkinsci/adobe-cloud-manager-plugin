@@ -26,5 +26,5 @@
 -->
 <?jelly escape-by-default='true'?>
 <div>
-    ${%apiUrl.help}
+    ${%help.text}
 </div>

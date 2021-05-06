@@ -62,7 +62,6 @@ public class ConfigAsCodeTest {
     assertEquals("Tech Account is correct", "Technical Account Id 1", config.getTechnicalAccountId());
     assertEquals("Client Secret Cred is correct", "Client Secret Credentials Id 1", config.getClientSecretCredentialsId());
     assertEquals("Private Key Cred is correct", "Private Key Credentials Id 1", config.getPrivateKeyCredentialsId());
-    assertTrue("Validate Signatures is correct.", config.isValidateSignatures());
 
     config = aioconfig.getProjectConfigs().get(1);
     assertEquals("Name is correct.", "Test Project 2", config.getName());
@@ -72,7 +71,6 @@ public class ConfigAsCodeTest {
     assertEquals("Tech Account is correct", "Technical Account Id 2", config.getTechnicalAccountId());
     assertEquals("Client Secret Cred is correct", "Client Secret Credentials Id 2", config.getClientSecretCredentialsId());
     assertEquals("Private Key Cred is correct", "Private Key Credentials Id 2", config.getPrivateKeyCredentialsId());
-    assertFalse("Validate Signatures is correct.", config.isValidateSignatures());
   }
 
   @Test

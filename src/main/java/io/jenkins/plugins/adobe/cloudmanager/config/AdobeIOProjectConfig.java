@@ -104,8 +104,6 @@ public class AdobeIOProjectConfig extends AbstractDescribableImpl<AdobeIOProject
   @CheckForNull
   private String privateKeyCredentialsId;
 
-  private boolean validateSignatures = true;
-
   @DataBoundConstructor
   public AdobeIOProjectConfig() {
   }
@@ -175,15 +173,6 @@ public class AdobeIOProjectConfig extends AbstractDescribableImpl<AdobeIOProject
   @DataBoundSetter
   public void setPrivateKeyCredentialsId(@CheckForNull String privateKeyCredentialsId) {
     this.privateKeyCredentialsId = privateKeyCredentialsId;
-  }
-
-  public boolean isValidateSignatures() {
-    return validateSignatures;
-  }
-
-  @DataBoundSetter
-  public void setValidateSignatures(boolean validateSignatures) {
-    this.validateSignatures = validateSignatures;
   }
 
   /**

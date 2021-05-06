@@ -15,4 +15,3 @@ unclassified:
         technicalAccountId: "Technical Account Id 2"
         clientSecretCredentialsId: "Client Secret Credentials Id 2"
         privateKeyCredentialsId: "Private Key Credentials Id 2"
-        validateSignatures: false

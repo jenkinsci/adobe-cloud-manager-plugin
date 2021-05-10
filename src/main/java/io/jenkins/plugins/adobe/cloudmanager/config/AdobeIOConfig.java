@@ -51,6 +51,7 @@ public class AdobeIOConfig extends GlobalConfiguration {
   private static final Logger LOGGER = LoggerFactory.getLogger(AdobeIOConfig.class);
   private static final AdobeIOConfig EMPTY_CONFIG = new AdobeIOConfig(Collections.emptyList());
   private List<AdobeIOProjectConfig> projectConfigs = new ArrayList<>();
+  private boolean webhookEnabled = false;
 
   public AdobeIOConfig() {
     getConfigFile().getXStream().alias("adobe-io-project-config", AdobeIOProjectConfig.class);
@@ -59,6 +60,26 @@ public class AdobeIOConfig extends GlobalConfiguration {
 
   public AdobeIOConfig(@Nonnull List<AdobeIOProjectConfig> projectConfigs) {
     this.projectConfigs = projectConfigs;
+  }
+
+
+  @Nonnull
+  public List<AdobeIOProjectConfig> getProjectConfigs() {
+    return Collections.unmodifiableList(projectConfigs);
+  }
+
+  @DataBoundSetter
+  public void setProjectConfigs(@Nonnull List<AdobeIOProjectConfig> projectConfigs) {
+    this.projectConfigs = projectConfigs;
+  }
+
+  public boolean isWebhookEnabled() {
+    return webhookEnabled;
+  }
+
+  @DataBoundSetter
+  public void setWebhookEnabled(boolean webhookEnabled) {
+    this.webhookEnabled = webhookEnabled;
   }
 
   /**
@@ -104,14 +125,5 @@ public class AdobeIOConfig extends GlobalConfiguration {
     return true;
   }
 
-  @Nonnull
-  public List<AdobeIOProjectConfig> getProjectConfigs() {
-    return Collections.unmodifiableList(projectConfigs);
-  }
-
-  @DataBoundSetter
-  public void setProjectConfigs(@Nonnull List<AdobeIOProjectConfig> projectConfigs) {
-    this.projectConfigs = projectConfigs;
-  }
 
 }

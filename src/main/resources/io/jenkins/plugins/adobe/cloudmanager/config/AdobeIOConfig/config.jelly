@@ -29,7 +29,7 @@
          xmlns:f="/lib/form">
     <f:section title="${%displayName}">
         <f:entry title="${%title}">
-            <f:entry title="${%webhook.title}" field="enableWebHook">
+            <f:entry title="${%webhook.title}" field="webhookEnabled">
                 <f:checkbox default="false" />
             </f:entry>
             <f:block>

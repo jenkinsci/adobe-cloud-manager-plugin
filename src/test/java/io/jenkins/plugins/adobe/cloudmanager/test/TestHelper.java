@@ -106,6 +106,7 @@ public class TestHelper {
 
   public static void setupAdobeIOConfigs(@SuppressWarnings("unused") Jenkins jenkins) {
     AdobeIOConfig adobeIOConfig = AdobeIOConfig.configuration();
+    adobeIOConfig.setWebhookEnabled(true);
     adobeIOConfig.setProjectConfigs(AIO_PROJECT_CONFIGS);
   }
 

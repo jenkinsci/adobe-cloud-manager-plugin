@@ -186,8 +186,8 @@ public class AdobeIOProjectConfig extends AbstractDescribableImpl<AdobeIOProject
       AdobeClientCredentials creds = new AdobeClientCredentials(imsOrganizationId,
           technicalAccountId,
           clientId,
-          CredentialsUtil.clientSecretFor(clientSecretCredentialsId).get(),
-          AdobeClientCredentials.getKeyFromPem(CredentialsUtil.privateKeyFor(privateKeyCredentialsId).get()));
+          CredentialsUtil.clientSecretFor(clientSecretCredentialsId).get().getPlainText(),
+          AdobeClientCredentials.getKeyFromPem(CredentialsUtil.privateKeyFor(privateKeyCredentialsId).get().getPlainText()));
 
       if (!isValidToken(creds)) {
         generateNewToken(creds);
@@ -341,7 +341,7 @@ public class AdobeIOProjectConfig extends AbstractDescribableImpl<AdobeIOProject
       if (StringUtils.isBlank(clientSecretCredentialsId)) {
         return FormValidation.error(Messages.AdobeIOProjectConfig_DescriptorImpl_error_missingClientSecret());
       }
-      Optional<String> clientSecret = CredentialsUtil.clientSecretFor(clientSecretCredentialsId);
+      Optional<Secret> clientSecret = CredentialsUtil.clientSecretFor(clientSecretCredentialsId);
       if (!clientSecret.isPresent()) {
         return FormValidation.error(Messages.AdobeIOProjectConfig_DescriptorImpl_error_unresolvableClientSecret(clientSecretCredentialsId));
       }
@@ -359,7 +359,7 @@ public class AdobeIOProjectConfig extends AbstractDescribableImpl<AdobeIOProject
       if (StringUtils.isBlank(privateKeyCredentialsId)) {
         return FormValidation.error(Messages.AdobeIOProjectConfig_DescriptorImpl_error_missingPrivateKey());
       }
-      Optional<String> privateKey = CredentialsUtil.privateKeyFor(privateKeyCredentialsId);
+      Optional<Secret> privateKey = CredentialsUtil.privateKeyFor(privateKeyCredentialsId);
       if (!privateKey.isPresent()) {
         return FormValidation.error(Messages.AdobeIOProjectConfig_DescriptorImpl_error_unresolvablePrivateKey(privateKeyCredentialsId));
       }
@@ -431,13 +431,13 @@ public class AdobeIOProjectConfig extends AbstractDescribableImpl<AdobeIOProject
         @QueryParameter String privateKeyCredentialsId) {
       Jenkins.get().checkPermission(Jenkins.ADMINISTER);
 
-      Optional<String> clientSecret = CredentialsUtil.clientSecretFor(clientSecretCredentialsId);
+      Optional<Secret> clientSecret = CredentialsUtil.clientSecretFor(clientSecretCredentialsId);
       if (!clientSecret.isPresent()) {
         return FormValidation.error(
             Messages.AdobeIOProjectConfig_DescriptorImpl_error_unresolvableClientSecret(clientSecretCredentialsId));
       }
 
-      Optional<String> privateKey = CredentialsUtil.privateKeyFor(privateKeyCredentialsId);
+      Optional<Secret> privateKey = CredentialsUtil.privateKeyFor(privateKeyCredentialsId);
       if (!privateKey.isPresent()) {
         return FormValidation.error(
             Messages.AdobeIOProjectConfig_DescriptorImpl_error_unresolvablePrivateKey(privateKeyCredentialsId));
@@ -445,12 +445,12 @@ public class AdobeIOProjectConfig extends AbstractDescribableImpl<AdobeIOProject
 
       PrivateKey pk;
       try {
-        pk = AdobeClientCredentials.getKeyFromPem(privateKey.get());
+        pk = AdobeClientCredentials.getKeyFromPem(privateKey.get().getPlainText());
       } catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException e) {
         return FormValidation.error(
             Messages.AdobeIOProjectConfig_DescriptorImpl_error_unresolvablePrivateKey(privateKeyCredentialsId));
       }
-      AdobeClientCredentials creds = new AdobeClientCredentials(imsOrganizationId, technicalAccountId, clientId, clientSecret.get(), pk);
+      AdobeClientCredentials creds = new AdobeClientCredentials(imsOrganizationId, technicalAccountId, clientId, clientSecret.get().getPlainText(), pk);
 
       try {
         IdentityManagementApi.create(apiUrl).authenticate(creds);

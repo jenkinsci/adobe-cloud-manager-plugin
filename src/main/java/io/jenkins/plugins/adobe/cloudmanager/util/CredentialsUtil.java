@@ -58,8 +58,8 @@ public class CredentialsUtil {
    * @return optional string containing the credentials
    */
   @Nonnull
-  public static Optional<String> clientSecretFor(String credentialsId) {
-    return aioScopedCredentialsFor(credentialsId, StringCredentials.class).map(StringCredentials::getSecret).map(Secret::getPlainText);
+  public static Optional<Secret> clientSecretFor(String credentialsId) {
+    return aioScopedCredentialsFor(credentialsId, StringCredentials.class).map(StringCredentials::getSecret);
   }
 
   /**
@@ -69,11 +69,11 @@ public class CredentialsUtil {
    * @return optional String containing the credentials
    */
   @Nonnull
-  public static Optional<String> privateKeyFor(String credentialsId) {
+  public static Optional<Secret> privateKeyFor(String credentialsId) {
     return aioScopedCredentialsFor(credentialsId, FileCredentials.class)
         .map(creds -> {
           try {
-            return IOUtils.toString(creds.getContent(), Charset.defaultCharset());
+            return Secret.fromString(IOUtils.toString(creds.getContent(), Charset.defaultCharset()));
           } catch (IOException e) {
             Messages.AdobeIOProjectConfig_error_privateKeyError(credentialsId);
             return null;

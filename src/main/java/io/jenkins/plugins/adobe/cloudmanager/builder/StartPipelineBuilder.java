@@ -62,6 +62,10 @@ public class StartPipelineBuilder extends CloudManagerBuilder {
     CloudManagerApi api = createApi();
     String programId = getProgramId(api);
     String pipelineId = getPipelineId(api, programId);
+
+    if (run.getAction(CloudManagerBuildData.class) != null) {
+      throw new AbortException(Messages.StartPipelineBuilder_error_duplicateBuild());
+    }
     try {
       PrintStream log = listener.getLogger();
       PipelineExecution execution = api.startExecution(programId, pipelineId);

@@ -40,6 +40,8 @@ import org.kohsuke.stapler.export.ExportedBean;
 @ExportedBean(defaultVisibility = 1500)
 public class CloudManagerBuildData implements Action, Serializable, Cloneable {
 
+  private static final long serialVersionUID = 1L;
+
   private String aioProjectName;
   private String programId;
   private String pipelineId;

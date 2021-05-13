@@ -101,8 +101,6 @@ public class StartPipelineBuilderTest {
     new Expectations(aioConfig) {{
       aioConfig.authenticate();
       result = Secret.fromString(ACCESS_TOKEN);
-      CloudManagerApi.create(anyString, anyString, ACCESS_TOKEN);
-      result = api;
       api.listPrograms();
       result = programs;
       api.listPipelines(anyString);
@@ -125,16 +123,50 @@ public class StartPipelineBuilderTest {
       result = new CloudManagerApiException(CloudManagerApiException.ErrorType.PIPELINE_START, "Error");
     }};
 
+    rule.createOnlineSlave(Label.get("runner"));
     WorkflowJob job = rule.jenkins.createProject(WorkflowJob.class, "test");
     CpsFlowDefinition flow = new CpsFlowDefinition(
-        "node('master') {\n" +
+        "node('runner') {\n" +
             "    acmStartPipeline(aioProject: '" + AIO_PROJECT_NAME + "', program: '" + programId + "', pipeline: '" + pipelineId + "')\n" +
             "}",
         true);
     job.setDefinition(flow);
-    QueueTaskFuture<WorkflowRun> run = job.scheduleBuild2(0);
-    rule.waitForMessage("An API exception occurred", run.get());
+    WorkflowRun run = job.scheduleBuild2(0).waitForStart();
+    rule.waitForCompletion(run);
     rule.assertBuildStatus(Result.FAILURE, run);
+    assertTrue(run.getLog().contains("An API exception occurred"));
+  }
+
+
+  @Test
+  public void duplicateSteps(@Mocked PipelineExecution execution) throws Exception {
+
+    final String executionId = "3303";
+
+    new Expectations() {{
+      api.startExecution(programId, pipelineId);
+      result = execution;
+      execution.getProgramId();
+      result = programId;
+      execution.getPipelineId();
+      result = pipelineId;
+      execution.getId();
+      result = executionId;
+    }};
+
+    rule.createOnlineSlave(Label.get("runner"));
+    WorkflowJob job = rule.jenkins.createProject(WorkflowJob.class, "test");
+    CpsFlowDefinition flow = new CpsFlowDefinition(
+        "node('runner') {\n" +
+            "    acmStartPipeline(aioProject: '" + AIO_PROJECT_NAME + "', program: '" + programId + "', pipeline: '" + pipelineId + "')\n" +
+            "    acmStartPipeline(aioProject: '" + AIO_PROJECT_NAME + "', program: '" + programId + "', pipeline: '" + pipelineId + "')\n" +
+            "}",
+        true);
+    job.setDefinition(flow);
+    WorkflowRun run = job.scheduleBuild2(0).waitForStart();
+    rule.waitForCompletion(run);
+    rule.assertBuildStatus(Result.FAILURE, run);
+    assertTrue(run.getLog().contains(Messages.StartPipelineBuilder_error_duplicateBuild()));
   }
 
   @Test
@@ -161,9 +193,10 @@ public class StartPipelineBuilderTest {
             "}",
         true);
     job.setDefinition(flow);
-    WorkflowRun run = job.scheduleBuild2(0).get();
-    rule.waitForMessage(Messages.StartPipelineBuilder_started(executionId, pipelineId), run);
+    WorkflowRun run = job.scheduleBuild2(0).waitForStart();
+    rule.waitForCompletion(run);
     rule.assertBuildStatus(Result.SUCCESS, run);
+    assertTrue(run.getLog().contains(Messages.StartPipelineBuilder_started(executionId, pipelineId)));
     CloudManagerBuildData action = run.getAction(CloudManagerBuildData.class);
     assertNotNull(action);
     assertEquals(new CloudManagerBuildData(AIO_PROJECT_NAME, programId, pipelineId, executionId), action);

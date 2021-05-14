@@ -9,7 +9,8 @@ import org.apache.commons.io.IOUtils;
 import org.apache.http.entity.ContentType;
 
 import io.adobe.cloudmanager.CloudManagerApiException;
-import io.adobe.cloudmanager.CloudManagerEvents;
+import io.adobe.cloudmanager.CloudManagerEvent;
+import io.adobe.cloudmanager.CloudManagerEvent.Type;
 import io.adobe.cloudmanager.generated.events.PipelineExecutionStartEvent;
 import mockit.Expectations;
 import mockit.Mock;
@@ -90,9 +91,9 @@ public class AIOEventPayloadTest {
       }
     };
 
-    new MockUp<CloudManagerEvents>() {
+    new MockUp<Type>() {
       @Mock
-      public Class typeFrom(String source) throws CloudManagerApiException {
+      public Type from(String source) throws CloudManagerApiException {
         throw new CloudManagerApiException(CloudManagerApiException.ErrorType.PROCESS_EVENT, "failed");
       }
     };
@@ -118,10 +119,10 @@ public class AIOEventPayloadTest {
       }
     };
 
-    new MockUp<CloudManagerEvents>() {
+    new MockUp<Type>() {
       @Mock
-      public Class typeFrom(String source) throws CloudManagerApiException {
-        return type;
+      public Class from(String source) throws CloudManagerApiException {
+        return null;
       }
     };
 
@@ -137,7 +138,7 @@ public class AIOEventPayloadTest {
 
   @Test
   public void unableToParseBody() throws Exception {
-    Class type = PipelineExecutionStartEvent.class;
+    Type type = Type.PIPELINE_STARTED;
     String body = "";
     new MockUp<IOUtils>() {
       @Mock
@@ -146,11 +147,13 @@ public class AIOEventPayloadTest {
       }
     };
 
-    new MockUp<CloudManagerEvents>() {
+    new MockUp<Type>() {
       @Mock
-      public Class typeFrom(String source) throws CloudManagerApiException {
+      public Type from(String source) throws CloudManagerApiException {
         return type;
       }
+    };
+    new MockUp<CloudManagerEvent>() {
       @Mock
       public <T> T parseEvent(String source, Class<T> type) throws CloudManagerApiException {
         throw new CloudManagerApiException(CloudManagerApiException.ErrorType.PROCESS_EVENT, "Failed");
@@ -169,7 +172,7 @@ public class AIOEventPayloadTest {
 
   @Test
   public void success() throws Exception {
-    Class type = PipelineExecutionStartEvent.class;
+    Type type = Type.PIPELINE_STARTED;
     String body = "";
     new MockUp<IOUtils>() {
       @Mock
@@ -178,11 +181,13 @@ public class AIOEventPayloadTest {
       }
     };
 
-    new MockUp<CloudManagerEvents>() {
+    new MockUp<Type>() {
       @Mock
-      public Class typeFrom(String source) throws CloudManagerApiException {
+      public Type from(String source) throws CloudManagerApiException {
         return type;
       }
+    };
+    new MockUp<CloudManagerEvent>() {
       @Mock
       public PipelineExecutionStartEvent parseEvent(String source, Class<PipelineExecutionStartEvent> type) throws CloudManagerApiException {
         return new PipelineExecutionStartEvent();

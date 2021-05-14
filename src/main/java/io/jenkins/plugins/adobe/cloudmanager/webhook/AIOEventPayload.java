@@ -10,7 +10,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 import javax.servlet.ServletException;
 
@@ -18,7 +17,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.http.entity.ContentType;
 
 import io.adobe.cloudmanager.CloudManagerApiException;
-import io.adobe.cloudmanager.CloudManagerEvents;
+import io.adobe.cloudmanager.CloudManagerEvent;
 import org.kohsuke.stapler.AnnotationHandler;
 import org.kohsuke.stapler.InjectedParameter;
 import org.kohsuke.stapler.StaplerRequest;
@@ -66,7 +65,7 @@ public @interface AIOEventPayload {
       return (request) -> {
         try {
           String body = IOUtils.toString(request.getInputStream(), StandardCharsets.UTF_8);
-          CloudManagerEvents.parseEvent(body, CloudManagerEvents.typeFrom(body));
+          CloudManagerEvent.parseEvent(body, CloudManagerEvent.Type.from(body).getClass());
           return body;
         } catch (IOException e) {
           LOGGER.error(Messages.AIOEventPayload_PayloadHandler_error_io(e.getLocalizedMessage()));

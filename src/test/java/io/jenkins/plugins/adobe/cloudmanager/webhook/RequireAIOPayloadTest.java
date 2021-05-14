@@ -4,7 +4,7 @@ import java.lang.reflect.InvocationTargetException;
 
 import io.adobe.cloudmanager.CloudManagerApiException;
 import io.adobe.cloudmanager.CloudManagerApiException.ErrorType;
-import io.adobe.cloudmanager.CloudManagerEvents;
+import io.adobe.cloudmanager.CloudManagerEvent;
 import mockit.Expectations;
 import mockit.Mock;
 import mockit.MockUp;
@@ -69,7 +69,7 @@ public class RequireAIOPayloadTest {
   @Test
   public void failOnNoSignatureHeader() throws Exception {
     new Expectations() {{
-      request.getHeader(CloudManagerEvents.SIGNATURE_HEADER);
+      request.getHeader(CloudManagerEvent.SIGNATURE_HEADER);
       result = null;
     }};
     setupAdobeIOConfigs(rule.jenkins);
@@ -80,14 +80,14 @@ public class RequireAIOPayloadTest {
   @Test
   public void failOnNoMatchedProjectSignature() throws Exception {
 
-    new MockUp<CloudManagerEvents>() {
+    new MockUp<CloudManagerEvent>() {
       @Mock
       public boolean isValidSignature(String payload, String digest, String slientSecret) throws CloudManagerApiException {
         throw new CloudManagerApiException(ErrorType.VALIDATE_EVENT, "Error");
       }
     };
     new Expectations() {{
-      request.getHeader(CloudManagerEvents.SIGNATURE_HEADER);
+      request.getHeader(CloudManagerEvent.SIGNATURE_HEADER);
       result = "Signed";
     }};
 
@@ -99,14 +99,14 @@ public class RequireAIOPayloadTest {
   @Test
   public void failOnValidateSignatureErrors() throws Exception {
 
-    new MockUp<CloudManagerEvents>() {
+    new MockUp<CloudManagerEvent>() {
       @Mock
       public boolean isValidSignature(String payload, String digest, String slientSecret) throws CloudManagerApiException {
         return false;
       }
     };
     new Expectations() {{
-      request.getHeader(CloudManagerEvents.SIGNATURE_HEADER);
+      request.getHeader(CloudManagerEvent.SIGNATURE_HEADER);
       result = "Signed";
     }};
 
@@ -118,14 +118,14 @@ public class RequireAIOPayloadTest {
   @Test
   public void validSignature() throws Exception {
 
-    new MockUp<CloudManagerEvents>() {
+    new MockUp<CloudManagerEvent>() {
       @Mock
       public boolean isValidSignature(String payload, String digest, String slientSecret) throws CloudManagerApiException {
         return true;
       }
     };
     new Expectations() {{
-      request.getHeader(CloudManagerEvents.SIGNATURE_HEADER);
+      request.getHeader(CloudManagerEvent.SIGNATURE_HEADER);
       result = "Signed";
     }};
 

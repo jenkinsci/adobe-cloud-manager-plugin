@@ -11,14 +11,13 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.HttpMethod;
 
 import org.apache.commons.lang3.StringUtils;
 
 import hudson.util.Secret;
 import io.adobe.cloudmanager.CloudManagerApiException;
-import io.adobe.cloudmanager.CloudManagerEvents;
+import io.adobe.cloudmanager.CloudManagerEvent;
 import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOConfig;
 import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOProjectConfig;
 import io.jenkins.plugins.adobe.cloudmanager.util.CredentialsUtil;
@@ -29,7 +28,7 @@ import org.kohsuke.stapler.interceptor.Interceptor;
 import org.kohsuke.stapler.interceptor.InterceptorAnnotation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import static io.adobe.cloudmanager.CloudManagerEvents.*;
+import static io.adobe.cloudmanager.CloudManagerEvent.*;
 import static javax.servlet.http.HttpServletResponse.*;
 
 @Retention(RetentionPolicy.RUNTIME)
@@ -107,7 +106,7 @@ public @interface RequireAIOPayload {
       isTrue(
           secrets.stream().anyMatch(s -> {
             try {
-              return CloudManagerEvents.isValidSignature(payload, digest, s.getPlainText());
+              return CloudManagerEvent.isValidSignature(payload, digest, s.getPlainText());
             } catch (CloudManagerApiException e) {
               LOGGER.warn(Messages.RequireAIOPayload_Processor_warn_signatureValidationError(e.getLocalizedMessage()));
               return false;

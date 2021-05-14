@@ -1,0 +1,13 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout">
+    <l:layout title="${it.displayName}">
+        <j:if test="${it.owningRun != null}">
+            <st:include page="sidepanel" it="${it.owningRun}" optional="true"/>
+        </j:if>
+        <l:main-panel>
+            <j:forEach var="execution" items="${it.executions}">
+                <st:include page="index.jelly" it="${execution}"/>
+            </j:forEach>
+        </l:main-panel>
+    </l:layout>
+</j:jelly>

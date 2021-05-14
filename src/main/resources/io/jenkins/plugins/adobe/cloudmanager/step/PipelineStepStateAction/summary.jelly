@@ -1,0 +1,6 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:t="/lib/hudson">
+    <t:summary icon="/plugin/adobe-cloud-manager/icons/Adobe_Experience_Cloud_logo_48px.png">
+        <strong>Pipeline Execution Event State</strong>: ${it.displayName}
+    </t:summary>
+</j:jelly>

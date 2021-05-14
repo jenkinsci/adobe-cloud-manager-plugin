@@ -1,4 +1,4 @@
-package io.jenkins.plugin.adobe.cloudmanager.step;
+package io.jenkins.plugins.adobe.cloudmanager.step;
 
 /*-
  * #%L
@@ -26,9 +26,12 @@ package io.jenkins.plugin.adobe.cloudmanager.step;
  * #L%
  */
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+
+import javax.annotation.Nonnull;
 
 import hudson.Util;
 import hudson.model.Result;
@@ -37,21 +40,25 @@ import io.adobe.cloudmanager.CloudManagerApi;
 import io.adobe.cloudmanager.CloudManagerApiException;
 import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOConfig;
 import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOProjectConfig;
-import io.jenkins.plugins.adobe.cloudmanager.step.Messages;
-import io.jenkins.plugins.adobe.cloudmanager.step.PollPipelineStep;
+import io.jenkins.plugins.adobe.cloudmanager.step.execution.Messages;
+import io.jenkins.plugins.adobe.cloudmanager.step.execution.PollPipelineExecution;
 import io.jenkins.plugins.adobe.cloudmanager.util.CloudManagerBuildData;
 import mockit.Expectations;
 import mockit.Mock;
 import mockit.MockUp;
 import mockit.Mocked;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
+import org.jenkinsci.plugins.workflow.flow.StepListener;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
+import org.jenkinsci.plugins.workflow.steps.Step;
+import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.jenkinsci.plugins.workflow.steps.StepExecution;
 import org.jenkinsci.plugins.workflow.test.steps.SemaphoreStep;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.RestartableJenkinsRule;
+import org.jvnet.hudson.test.TestExtension;
 import static io.jenkins.plugin.adobe.cloudmanager.test.TestHelper.*;
 import static org.junit.Assert.*;
 
@@ -77,14 +84,13 @@ public class PollPipelineStepTest {
           true);
       job.setDefinition(flow);
       WorkflowRun run = job.scheduleBuild2(0).get();
-      rule.waitForMessage(Messages.PollPipelineStep_error_missingBuildData(), run);
+      rule.waitForMessage(Messages.AbstractStepExecution_error_missingBuildData(), run);
       rule.assertBuildStatus(Result.FAILURE, run);
     });
   }
 
   @Test
   public void buildDataMissingInContext() {
-
     story.then(rule -> {
       new MockUp<AdobeIOConfig>() {
         @Mock
@@ -104,7 +110,7 @@ public class PollPipelineStepTest {
       SemaphoreStep.waitForStart("before/1", run);
       run.addAction(new CloudManagerBuildData(AIO_PROJECT_NAME, "1", "1", "1"));
       SemaphoreStep.success("before/1", true);
-      rule.waitForMessage(Messages.PollPipelineStep_error_missingBuildData(), run);
+      rule.waitForMessage(Messages.AbstractStepExecution_error_missingBuildData(), run);
       rule.assertBuildStatus(Result.FAILURE, run);
     });
   }
@@ -138,7 +144,7 @@ public class PollPipelineStepTest {
       SemaphoreStep.waitForStart("before/1", run);
       run.addAction(new CloudManagerBuildData(AIO_PROJECT_NAME, "1", "1", "1"));
       SemaphoreStep.success("before/1", true);
-      rule.waitForMessage(Messages.PollPipelineStep_error_authentication(), run);
+      rule.waitForMessage(Messages.AbstractStepExecution_error_authentication(), run);
       rule.assertBuildStatus(Result.FAILURE, run);
     });
   }
@@ -235,7 +241,7 @@ public class PollPipelineStepTest {
       CpsFlowDefinition flow = new CpsFlowDefinition(
           "node('master') {\n" +
               "    semaphore 'before'\n" +
-              "    acmPollPipeline(recurrencePeriod: 30)\n" +
+              "    acmPollPipeline(recurrencePeriod: 10)\n" +
               "}",
           true);
       job.setDefinition(flow);
@@ -243,7 +249,7 @@ public class PollPipelineStepTest {
       SemaphoreStep.waitForStart("before/1", run);
       run.addAction(new CloudManagerBuildData(AIO_PROJECT_NAME, "1", "1", "1"));
       SemaphoreStep.success("before/1", true);
-      rule.waitForMessage(Messages.PollPipelineStep_waiting(Util.getTimeSpanString(TimeUnit.SECONDS.toMillis(30))), run);
+      rule.waitForMessage(Messages.PollPipelineExecution_waiting(Util.getTimeSpanString(TimeUnit.SECONDS.toMillis(1))), run);
       rule.waitForCompletion(run);
       rule.assertBuildStatusSuccess(run);
     });
@@ -272,7 +278,6 @@ public class PollPipelineStepTest {
           "node('master') {\n" +
               "    semaphore 'before'\n" +
               "    acmPollPipeline(recurrencePeriod: 30)\n" +
-              "    semaphore 'after'\n" +
               "}",
           true);
       job.setDefinition(flow);
@@ -280,14 +285,13 @@ public class PollPipelineStepTest {
       SemaphoreStep.waitForStart("before/1", run);
       run.addAction(new CloudManagerBuildData(AIO_PROJECT_NAME, "1", "1", "1"));
       SemaphoreStep.success("before/1", true);
-      Thread.sleep(10000);
-      final List<PollPipelineStep.StepExecutionImpl> executions = new ArrayList<>();
-      StepExecution.applyAll(PollPipelineStep.StepExecutionImpl.class, excution -> {
+      rule.waitForMessage(Messages.PollPipelineExecution_waiting(Util.getTimeSpanString(TimeUnit.SECONDS.toMillis(30))), run);
+      final List<PollPipelineExecution> executions = new ArrayList<>();
+      StepExecution.applyAll(PollPipelineExecution.class, excution -> {
         executions.add(excution);
         return null;
       }).get();
       assertEquals(1, executions.size());
-      rule.waitForMessage(Messages.PollPipelineStep_waiting(Util.getTimeSpanString(TimeUnit.SECONDS.toMillis(30))), run);
     });
 
     story.then(rule -> {
@@ -305,10 +309,27 @@ public class PollPipelineStepTest {
         result = false;
       }};
       WorkflowRun run = rule.jenkins.getItemByFullName("test", WorkflowJob.class).getBuildByNumber(1);
-      SemaphoreStep.waitForStart("after/1", run);
-      SemaphoreStep.success("after/1", true);
       rule.waitForCompletion(run);
       rule.assertBuildStatusSuccess(run);
     });
+  }
+
+  @TestExtension("recurrencePeriod")
+  public static final class SetTimeoutStepListener implements StepListener {
+    @Override
+    public void notifyOfNewStep(@Nonnull Step step, @Nonnull StepContext stepContext) {
+      if (step instanceof PollPipelineStep) {
+        PollPipelineStep pollStep = (PollPipelineStep) step;
+        assertEquals(30000, pollStep.getRecurrencePeriod());
+        try {
+          Field rp = PollPipelineStep.class.getDeclaredField("recurrencePeriod");
+          rp.setAccessible(true);
+          rp.set(pollStep, 1000);
+        } catch (Exception e) {
+          fail(e.getLocalizedMessage());
+        }
+
+      }
+    }
   }
 }

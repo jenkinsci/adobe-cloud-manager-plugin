@@ -26,13 +26,14 @@ package io.jenkins.plugins.adobe.cloudmanager.step;
  * #L%
  */
 
-import java.util.Objects;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nonnull;
 
-import com.google.common.collect.ImmutableSet;
 import hudson.AbortException;
 import hudson.Extension;
 import hudson.Util;
@@ -41,9 +42,9 @@ import hudson.model.TaskListener;
 import hudson.util.Secret;
 import io.adobe.cloudmanager.CloudManagerApi;
 import io.adobe.cloudmanager.CloudManagerApiException;
-import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOConfig;
 import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOProjectConfig;
-import io.jenkins.plugins.adobe.cloudmanager.util.CloudManagerBuildData;
+import io.jenkins.plugins.adobe.cloudmanager.step.execution.AbstractStepExecution;
+import io.jenkins.plugins.adobe.cloudmanager.step.execution.PollPipelineExecution;
 import jenkins.util.Timer;
 import org.jenkinsci.plugins.workflow.steps.Step;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
@@ -52,6 +53,9 @@ import org.jenkinsci.plugins.workflow.steps.StepExecution;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
+/**
+ * Polls for a Cloud Manager pipeline's completion. The pipeline execution needs to be in the Job/Build context.
+ */
 public class PollPipelineStep extends Step {
 
   static final long MIN_RECURRENCE_PERIOD = 30000; // 30 seconds
@@ -95,103 +99,8 @@ public class PollPipelineStep extends Step {
 
   @Override
   public StepExecution start(StepContext context) throws Exception {
-    return new StepExecutionImpl(context, recurrencePeriod, quiet);
+    return new PollPipelineExecution(context, recurrencePeriod, quiet);
   }
-
-  public static final class StepExecutionImpl extends StepExecution {
-
-    private static final long serialVersionUID = 1;
-    private final long recurrencePeriod;
-    private final boolean quiet;
-    private transient volatile ScheduledFuture<?> task;
-    private CloudManagerBuildData data;
-
-    StepExecutionImpl(StepContext context, long recurrencePeriod, boolean quiet) {
-      super(context);
-      this.recurrencePeriod = recurrencePeriod;
-      this.quiet = quiet;
-    }
-
-    @Override
-    public boolean start() throws Exception {
-      Run<?, ?> run = Objects.requireNonNull(getContext().get(Run.class));
-      data = run.getAction(CloudManagerBuildData.class);
-      if (data == null) {
-        throw new AbortException(Messages.PollPipelineStep_error_missingBuildData());
-      }
-      setupCheck();
-      return false;
-    }
-
-    @Override
-    public void stop(Throwable cause) throws Exception {
-      if (task != null) {
-        task.cancel(true);
-      }
-      super.stop(cause);
-    }
-
-    @Override
-    public void onResume() {
-      setupCheck();
-    }
-
-    private void setupCheck() {
-      getContext().saveState();
-      task = Timer.get().scheduleWithFixedDelay(() -> {
-        try {
-          AdobeIOProjectConfig aioProject = getAioProject();
-          Secret token = getAccessToken(aioProject);
-          if (checkExecution(aioProject, token)) {
-            getContext().onSuccess(null);
-            task.cancel(true);
-            task = null;
-          }
-        } catch (AbortException e) {
-          getContext().onFailure(e);
-          task.cancel(true);
-          task = null;
-        }
-      }, 0, recurrencePeriod, TimeUnit.MILLISECONDS);
-    }
-
-    @Nonnull
-    private AdobeIOProjectConfig getAioProject() throws AbortException {
-      AdobeIOProjectConfig aioProject = AdobeIOConfig.projectConfigFor(data.getAioProjectName());
-      // Restart may be after AIO Project is removed.
-      if (aioProject == null) {
-        throw new AbortException(Messages.PollPipelineStep_error_missingBuildData());
-      }
-      return aioProject;
-    }
-
-    @Nonnull
-    private Secret getAccessToken(AdobeIOProjectConfig aioProject) throws AbortException {
-      Secret token = aioProject.authenticate();
-      if (token == null) {
-        throw new AbortException(Messages.PollPipelineStep_error_authentication());
-      }
-      return token;
-    }
-
-    private boolean checkExecution(AdobeIOProjectConfig aioProject, Secret token) throws AbortException {
-      try {
-        CloudManagerApi api = CloudManagerApi.create(aioProject.getImsOrganizationId(), aioProject.getClientId(), token.getPlainText());
-        if (api.isExecutionRunning(data.getProgramId(), data.getPipelineId(), data.getExecutionId())) {
-          if (!quiet) {
-            getContext().get(TaskListener.class).getLogger().println(Messages.PollPipelineStep_waiting(Util.getTimeSpanString(recurrencePeriod)));
-          }
-          return false;
-        }
-      } catch (CloudManagerApiException e) {
-        throw new AbortException(Messages.PollPipelineStep_error_CloudManagerApiException(e.getLocalizedMessage()));
-      } catch (Exception e) {
-        throw new AbortException(e.getLocalizedMessage());
-      }
-      return true;
-    }
-  }
-
 
 
   @Extension
@@ -210,7 +119,7 @@ public class PollPipelineStep extends Step {
 
     @Override
     public Set<? extends Class<?>> getRequiredContext() {
-      return ImmutableSet.of(Run.class, TaskListener.class);
+      return Collections.unmodifiableSet(new HashSet<>(Arrays.asList(Run.class, TaskListener.class)));
     }
   }
 }

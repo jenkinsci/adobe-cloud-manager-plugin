@@ -3,6 +3,7 @@ package io.jenkins.plugins.adobe.cloudmanager.step;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import javax.annotation.Nonnull;
@@ -22,7 +23,7 @@ import org.kohsuke.stapler.DataBoundSetter;
 
 public class PipelineStepStateStep extends Step {
 
-  private Set<StepAction> actions;
+  private List<StepAction> actions;
   private boolean showLogs = true;
   private boolean autoAdvance = false;
 
@@ -31,15 +32,15 @@ public class PipelineStepStateStep extends Step {
 
   }
 
-  public Set<StepAction> getActions() {
+  public List<StepAction> getActions() {
     if (actions == null) {
-      actions = new HashSet<>(Arrays.asList(StepAction.values()));
+      actions = Arrays.asList(StepAction.values());
     }
-    return Collections.unmodifiableSet(actions);
+    return actions;
   }
 
   @DataBoundSetter
-  public void setActions(Set<StepAction> actions) {
+  public void setActions(List<StepAction> actions) {
     this.actions = actions;
   }
 
@@ -63,7 +64,7 @@ public class PipelineStepStateStep extends Step {
 
   @Override
   public StepExecution start(StepContext context) throws Exception {
-    return new PipelineStepStateExecution(context, getActions());
+    return new PipelineStepStateExecution(context, new HashSet<>(getActions()));
   }
 
   @Extension

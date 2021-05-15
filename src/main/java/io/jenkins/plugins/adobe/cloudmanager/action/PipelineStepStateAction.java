@@ -1,4 +1,4 @@
-package io.jenkins.plugins.adobe.cloudmanager.step;
+package io.jenkins.plugins.adobe.cloudmanager.action;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -61,6 +61,10 @@ public class PipelineStepStateAction implements RunAction2, Serializable {
     return "acm-pipeline-step-state";
   }
 
+  public Run<?, ?> getRun() {
+    return run;
+  }
+
   @Override
   public void onAttached(Run<?, ?> run) {
     this.run = run;
@@ -69,6 +73,14 @@ public class PipelineStepStateAction implements RunAction2, Serializable {
   @Override
   public void onLoad(Run<?, ?> run) {
     this.run = run;
+    synchronized (this) {
+      if (ids == null) {
+        assert executions != null && !executions.contains(null) : executions;
+        ids = new CopyOnWriteArrayList<>();
+        executions.stream().map(e -> ids.add(e.getId())).collect(Collectors.toList());
+        executions = null;
+      }
+    }
   }
 
   public synchronized void add(@Nonnull PipelineStepStateExecution step) throws IOException, InterruptedException, TimeoutException {
@@ -99,7 +111,7 @@ public class PipelineStepStateAction implements RunAction2, Serializable {
     if (executions == null) {
       throw new IOException(Messages.PipelineStepStateAction_error_loadState());
     }
-    this.executions.remove(step);
+    executions.remove(step);
     ids.remove(step.getId());
     run.save();
   }
@@ -107,14 +119,14 @@ public class PipelineStepStateAction implements RunAction2, Serializable {
   /**
    * For URL Access
    */
-  public PipelineStepStateExecution getDynamic(String token) throws InterruptedException, TimeoutException {
-    return getExecution(token);
+  public PipelineStepStateExecution getDynamic(String id) throws InterruptedException, TimeoutException {
+    return getExecution(id);
   }
 
   private synchronized void loadExecutions() throws InterruptedException, TimeoutException {
     if (executions == null) { // Loaded after restart.
       try {
-        Optional<FlowExecution> optional = StreamSupport.stream(FlowExecutionList.get().spliterator(), false).filter((ex) -> {
+        Optional<FlowExecution> execution = StreamSupport.stream(FlowExecutionList.get().spliterator(), false).filter((ex) -> {
           try {
             return ex.getOwner().getExecutable() == run;
           } catch (IOException e) {
@@ -122,9 +134,8 @@ public class PipelineStepStateAction implements RunAction2, Serializable {
           }
           return false;
         }).findFirst();
-        if (optional.isPresent()) {
-          FlowExecution execution = optional.get();
-          List<StepExecution> candidates = execution.getCurrentExecutions(true).get(60, TimeUnit.SECONDS);
+        if (execution.isPresent()) {
+          List<StepExecution> candidates = execution.get().getCurrentExecutions(true).get(60, TimeUnit.SECONDS);
           executions = candidates.stream()
               .filter(se -> se instanceof PipelineStepStateExecution && ids.contains(((PipelineStepStateExecution) se).getId()))
               .map((se) -> ((PipelineStepStateExecution) se))

@@ -1,4 +1,4 @@
-package io.jenkins.plugins.adobe.cloudmanager.util;
+package io.jenkins.plugins.adobe.cloudmanager.action;
 
 /*-
  * #%L
@@ -38,7 +38,7 @@ import org.kohsuke.stapler.export.ExportedBean;
 
 @Data
 @ExportedBean(defaultVisibility = 1500)
-public class CloudManagerBuildData implements Action, Serializable, Cloneable {
+public class CloudManagerBuildAction implements Action, Serializable, Cloneable {
 
   private static final long serialVersionUID = 1L;
 
@@ -47,10 +47,10 @@ public class CloudManagerBuildData implements Action, Serializable, Cloneable {
   private String pipelineId;
   private String executionId;
 
-  public CloudManagerBuildData() {
+  public CloudManagerBuildAction() {
   }
 
-  public CloudManagerBuildData(String aioProjectName, String programId, String pipelineId, String executionId) {
+  public CloudManagerBuildAction(String aioProjectName, String programId, String pipelineId, String executionId) {
     this.aioProjectName = aioProjectName;
     this.programId = programId;
     this.pipelineId = pipelineId;

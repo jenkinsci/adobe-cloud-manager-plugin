@@ -38,7 +38,6 @@ import org.apache.commons.lang.StringUtils;
 import com.cloudbees.plugins.credentials.Credentials;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
-import hudson.security.ACL;
 import hudson.util.Secret;
 import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOProjectConfig;
 import io.jenkins.plugins.adobe.cloudmanager.config.Messages;

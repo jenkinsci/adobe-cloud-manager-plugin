@@ -31,7 +31,6 @@ import java.util.List;
 
 import hudson.model.Label;
 import hudson.model.Result;
-import hudson.model.queue.QueueTaskFuture;
 import hudson.util.Secret;
 import io.adobe.cloudmanager.CloudManagerApi;
 import io.adobe.cloudmanager.CloudManagerApiException;
@@ -42,7 +41,7 @@ import io.jenkins.plugin.adobe.cloudmanager.util.DescriptorHelperTest;
 import io.jenkins.plugins.adobe.cloudmanager.builder.Messages;
 import io.jenkins.plugins.adobe.cloudmanager.builder.StartPipelineBuilder;
 import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOProjectConfig;
-import io.jenkins.plugins.adobe.cloudmanager.util.CloudManagerBuildData;
+import io.jenkins.plugins.adobe.cloudmanager.action.CloudManagerBuildAction;
 import mockit.Expectations;
 import mockit.Mock;
 import mockit.MockUp;
@@ -197,8 +196,8 @@ public class StartPipelineBuilderTest {
     rule.waitForCompletion(run);
     rule.assertBuildStatus(Result.SUCCESS, run);
     assertTrue(run.getLog().contains(Messages.StartPipelineBuilder_started(executionId, pipelineId)));
-    CloudManagerBuildData action = run.getAction(CloudManagerBuildData.class);
+    CloudManagerBuildAction action = run.getAction(CloudManagerBuildAction.class);
     assertNotNull(action);
-    assertEquals(new CloudManagerBuildData(AIO_PROJECT_NAME, programId, pipelineId, executionId), action);
+    assertEquals(new CloudManagerBuildAction(AIO_PROJECT_NAME, programId, pipelineId, executionId), action);
   }
 }

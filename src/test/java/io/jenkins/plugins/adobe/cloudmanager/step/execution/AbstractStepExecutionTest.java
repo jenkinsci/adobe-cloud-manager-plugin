@@ -5,7 +5,7 @@ import hudson.util.Secret;
 import io.adobe.cloudmanager.CloudManagerApi;
 import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOConfig;
 import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOProjectConfig;
-import io.jenkins.plugins.adobe.cloudmanager.util.CloudManagerBuildData;
+import io.jenkins.plugins.adobe.cloudmanager.action.CloudManagerBuildAction;
 import mockit.Expectations;
 import mockit.Injectable;
 import mockit.Mock;
@@ -28,7 +28,7 @@ public class AbstractStepExecutionTest {
   private StepContext context;
 
   @Injectable
-  private CloudManagerBuildData data;
+  private CloudManagerBuildAction data;
 
   @Mocked
   private CloudManagerApi api;

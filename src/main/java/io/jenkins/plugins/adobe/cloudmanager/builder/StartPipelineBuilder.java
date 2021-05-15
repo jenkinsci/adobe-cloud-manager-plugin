@@ -43,7 +43,7 @@ import hudson.model.TaskListener;
 import io.adobe.cloudmanager.CloudManagerApi;
 import io.adobe.cloudmanager.CloudManagerApiException;
 import io.adobe.cloudmanager.PipelineExecution;
-import io.jenkins.plugins.adobe.cloudmanager.util.CloudManagerBuildData;
+import io.jenkins.plugins.adobe.cloudmanager.action.CloudManagerBuildAction;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.slf4j.Logger;
@@ -63,13 +63,13 @@ public class StartPipelineBuilder extends CloudManagerBuilder {
     String programId = getProgramId(api);
     String pipelineId = getPipelineId(api, programId);
 
-    if (run.getAction(CloudManagerBuildData.class) != null) {
+    if (run.getAction(CloudManagerBuildAction.class) != null) {
       throw new AbortException(Messages.StartPipelineBuilder_error_duplicateBuild());
     }
     try {
       PrintStream log = listener.getLogger();
       PipelineExecution execution = api.startExecution(programId, pipelineId);
-      CloudManagerBuildData data = new CloudManagerBuildData(getAioProject(), execution.getProgramId(), execution.getPipelineId(), execution.getId());
+      CloudManagerBuildAction data = new CloudManagerBuildAction(getAioProject(), execution.getProgramId(), execution.getPipelineId(), execution.getId());
       run.addAction(data);
       log.println(Messages.StartPipelineBuilder_started(execution.getId(), pipeline));
     } catch (CloudManagerApiException e) {
@@ -80,7 +80,7 @@ public class StartPipelineBuilder extends CloudManagerBuilder {
   @Override
   @NonNull
   public Collection<? extends Action> getProjectActions(AbstractProject<?, ?> project) {
-    return Collections.singletonList(new CloudManagerBuildData());
+    return Collections.singletonList(new CloudManagerBuildAction());
   }
 
   @Override

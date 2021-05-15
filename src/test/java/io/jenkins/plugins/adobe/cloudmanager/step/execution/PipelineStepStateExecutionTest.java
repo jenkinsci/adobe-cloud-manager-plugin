@@ -5,7 +5,7 @@ import java.util.HashSet;
 import io.adobe.cloudmanager.PipelineExecution;
 import io.adobe.cloudmanager.PipelineExecutionStepState;
 import io.adobe.cloudmanager.StepAction;
-import io.jenkins.plugins.adobe.cloudmanager.util.CloudManagerBuildData;
+import io.jenkins.plugins.adobe.cloudmanager.action.CloudManagerBuildAction;
 import mockit.Expectations;
 import mockit.Injectable;
 import mockit.Mock;
@@ -23,7 +23,7 @@ public class PipelineStepStateExecutionTest {
 
   private HashSet<StepAction> actions = new HashSet<>();
 
-  private CloudManagerBuildData data = new CloudManagerBuildData();
+  private CloudManagerBuildAction data = new CloudManagerBuildAction();
 
   @Injectable
   private StepContext context;
@@ -38,7 +38,7 @@ public class PipelineStepStateExecutionTest {
   public void before() {
     new MockUp<AbstractStepExecution>() {
       @Mock
-      protected CloudManagerBuildData getBuildData() {
+      protected CloudManagerBuildAction getBuildData() {
         return data;
       }
     };

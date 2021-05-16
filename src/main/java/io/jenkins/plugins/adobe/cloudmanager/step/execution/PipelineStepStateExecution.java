@@ -6,7 +6,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
 import javax.annotation.CheckForNull;
@@ -31,7 +30,6 @@ import io.adobe.cloudmanager.StepAction;
 import io.jenkins.plugins.adobe.cloudmanager.action.CloudManagerBuildAction;
 import io.jenkins.plugins.adobe.cloudmanager.action.PipelineStepDecisionAction;
 import io.jenkins.plugins.adobe.cloudmanager.action.PipelineStepStateAction;
-import jenkins.util.Timer;
 import org.jenkinsci.plugins.workflow.graph.FlowNode;
 import org.jenkinsci.plugins.workflow.steps.FlowInterruptedException;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
@@ -53,31 +51,16 @@ public class PipelineStepStateExecution extends AbstractStepExecution {
       Collections.unmodifiableSet(new HashSet<>(Arrays.asList(StepAction.codeQuality, StepAction.approval)));
 
   private final Set<StepAction> actions;
-  private final String id;
   private StepAction reason;
 
   public PipelineStepStateExecution(StepContext context, Set<StepAction> actions) {
     super(context);
     this.actions = actions;
-    id = UUID.randomUUID().toString();
-  }
-
-  @Nonnull
-  public String getId() {
-    return id;
   }
 
   @CheckForNull
   public StepAction getReason() {
     return reason;
-  }
-
-  public Run<?, ?> getRun() throws IOException, InterruptedException {
-    return Objects.requireNonNull(getContext().get(Run.class));
-  }
-
-  public TaskListener getTaskListener() throws IOException, InterruptedException {
-    return Objects.requireNonNull(getContext().get(TaskListener.class));
   }
 
   // Execution Logic
@@ -87,17 +70,14 @@ public class PipelineStepStateExecution extends AbstractStepExecution {
     getAction().add(this);
     FlowNode node = Objects.requireNonNull(getContext().get(FlowNode.class));
     node.addAction(new PauseAction("Pipeline Execution Step State"));
-    TaskListener listener = getTaskListener();
-    listener.getLogger().println(Messages.PipelineStepStateExecution_info_waiting());
+    getTaskListener().getLogger().println(Messages.PipelineStepStateExecution_info_waiting());
     return false;
   }
 
   @Override
   public void stop(@Nonnull Throwable cause) throws Exception {
-    Timer.get().submit(() -> {
-      doFinish();
-      getContext().onFailure(cause);
-    });
+    doFinish();
+    getContext().onFailure(cause);
   }
 
   // Filters for looking up waiting steps.
@@ -131,10 +111,8 @@ public class PipelineStepStateExecution extends AbstractStepExecution {
   public void occurred(@Nonnull PipelineExecution pe, @Nonnull PipelineExecutionStepState state) throws IOException, InterruptedException {
     TaskListener listener = getTaskListener();
     listener.getLogger().println(Messages.PipelineStepStateExecution_event_occurred(pe.getId(), state.getAction(), state.getStatusState()));
-    Timer.get().submit(() -> {
-      doFinish();
-      getContext().onSuccess(null);
-    });
+    doFinish();
+    getContext().onSuccess(null);
   }
 
   public void waiting(@Nonnull PipelineExecution pe, @Nonnull PipelineExecutionStepState state) throws IOException, InterruptedException {
@@ -144,15 +122,18 @@ public class PipelineStepStateExecution extends AbstractStepExecution {
     listener.getLogger().println(Messages.PipelineStepStateExecution_event_occurred(pe.getId(), action, state.getStatusState()));
     try {
       reason = StepAction.valueOf(action);
-      if (!WAITING_ACTIONS.contains(reason)) {
-        listener.getLogger().println(Messages.PipelineStepStateExecution_error_unknownWaitingAction(action));
-        throw new IllegalArgumentException(Messages.PipelineStepStateExecution_error_unknownWaitingAction(action));
-      }
-      String url = String.format("/%s%s/", run.getUrl(), getAction().getUrlName());
-      listener.getLogger().println(HyperlinkNote.encodeTo(url, Messages.PipelineStepStateExecution_prompt_waitingApproval()));
     } catch (IllegalArgumentException e) {
       listener.getLogger().println(Messages.PipelineStepStateExecution_error_unknownStepAction(action));
-      throw e;
+      doFinish();
+      getContext().onFailure(e);
+    }
+    if (WAITING_ACTIONS.contains(reason)) {
+      String url = String.format("/%s%s/", run.getUrl(), getAction().getUrlName());
+      listener.getLogger().println(HyperlinkNote.encodeTo(url, Messages.PipelineStepStateExecution_prompt_waitingApproval()));
+    } else {
+      listener.getLogger().println(Messages.PipelineStepStateExecution_error_unknownWaitingAction(action));
+      doFinish();
+      getContext().onFailure(new IllegalArgumentException(Messages.PipelineStepStateExecution_error_unknownWaitingAction(action)));
     }
   }
 
@@ -291,5 +272,4 @@ public class PipelineStepStateExecution extends AbstractStepExecution {
       }
     }
   }
-
 }

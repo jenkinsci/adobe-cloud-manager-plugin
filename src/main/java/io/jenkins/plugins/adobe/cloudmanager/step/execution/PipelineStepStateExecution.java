@@ -68,10 +68,17 @@ public class PipelineStepStateExecution extends AbstractStepExecution {
   public boolean doStart() throws Exception {
     // Pause the flow.
     getAction().add(this);
-    FlowNode node = Objects.requireNonNull(getContext().get(FlowNode.class));
-    node.addAction(new PauseAction("Pipeline Execution Step State"));
     getTaskListener().getLogger().println(Messages.PipelineStepStateExecution_info_waiting());
     return false;
+  }
+
+  @Override
+  public void onResume() {
+    try {
+      startWaiting();
+    } catch (IOException | InterruptedException e) {
+      getContext().onFailure(e);
+    }
   }
 
   @Override
@@ -115,26 +122,34 @@ public class PipelineStepStateExecution extends AbstractStepExecution {
     getContext().onSuccess(null);
   }
 
-  public void waiting(@Nonnull PipelineExecution pe, @Nonnull PipelineExecutionStepState state) throws IOException, InterruptedException {
+  public void waiting(@Nonnull PipelineExecution pe, @Nonnull PipelineExecutionStepState state) throws IOException, InterruptedException, TimeoutException {
     TaskListener listener = getTaskListener();
     Run<?, ?> run = getRun();
     String action = state.getAction();
     listener.getLogger().println(Messages.PipelineStepStateExecution_event_occurred(pe.getId(), action, state.getStatusState()));
     try {
       reason = StepAction.valueOf(action);
+      if (WAITING_ACTIONS.contains(reason)) {
+        startWaiting();
+      } else {
+        listener.getLogger().println(Messages.PipelineStepStateExecution_error_unknownWaitingAction(action));
+        doFinish();
+        getContext().onFailure(new IllegalArgumentException(Messages.PipelineStepStateExecution_error_unknownWaitingAction(action)));
+      }
     } catch (IllegalArgumentException e) {
       listener.getLogger().println(Messages.PipelineStepStateExecution_error_unknownStepAction(action));
       doFinish();
       getContext().onFailure(e);
     }
-    if (WAITING_ACTIONS.contains(reason)) {
-      String url = String.format("/%s%s/", run.getUrl(), getAction().getUrlName());
-      listener.getLogger().println(HyperlinkNote.encodeTo(url, Messages.PipelineStepStateExecution_prompt_waitingApproval()));
-    } else {
-      listener.getLogger().println(Messages.PipelineStepStateExecution_error_unknownWaitingAction(action));
-      doFinish();
-      getContext().onFailure(new IllegalArgumentException(Messages.PipelineStepStateExecution_error_unknownWaitingAction(action)));
-    }
+  }
+
+  // Wait for the user input
+  private void startWaiting() throws IOException, InterruptedException {
+    String url = String.format("/%s%s/", getRun().getUrl(), getAction().getUrlName());
+    getTaskListener().getLogger().println(HyperlinkNote.encodeTo(url, Messages.PipelineStepStateExecution_prompt_waitingApproval()));
+    FlowNode node = Objects.requireNonNull(getContext().get(FlowNode.class));
+    node.addAction(new PauseAction("Pipeline Execution Step State"));
+    getContext().saveState();
   }
 
   /**

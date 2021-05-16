@@ -1,6 +1,8 @@
 package io.jenkins.plugins.adobe.cloudmanager.step.execution;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 import javax.annotation.CheckForNull;
@@ -8,19 +10,26 @@ import javax.annotation.Nonnull;
 
 import org.apache.commons.lang3.StringUtils;
 
+import hudson.AbortException;
+import hudson.model.Result;
 import hudson.model.TaskListener;
 import io.adobe.cloudmanager.PipelineExecution;
 import org.jenkinsci.plugins.workflow.steps.BodyExecutionCallback;
+import org.jenkinsci.plugins.workflow.steps.FlowInterruptedException;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.jenkinsci.plugins.workflow.steps.StepExecution;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static io.adobe.cloudmanager.PipelineExecution.Status.*;
+
 public class PipelineEndExecution extends AbstractStepExecution {
   private static final Logger LOGGER = LoggerFactory.getLogger(PipelineEndExecution.class);
 
   private final Boolean mirror;
-  boolean finished = false;
+  PipelineExecution.Status status;
+
+  private final List<PipelineExecution.Status> FAILURES = Arrays.asList(FAILED, ERROR, CANCELLED);
 
   public PipelineEndExecution(StepContext context, boolean mirror) {
     super(context);
@@ -28,15 +37,14 @@ public class PipelineEndExecution extends AbstractStepExecution {
   }
 
   public boolean isFinished() {
-    return finished;
+    return status != null;
   }
 
   @Override
   public boolean doStart() throws Exception {
+    getTaskListener().getLogger().println(Messages.PipelineEndExecution_info_waiting());
     if (getContext().hasBody()) {
       getContext().newBodyInvoker().withCallback(new Callback(getId())).start();
-    } else {
-      getTaskListener().getLogger().println(Messages.PipelineEndExecution_info_waiting());
     }
     return false;
   }
@@ -50,7 +58,7 @@ public class PipelineEndExecution extends AbstractStepExecution {
   @CheckForNull
   @Override
   public String getStatus() {
-    if (!finished) {
+    if (!isFinished()) {
       return "waiting for event";
     } else {
       return "apparently finished, maybe cleaning up?";
@@ -68,7 +76,11 @@ public class PipelineEndExecution extends AbstractStepExecution {
    * We're done working and the body has finished its work.
    */
   public void end() {
-    getContext().onSuccess(null);
+    if (mirror && FAILURES.contains(status)) {
+      getContext().onFailure(new FlowInterruptedException(Result.FAILURE, new RemoteStateInterruption(status)));
+    } else {
+      getContext().onSuccess(null);
+    }
   }
 
   public Function<PipelineExecution, Boolean> wants() {
@@ -85,7 +97,7 @@ public class PipelineEndExecution extends AbstractStepExecution {
    * If any unknown body steps are waiting, they'll block this event processing from early termination of this step.
    */
   public void occurred(@Nonnull PipelineExecution pe) throws IOException, InterruptedException {
-    finished = true;
+    status = pe.getStatusState();
     TaskListener listener = getTaskListener();
     try {
       StepExecution.applyAll(PipelineStepStateExecution.class, (execution) -> {

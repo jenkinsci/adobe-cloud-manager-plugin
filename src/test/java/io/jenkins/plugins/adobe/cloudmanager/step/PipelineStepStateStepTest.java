@@ -113,7 +113,6 @@ public class PipelineStepStateStepTest {
       }};
 
       WorkflowRun run = setupRun(rule);
-      // Poke the Execution to make it move.
       PipelineStepStateExecution execution = (PipelineStepStateExecution) run.getExecution().getCurrentExecutions(false).get().stream().filter(e -> e instanceof PipelineStepStateExecution).findFirst().orElse(null);
       execution.occurred(pipelineExecution, stepState);
       rule.waitForCompletion(run);
@@ -149,7 +148,6 @@ public class PipelineStepStateStepTest {
         cfe.waitForSuspension();
       }
 
-      // Poke the Execution to make it move.
       PipelineStepStateExecution execution = (PipelineStepStateExecution) run.getExecution().getCurrentExecutions(false).get().stream().filter(e -> e instanceof PipelineStepStateExecution).findFirst().orElse(null);
       execution.occurred(pipelineExecution, stepState);
       rule.waitForCompletion(run);
@@ -450,7 +448,6 @@ public class PipelineStepStateStepTest {
       }};
 
       WorkflowRun run = setupRun(rule);
-      // Poke the Execution to make it move.
       PipelineStepStateExecution execution = (PipelineStepStateExecution) run.getExecution().getCurrentExecutions(false).get().stream().filter(e -> e instanceof PipelineStepStateExecution).findFirst().orElse(null);
       execution.waiting(pipelineExecution, stepState);
       rule.waitForCompletion(run);
@@ -472,8 +469,6 @@ public class PipelineStepStateStepTest {
       }};
 
       WorkflowRun run = setupRun(rule);
-
-      // Poke the Execution to make it move.
       PipelineStepStateExecution execution = (PipelineStepStateExecution) run.getExecution().getCurrentExecutions(false).get().stream().filter(e -> e instanceof PipelineStepStateExecution).findFirst().orElse(null);
       execution.waiting(pipelineExecution, stepState);
       rule.waitForCompletion(run);

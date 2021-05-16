@@ -16,7 +16,7 @@ import hudson.model.Result;
 import io.adobe.cloudmanager.CloudManagerApi;
 import io.adobe.cloudmanager.PipelineExecution;
 import io.jenkins.plugins.adobe.cloudmanager.action.CloudManagerBuildAction;
-import io.jenkins.plugins.adobe.cloudmanager.action.PipelineStepStateAction;
+import io.jenkins.plugins.adobe.cloudmanager.action.PipelineWaitingAction;
 import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOProjectConfig;
 import io.jenkins.plugins.adobe.cloudmanager.step.execution.Messages;
 import io.jenkins.plugins.adobe.cloudmanager.step.execution.PipelineEndExecution;
@@ -143,7 +143,7 @@ public class PipelineEndStepTest {
       SemaphoreStep.success("before/1", true);
 
       CpsFlowExecution cfe = (CpsFlowExecution) run.getExecutionPromise().get();
-      while (run.getAction(PipelineStepStateAction.class) == null) {
+      while (run.getAction(PipelineWaitingAction.class) == null) {
         cfe.waitForSuspension();
       }
 
@@ -204,7 +204,7 @@ public class PipelineEndStepTest {
       SemaphoreStep.success("before/1", true);
 
       CpsFlowExecution cfe = (CpsFlowExecution) run.getExecutionPromise().get();
-      while (run.getAction(PipelineStepStateAction.class) == null) {
+      while (run.getAction(PipelineWaitingAction.class) == null) {
         cfe.waitForSuspension();
       }
       // Poke the Execution to make it end.

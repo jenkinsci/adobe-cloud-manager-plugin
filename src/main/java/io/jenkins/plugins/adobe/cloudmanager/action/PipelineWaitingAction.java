@@ -17,13 +17,13 @@ import org.apache.commons.lang3.StringUtils;
 
 import hudson.model.Run;
 import io.jenkins.plugins.adobe.cloudmanager.step.execution.AbstractStepExecution;
+import io.jenkins.plugins.adobe.cloudmanager.step.execution.PipelineStepStateExecution;
 import jenkins.model.RunAction2;
 import org.jenkinsci.plugins.workflow.flow.FlowExecution;
 import org.jenkinsci.plugins.workflow.flow.FlowExecutionList;
 import org.jenkinsci.plugins.workflow.steps.StepExecution;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.core.parameters.P;
 
 /**
  * Action for Pipeline Executions which need to be paused and display info.
@@ -31,15 +31,13 @@ import org.springframework.security.core.parameters.P;
  * Executions could be put into parallel blocks, so have to handle this.
  * A lot of this is modeled off of {@code InputAction}
  */
-public abstract class PipelineAction<T extends AbstractStepExecution> implements RunAction2, Serializable {
-  private static final Logger LOGGER = LoggerFactory.getLogger(PipelineAction.class);
+public class PipelineWaitingAction implements RunAction2, Serializable {
+  private static final Logger LOGGER = LoggerFactory.getLogger(PipelineWaitingAction.class);
   private static final long serialVersionUID = 1L;
 
-  private transient List<T> executions = new ArrayList<>();
+  private transient List<PipelineStepStateExecution> executions = new ArrayList<>();
   private transient Run<?, ?> run;
   private List<String> ids = new CopyOnWriteArrayList<>();
-
-  public abstract Class<T> getType();
 
   @Override
   public String getIconFileName() {
@@ -54,7 +52,7 @@ public abstract class PipelineAction<T extends AbstractStepExecution> implements
     if (ids == null || ids.isEmpty()) {
       return null;
     }
-    return Messages.PipelineAction_displayName();
+    return Messages.PipelineWaitingAction_displayName();
   }
 
   @Override
@@ -84,17 +82,17 @@ public abstract class PipelineAction<T extends AbstractStepExecution> implements
     }
   }
 
-  public synchronized void add(@Nonnull T step) throws IOException, InterruptedException, TimeoutException {
+  public synchronized void add(@Nonnull PipelineStepStateExecution step) throws IOException, InterruptedException, TimeoutException {
     loadExecutions();
     if (executions == null) {
-      throw new IOException(Messages.PipelineAction_error_loadState());
+      throw new IOException(Messages.PipelineWaitingAction_error_loadState());
     }
     this.executions.add(step);
     ids.add(step.getId());
     run.save();
   }
 
-  public synchronized T getExecution(String id) throws InterruptedException, TimeoutException {
+  public synchronized PipelineStepStateExecution getExecution(String id) throws InterruptedException, TimeoutException {
     loadExecutions();
     if (executions == null) {
       return null;
@@ -102,15 +100,15 @@ public abstract class PipelineAction<T extends AbstractStepExecution> implements
     return executions.stream().filter(e -> StringUtils.equals(id, e.getId())).findFirst().orElse(null);
   }
 
-  public synchronized List<T> getExecutions() throws InterruptedException, TimeoutException {
+  public synchronized List<PipelineStepStateExecution> getExecutions() throws InterruptedException, TimeoutException {
     loadExecutions();
     return (executions == null) ? Collections.emptyList() : new ArrayList<>(executions);
   }
 
-  public synchronized void remove(@Nonnull T step) throws IOException, InterruptedException, TimeoutException {
+  public synchronized void remove(@Nonnull PipelineStepStateExecution step) throws IOException, InterruptedException, TimeoutException {
     loadExecutions();
     if (executions == null) {
-      throw new IOException(Messages.PipelineAction_error_loadState());
+      throw new IOException(Messages.PipelineWaitingAction_error_loadState());
     }
     executions.remove(step);
     ids.remove(step.getId());
@@ -120,7 +118,7 @@ public abstract class PipelineAction<T extends AbstractStepExecution> implements
   /**
    * For URL Access
    */
-  public T getDynamic(String id) throws InterruptedException, TimeoutException {
+  public PipelineStepStateExecution getDynamic(String id) throws InterruptedException, TimeoutException {
     return getExecution(id);
   }
 
@@ -131,26 +129,26 @@ public abstract class PipelineAction<T extends AbstractStepExecution> implements
           try {
             return ex.getOwner().getExecutable() == run;
           } catch (IOException e) {
-            LOGGER.error(Messages.PipelineAction_error_loadExecutions(e.getLocalizedMessage()));
+            LOGGER.error(Messages.PipelineWaitingAction_error_loadExecutions(e.getLocalizedMessage()));
           }
           return false;
         }).findFirst();
         if (execution.isPresent()) {
           List<StepExecution> candidates = execution.get().getCurrentExecutions(true).get(60, TimeUnit.SECONDS);
           executions = candidates.stream()
-              .filter(se -> getType().isInstance(se) && ids.contains(((T) se).getId()))
-              .map((se) -> ((T) se))
+              .filter(se -> se instanceof PipelineStepStateExecution && ids.contains(((PipelineStepStateExecution) se).getId()))
+              .map((se) -> ((PipelineStepStateExecution) se))
               .collect(Collectors.toList());
           if (executions.size() < ids.size()) {
-            LOGGER.warn(Messages.PipelineAction_warn_lostExecutions(run));
+            LOGGER.warn(Messages.PipelineWaitingAction_warn_lostExecutions(run));
           }
         } else {
-          LOGGER.warn(Messages.PipelineAction_warn_missingExecution(run));
+          LOGGER.warn(Messages.PipelineWaitingAction_warn_missingExecution(run));
         }
       } catch (InterruptedException | TimeoutException e) {
         throw e;
       } catch (Exception e) {
-        LOGGER.error(Messages.PipelineAction_error_loadExecutions(e.getLocalizedMessage()));
+        LOGGER.error(Messages.PipelineWaitingAction_error_loadExecutions(e.getLocalizedMessage()));
       }
     }
   }

@@ -29,7 +29,7 @@ import io.adobe.cloudmanager.PipelineExecutionStepState;
 import io.adobe.cloudmanager.StepAction;
 import io.jenkins.plugins.adobe.cloudmanager.action.CloudManagerBuildAction;
 import io.jenkins.plugins.adobe.cloudmanager.action.PipelineStepDecisionAction;
-import io.jenkins.plugins.adobe.cloudmanager.action.PipelineStepStateAction;
+import io.jenkins.plugins.adobe.cloudmanager.action.PipelineWaitingAction;
 import org.jenkinsci.plugins.workflow.graph.FlowNode;
 import org.jenkinsci.plugins.workflow.steps.FlowInterruptedException;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
@@ -258,11 +258,11 @@ public class PipelineStepStateExecution extends AbstractStepExecution {
   }
 
   // Make sure Action exists
-  private PipelineStepStateAction getAction() throws IOException, InterruptedException {
+  private PipelineWaitingAction getAction() throws IOException, InterruptedException {
     Run<?, ?> run = getRun();
-    PipelineStepStateAction action = run.getAction(PipelineStepStateAction.class);
+    PipelineWaitingAction action = run.getAction(PipelineWaitingAction.class);
     if (action == null) {
-      action = new PipelineStepStateAction();
+      action = new PipelineWaitingAction();
       run.addAction(action);
     }
     return action;

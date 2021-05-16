@@ -17,7 +17,7 @@ import io.adobe.cloudmanager.PipelineExecution;
 import io.adobe.cloudmanager.PipelineExecutionStepState;
 import io.adobe.cloudmanager.StepAction;
 import io.jenkins.plugins.adobe.cloudmanager.action.CloudManagerBuildAction;
-import io.jenkins.plugins.adobe.cloudmanager.action.PipelineWaitingAction;
+import io.jenkins.plugins.adobe.cloudmanager.action.PipelineStepStateAction;
 import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOConfig;
 import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOProjectConfig;
 import io.jenkins.plugins.adobe.cloudmanager.step.execution.Messages;
@@ -72,6 +72,12 @@ public class PipelineStepStateStepTest {
     run.addAction(new CloudManagerBuildAction(AIO_PROJECT_NAME, "1", "1", "1"));
     SemaphoreStep.success("before/1", true);
     CpsFlowExecution cfe = (CpsFlowExecution) run.getExecutionPromise().get();
+    while (run.getAction(PipelineStepStateAction.class) == null) {
+      cfe.waitForSuspension();
+    }
+    // Now we're waiting for input.
+    PipelineStepStateAction action = run.getAction(PipelineStepStateAction.class);
+    assertEquals(1, action.getExecutions().size());
     return run;
   }
 
@@ -153,7 +159,7 @@ public class PipelineStepStateStepTest {
       assertEquals(StepAction.codeQuality, execution.getReason());
       rule.waitForMessage(Messages.PipelineStepStateExecution_prompt_waitingApproval(), run);
 
-      PipelineWaitingAction action = run.getAction(PipelineWaitingAction.class);
+      PipelineStepStateAction action = run.getAction(PipelineStepStateAction.class);
       JenkinsRule.WebClient client = rule.createWebClient();
       HtmlPage page = client.getPage(run, action.getUrlName());
       rule.submit(page.getFormByName(execution.getId()), "proceed");
@@ -199,7 +205,7 @@ public class PipelineStepStateStepTest {
       assertEquals(StepAction.approval, execution.getReason());
       rule.waitForMessage(Messages.PipelineStepStateExecution_prompt_waitingApproval(), run);
 
-      PipelineWaitingAction action = run.getAction(PipelineWaitingAction.class);
+      PipelineStepStateAction action = run.getAction(PipelineStepStateAction.class);
       JenkinsRule.WebClient client = rule.createWebClient();
       HtmlPage page = client.getPage(run, action.getUrlName());
       rule.submit(page.getFormByName(execution.getId()), "proceed");
@@ -247,7 +253,7 @@ public class PipelineStepStateStepTest {
       assertEquals(StepAction.codeQuality, execution.getReason());
       rule.waitForMessage(Messages.PipelineStepStateExecution_prompt_waitingApproval(), run);
 
-      PipelineWaitingAction action = run.getAction(PipelineWaitingAction.class);
+      PipelineStepStateAction action = run.getAction(PipelineStepStateAction.class);
       JenkinsRule.WebClient client = rule.createWebClient();
       HtmlPage page = client.getPage(run, action.getUrlName());
       rule.submit(page.getFormByName(execution.getId()), "proceed");
@@ -293,7 +299,7 @@ public class PipelineStepStateStepTest {
       assertEquals(StepAction.codeQuality, execution.getReason());
       rule.waitForMessage(Messages.PipelineStepStateExecution_prompt_waitingApproval(), run);
 
-      PipelineWaitingAction action = run.getAction(PipelineWaitingAction.class);
+      PipelineStepStateAction action = run.getAction(PipelineStepStateAction.class);
       JenkinsRule.WebClient client = rule.createWebClient();
       HtmlPage page = client.getPage(run, action.getUrlName());
       rule.submit(page.getFormByName(execution.getId()), "cancel");
@@ -338,7 +344,7 @@ public class PipelineStepStateStepTest {
       assertFalse(execution.isProcessed());
       assertEquals(StepAction.approval, execution.getReason());
 
-      PipelineWaitingAction action = run.getAction(PipelineWaitingAction.class);
+      PipelineStepStateAction action = run.getAction(PipelineStepStateAction.class);
       rule.waitForMessage(Messages.PipelineStepStateExecution_prompt_waitingApproval(), run);
       JenkinsRule.WebClient client = rule.createWebClient();
       HtmlPage page = client.getPage(run, action.getUrlName());
@@ -386,7 +392,7 @@ public class PipelineStepStateStepTest {
       assertEquals(StepAction.codeQuality, execution.getReason());
       rule.waitForMessage(Messages.PipelineStepStateExecution_prompt_waitingApproval(), run);
 
-      PipelineWaitingAction action = run.getAction(PipelineWaitingAction.class);
+      PipelineStepStateAction action = run.getAction(PipelineStepStateAction.class);
       JenkinsRule.WebClient client = rule.createWebClient();
       HtmlPage page = client.getPage(run, action.getUrlName());
       rule.submit(page.getFormByName(execution.getId()), "cancel");
@@ -489,7 +495,7 @@ public class PipelineStepStateStepTest {
 
       WorkflowRun run = rule.jenkins.getItemByFullName("test", WorkflowJob.class).getBuildByNumber(1);
       CpsFlowExecution cfe = (CpsFlowExecution) run.getExecutionPromise().get();
-      while (run.getAction(PipelineWaitingAction.class) == null) {
+      while (run.getAction(PipelineStepStateAction.class) == null) {
         cfe.waitForSuspension();
       }
 
@@ -524,7 +530,7 @@ public class PipelineStepStateStepTest {
 
       WorkflowRun run = rule.jenkins.getItemByFullName("test", WorkflowJob.class).getBuildByNumber(1);
       CpsFlowExecution cfe = (CpsFlowExecution) run.getExecutionPromise().get();
-      while (run.getAction(PipelineWaitingAction.class) == null) {
+      while (run.getAction(PipelineStepStateAction.class) == null) {
         cfe.waitForSuspension();
       }
       Executor executor;
@@ -565,7 +571,7 @@ public class PipelineStepStateStepTest {
       run.addAction(new CloudManagerBuildAction(AIO_PROJECT_NAME, "1", "1", "1"));
       SemaphoreStep.success("before/1", true);
       CpsFlowExecution cfe = (CpsFlowExecution) run.getExecutionPromise().get();
-      while (run.getAction(PipelineWaitingAction.class) == null) {
+      while (run.getAction(PipelineStepStateAction.class) == null) {
         cfe.waitForSuspension();
       }
       // Now we're waiting for input.

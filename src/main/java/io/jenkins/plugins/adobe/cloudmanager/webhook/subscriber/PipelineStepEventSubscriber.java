@@ -5,7 +5,6 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.TimeoutException;
-import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 
 import hudson.Extension;
@@ -59,23 +58,20 @@ public class PipelineStepEventSubscriber extends CloudManagerEventSubscriber {
           LOGGER.warn(Messages.PipelineStepEventSubscriber_warn_invalidStepState(event.getType()));
           return;
       }
+
       final PipelineExecution pipelineExecution = stepState.getExecution();
       StepExecution.applyAll(PipelineStepStateExecution.class, (execution) -> {
-        long count = Stream.of(execution)
-            .filter(e -> e.isApplicable(stepState) && e.isApplicable(pipelineExecution))
-            .map((e) -> {
-              try {
-                if (event.getType() == STEP_STARTED || event.getType() == STEP_ENDED) {
-                  e.occurred(pipelineExecution, stepState);
-                } else {
-                  e.waiting(pipelineExecution, stepState);
-                }
-              } catch (IOException | InterruptedException | TimeoutException ex) {
-                LOGGER.error(Messages.PipelineStepEventSubscriber_error_notifyExecution(ex.getLocalizedMessage()));
-              }
-              return e;
-            }).count();
-        LOGGER.debug(Messages.PipelineStepEventSubscriber_debug_notified(count));
+        if (execution.isApplicable(stepState) && execution.isApplicable(pipelineExecution)) {
+          try {
+            if (event.getType() == STEP_STARTED || event.getType() == STEP_ENDED) {
+              execution.occurred(pipelineExecution, stepState);
+            } else {
+              execution.waiting(pipelineExecution, stepState);
+            }
+          } catch (IOException | InterruptedException | TimeoutException ex) {
+            LOGGER.error(Messages.PipelineStepEventSubscriber_error_notifyExecution(ex.getLocalizedMessage()));
+          }
+        }
         return null;
       });
     } catch (CloudManagerApiException e) {

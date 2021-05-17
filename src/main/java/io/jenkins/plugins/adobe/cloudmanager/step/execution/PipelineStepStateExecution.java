@@ -7,7 +7,6 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.TimeoutException;
-import java.util.function.Function;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import javax.servlet.ServletException;
@@ -87,29 +86,27 @@ public class PipelineStepStateExecution extends AbstractStepExecution {
     getContext().onFailure(cause);
   }
 
-  // Filters for looking up waiting steps.
-  public Function<PipelineExecutionStepState, Boolean> wantsStep() {
-    return (state) -> {
+  // Methods for filtering incoming events
+  public boolean isApplicable(PipelineExecutionStepState stepState) {
+    try {
+      StepAction action = StepAction.valueOf(stepState.getAction());
+      return actions.contains(action);
+    } catch (IllegalArgumentException e) {
+      TaskListener listener;
       try {
-        StepAction action = StepAction.valueOf(state.getAction());
-        return actions.contains(action);
-      } catch (IllegalArgumentException e) {
-        TaskListener listener;
-        try {
-          listener = getContext().get(TaskListener.class);
-          if (listener != null) {
-            listener.getLogger().println(Messages.PipelineStepStateExecution_error_unknownStepAction(state.getAction()));
-          }
-        } catch (IOException | InterruptedException ex) {
-          // Nothing we can do, can't even log it.
+        listener = getContext().get(TaskListener.class);
+        if (listener != null) {
+          listener.getLogger().println(Messages.PipelineStepStateExecution_error_unknownStepAction(stepState.getAction()));
         }
-        return false;
+      } catch (IOException | InterruptedException ex) {
+        // Nothing we can do, can't even log it.
       }
-    };
+      return false;
+    }
   }
 
-  public Function<PipelineExecution, Boolean> wantsExecution() {
-    return (pe) -> StringUtils.equals(getBuildData().getProgramId(), pe.getProgramId()) &&
+  public boolean isApplicable(PipelineExecution pe) {
+    return StringUtils.equals(getBuildData().getProgramId(), pe.getProgramId()) &&
         StringUtils.equals(getBuildData().getPipelineId(), pe.getPipelineId()) &&
         StringUtils.equals(getBuildData().getExecutionId(), pe.getId());
   }

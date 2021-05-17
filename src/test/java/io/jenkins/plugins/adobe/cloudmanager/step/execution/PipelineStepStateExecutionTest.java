@@ -60,7 +60,7 @@ public class PipelineStepStateExecutionTest {
       result = "Unknown";
     }};
 
-    assertFalse(tested.wantsStep().apply(stepState));
+    assertFalse(tested.isApplicable(stepState));
   }
 
   @Test
@@ -71,7 +71,7 @@ public class PipelineStepStateExecutionTest {
       result = StepAction.reportPerformanceTest.name();
     }};
 
-    assertFalse(tested.wantsStep().apply(stepState));
+    assertFalse(tested.isApplicable(stepState));
   }
 
   @Test
@@ -82,7 +82,7 @@ public class PipelineStepStateExecutionTest {
       result = StepAction.build.name();
     }};
 
-    assertTrue(tested.wantsStep().apply(stepState));
+    assertTrue(tested.isApplicable(stepState));
   }
 
   @Test
@@ -93,7 +93,7 @@ public class PipelineStepStateExecutionTest {
       result = "Wrong";
     }};
 
-    assertFalse(tested.wantsExecution().apply(pipelineExecution));
+    assertFalse(tested.isApplicable(pipelineExecution));
   }
 
   @Test
@@ -106,7 +106,7 @@ public class PipelineStepStateExecutionTest {
       result = "Wrong";
     }};
 
-    assertFalse(tested.wantsExecution().apply(pipelineExecution));
+    assertFalse(tested.isApplicable(pipelineExecution));
   }
 
   @Test
@@ -121,7 +121,7 @@ public class PipelineStepStateExecutionTest {
       result = "Wrong";
     }};
 
-    assertFalse(tested.wantsExecution().apply(pipelineExecution));
+    assertFalse(tested.isApplicable(pipelineExecution));
   }
 
   @Test
@@ -136,6 +136,6 @@ public class PipelineStepStateExecutionTest {
       result = right;
     }};
 
-    assertTrue(tested.wantsExecution().apply(pipelineExecution));
+    assertTrue(tested.isApplicable(pipelineExecution));
   }
 }

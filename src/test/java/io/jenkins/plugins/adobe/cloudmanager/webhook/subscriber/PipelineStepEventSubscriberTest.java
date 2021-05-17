@@ -107,7 +107,7 @@ public class PipelineStepEventSubscriberTest {
     WorkflowJob job = rule.jenkins.createProject(WorkflowJob.class, "test");
     CpsFlowDefinition flow = new CpsFlowDefinition(
         "node('master') {\n" +
-            "    testSubscriberStep()\n" +
+            "    testStateSubscriberStep()\n" +
             "}",
         true);
     job.setDefinition(flow);
@@ -156,7 +156,7 @@ public class PipelineStepEventSubscriberTest {
     WorkflowJob job = rule.jenkins.createProject(WorkflowJob.class, "test");
     CpsFlowDefinition flow = new CpsFlowDefinition(
         "node('master') {\n" +
-            "    testSubscriberStep()\n" +
+            "    testStateSubscriberStep()\n" +
             "}",
         true);
     job.setDefinition(flow);
@@ -205,7 +205,7 @@ public class PipelineStepEventSubscriberTest {
     WorkflowJob job = rule.jenkins.createProject(WorkflowJob.class, "test");
     CpsFlowDefinition flow = new CpsFlowDefinition(
         "node('master') {\n" +
-            "    testSubscriberStep()\n" +
+            "    testStateSubscriberStep()\n" +
             "}",
         true);
     job.setDefinition(flow);
@@ -233,7 +233,7 @@ public class PipelineStepEventSubscriberTest {
     }
 
     @Override
-    public StepExecution start(StepContext context) throws Exception {
+    public StepExecution start(StepContext context) {
       return new Execution(context, this);
     }
 
@@ -283,7 +283,7 @@ public class PipelineStepEventSubscriberTest {
 
       @Override
       public String getFunctionName() {
-        return "testSubscriberStep";
+        return "testStateSubscriberStep";
       }
     }
   }

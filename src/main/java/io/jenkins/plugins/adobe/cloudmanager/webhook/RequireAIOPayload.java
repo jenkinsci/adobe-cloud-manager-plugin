@@ -5,7 +5,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.reflect.InvocationTargetException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -17,7 +16,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import hudson.util.Secret;
 import io.adobe.cloudmanager.CloudManagerApiException;
-import io.adobe.cloudmanager.CloudManagerEvent;
+import io.adobe.cloudmanager.event.CloudManagerEvent;
 import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOConfig;
 import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOProjectConfig;
 import io.jenkins.plugins.adobe.cloudmanager.util.CredentialsUtil;
@@ -28,7 +27,7 @@ import org.kohsuke.stapler.interceptor.Interceptor;
 import org.kohsuke.stapler.interceptor.InterceptorAnnotation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import static io.adobe.cloudmanager.CloudManagerEvent.*;
+import static io.adobe.cloudmanager.event.CloudManagerEvent.*;
 import static javax.servlet.http.HttpServletResponse.*;
 
 @Retention(RetentionPolicy.RUNTIME)
@@ -50,9 +49,7 @@ public @interface RequireAIOPayload {
     public Object invoke(StaplerRequest request, StaplerResponse response, Object instance, Object[] arguments) throws IllegalAccessException, InvocationTargetException, ServletException {
       requiresWebhookEnabled();
       requiresValidPayload(arguments);
-      if (HttpMethod.POST.equals(request.getMethod())) {
-        requiresValidSignature(request, arguments);
-      }
+      requiresValidSignature(arguments);
 
       return target.invoke(request, response, instance, arguments);
     }
@@ -72,25 +69,35 @@ public @interface RequireAIOPayload {
     /**
      * Precheck that the arguments contain a parsable payload.
      *
-     * @param args payload, not null and not blank.
+     * @param args request and CMEvent
      * @throws InvocationTargetException if conditions are not met
      */
     protected void requiresValidPayload(@Nonnull Object[] args) throws InvocationTargetException {
-      isTrue(args.length == 3, Messages.RequireAIOPayload_Processor_error_invalidArgs());
+      isTrue(args.length == 2, Messages.RequireAIOPayload_Processor_error_invalidArgs());
+      isTrue(args[1] instanceof CMEvent, Messages.RequireAIOPayload_Processor_error_invalidArgs());
 
-      isTrue(StringUtils.isNotBlank((String) Arrays.stream(args).filter(a -> a instanceof String).findFirst().orElse("")),
-          Messages.RequireAIOPayload_Processor_error_missingBody());
+      CMEvent event = (CMEvent) args[1];
+      isTrue(event != null, Messages.RequireAIOPayload_Processor_error_missingBody());
+      StaplerRequest request = (StaplerRequest) args[0];
+      if (HttpMethod.POST.equals(request.getMethod())) {
+        isTrue(event.getEventType() != null, Messages.RequireAIOPayload_Processor_error_missingBody());
+      }
     }
+
 
     /**
      * Precheck to ensure that the request contains a valid signature and that the payload matches.
      *
-     * @param request stapler request
-     * @param arguments event payload
+     * @param args request and CMEvent
      * @throws InvocationTargetException if conditions are not met
      */
-    protected void requiresValidSignature(StaplerRequest request, Object[] arguments) throws InvocationTargetException {
+    protected void requiresValidSignature(Object[] args) throws InvocationTargetException {
+      StaplerRequest request = (StaplerRequest) args[0];
+
+      final CMEvent event = (CMEvent) args[1];
       List<Secret> secrets = AdobeIOConfig.configuration().getProjectConfigs().stream()
+          // Challenge requests will have a blank IMS Org
+          .filter(cfg -> StringUtils.isBlank(event.getImsOrg()) || StringUtils.equals(cfg.getImsOrganizationId(), event.getImsOrg()))
           .map(AdobeIOProjectConfig::getClientSecretCredentialsId)
           .map(CredentialsUtil::clientSecretFor)
           .filter(Optional::isPresent)
@@ -101,12 +108,11 @@ public @interface RequireAIOPayload {
       Optional<String> header = Optional.ofNullable(request.getHeader(SIGNATURE_HEADER));
       isTrue(header.isPresent(), Messages.RequireAIOPayload_Processor_error_missingSignature());
 
-      final String payload = (String) arguments[2];
       String digest = header.get();
       isTrue(
           secrets.stream().anyMatch(s -> {
             try {
-              return CloudManagerEvent.isValidSignature(payload, digest, s.getPlainText());
+              return CloudManagerEvent.isValidSignature(event.getPayload(), digest, s.getPlainText());
             } catch (CloudManagerApiException e) {
               LOGGER.warn(Messages.RequireAIOPayload_Processor_warn_signatureValidationError(e.getLocalizedMessage()));
               return false;

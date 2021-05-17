@@ -3,15 +3,15 @@
   "event": {
     "@id": "1",
     "@type": "https://ns.adobe.com/experience/cloudmanager/event/started",
-    "xdmEventEnvelope:objectType": "https://ns.adobe.com/experience/cloudmanager/execution-step-state",
+    "xdmEventEnvelope:objectType": "https://ns.adobe.com/experience/cloudmanager/pipeline-execution",
     "activitystreams:published": "",
     "activitystreams:to": {
       "xdmImsOrg:id": "1234567890@AdobeOrg",
       "@type": "xdmImsOrg"
     },
     "activitystreams:object": {
-      "@id": "/api/program/4/pipeline/3/execution/4/phase/4596/step/8491",
-      "@type": "https://ns.adobe.com/experience/cloudmanager/execution-step-state"
+      "@id": "/api/program/4/pipeline/3/execution/4",
+      "@type": "https://ns.adobe.com/experience/cloudmanager/pipeline-execution"
     }
   }
 }

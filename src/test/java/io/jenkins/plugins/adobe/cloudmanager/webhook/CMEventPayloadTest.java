@@ -9,9 +9,9 @@ import org.apache.commons.io.IOUtils;
 import org.apache.http.entity.ContentType;
 
 import io.adobe.cloudmanager.CloudManagerApiException;
-import io.adobe.cloudmanager.CloudManagerEvent;
-import io.adobe.cloudmanager.CloudManagerEvent.Type;
-import io.adobe.cloudmanager.generated.events.PipelineExecutionStartEvent;
+import io.adobe.cloudmanager.event.CloudManagerEvent;
+import io.adobe.cloudmanager.event.CloudManagerEvent.EventType;
+import io.adobe.cloudmanager.event.PipelineExecutionStartEvent;
 import mockit.Expectations;
 import mockit.Mock;
 import mockit.MockUp;
@@ -21,17 +21,17 @@ import org.junit.Test;
 import org.kohsuke.stapler.StaplerRequest;
 import static org.junit.Assert.*;
 
-public class AIOEventPayloadTest {
+public class CMEventPayloadTest {
   private static final String PARAM_NAME = "payload";
 
   @Mocked
   private StaplerRequest request;
 
   @Mocked
-  private AIOEventPayload annotation;
+  private CMEventPayload annotation;
 
   @Tested
-  private AIOEventPayload.PayloadHandler handler;
+  private CMEventPayload.PayloadHandler handler;
 
   @Test
   public void invalidContentType() throws Exception {
@@ -41,7 +41,7 @@ public class AIOEventPayloadTest {
       result = ContentType.TEXT_HTML.getMimeType();
     }};
 
-    assertNull(handler.parse(request, annotation, String.class, PARAM_NAME));
+    assertNull(handler.parse(request, annotation, CMEvent.class, PARAM_NAME));
   }
 
   @Test
@@ -49,22 +49,22 @@ public class AIOEventPayloadTest {
     new Expectations() {{
       request.getContentType();
       result = ContentType.APPLICATION_FORM_URLENCODED.getMimeType();
-      request.getParameter(AIOEventPayload.PayloadHandler.CHALLENGE_PARAM);
+      request.getParameter(CMEventPayload.PayloadHandler.CHALLENGE_PARAM);
       result = null;
     }};
-    assertNull(handler.parse(request, annotation, String.class, PARAM_NAME));
+    assertNull(handler.parse(request, annotation, CMEvent.class, PARAM_NAME));
   }
   
   @Test
   public void validChallengeRequest() throws Exception {
-    String param = "Challenge Parameter";
+    CMEvent event = new CMEvent(null, null, "Challenge Parameter");
     new Expectations() {{
       request.getContentType();
       result = ContentType.APPLICATION_FORM_URLENCODED.getMimeType();
-      request.getParameter(AIOEventPayload.PayloadHandler.CHALLENGE_PARAM);
-      result = param;
+      request.getParameter(CMEventPayload.PayloadHandler.CHALLENGE_PARAM);
+      result = "Challenge Parameter";
     }};
-    assertEquals(param, handler.parse(request, annotation, String.class, PARAM_NAME));
+    assertEquals(event, handler.parse(request, annotation, CMEvent.class, PARAM_NAME));
   }
 
   @Test
@@ -77,7 +77,7 @@ public class AIOEventPayloadTest {
       result = new IOException("Failed");
     }};
 
-    assertNull(handler.parse(request, annotation, String.class, PARAM_NAME));
+    assertNull(handler.parse(request, annotation, CMEvent.class, PARAM_NAME));
   }
 
   @Test
@@ -91,9 +91,9 @@ public class AIOEventPayloadTest {
       }
     };
 
-    new MockUp<Type>() {
+    new MockUp<EventType>() {
       @Mock
-      public Type from(String source) throws CloudManagerApiException {
+      public EventType from(String source) throws CloudManagerApiException {
         throw new CloudManagerApiException(CloudManagerApiException.ErrorType.PROCESS_EVENT, "failed");
       }
     };
@@ -105,58 +105,19 @@ public class AIOEventPayloadTest {
       result = is;
     }};
 
-    assertNull(handler.parse(request, annotation, String.class, PARAM_NAME));
+    assertNull(handler.parse(request, annotation, CMEvent.class, PARAM_NAME));
   }
 
-  @Test
-  public void invalidClassProvided() throws Exception {
-    Class type = AIOEventPayloadTest.class;
-    String body = "";
-    new MockUp<IOUtils>() {
-      @Mock
-      public String toString(InputStream inputStream, Charset charset) {
-        return body;
-      }
-    };
 
-    new MockUp<Type>() {
-      @Mock
-      public Class from(String source) throws CloudManagerApiException {
-        return null;
-      }
-    };
-
-    new Expectations() {{
-      request.getContentType();
-      result = ContentType.APPLICATION_JSON.getMimeType();
-      request.getInputStream();
-      result = null;
-    }};
-
-    assertNull(handler.parse(request, annotation, String.class, PARAM_NAME));
-  }
 
   @Test
   public void unableToParseBody() throws Exception {
-    Type type = Type.PIPELINE_STARTED;
-    String body = "";
+    CloudManagerEvent.EventType type = EventType.PIPELINE_STARTED;
+    String body = "Not Json";
     new MockUp<IOUtils>() {
       @Mock
       public String toString(InputStream inputStream, Charset charset) {
         return body;
-      }
-    };
-
-    new MockUp<Type>() {
-      @Mock
-      public Type from(String source) throws CloudManagerApiException {
-        return type;
-      }
-    };
-    new MockUp<CloudManagerEvent>() {
-      @Mock
-      public <T> T parseEvent(String source, Class<T> type) throws CloudManagerApiException {
-        throw new CloudManagerApiException(CloudManagerApiException.ErrorType.PROCESS_EVENT, "Failed");
       }
     };
 
@@ -167,13 +128,41 @@ public class AIOEventPayloadTest {
       result = null;
     }};
 
-    assertNull(handler.parse(request, annotation, String.class, PARAM_NAME));
+    assertNull(handler.parse(request, annotation, CMEvent.class, PARAM_NAME));
+  }
+
+  @Test
+  public void incompleteBody() throws Exception {
+    CloudManagerEvent.EventType type = EventType.PIPELINE_STARTED;
+    String body = "{}";
+    new MockUp<IOUtils>() {
+      @Mock
+      public String toString(InputStream inputStream, Charset charset) {
+        return body;
+      }
+    };
+
+    new MockUp<EventType>() {
+      @Mock
+      public EventType from(String source) throws CloudManagerApiException {
+        return type;
+      }
+    };
+
+    new Expectations() {{
+      request.getContentType();
+      result = ContentType.APPLICATION_JSON.getMimeType();
+      request.getInputStream();
+      result = null;
+    }};
+
+    assertNull(handler.parse(request, annotation, CMEvent.class, PARAM_NAME));
   }
 
   @Test
   public void success() throws Exception {
-    Type type = Type.PIPELINE_STARTED;
-    String body = "";
+    CloudManagerEvent.EventType type = EventType.PIPELINE_STARTED;
+    String body = IOUtils.resourceToString("events/pipeline-ended.json", Charset.defaultCharset(), this.getClass().getClassLoader());
     new MockUp<IOUtils>() {
       @Mock
       public String toString(InputStream inputStream, Charset charset) {
@@ -181,16 +170,10 @@ public class AIOEventPayloadTest {
       }
     };
 
-    new MockUp<Type>() {
+    new MockUp<EventType>() {
       @Mock
-      public Type from(String source) throws CloudManagerApiException {
+      public EventType from(String source) throws CloudManagerApiException {
         return type;
-      }
-    };
-    new MockUp<CloudManagerEvent>() {
-      @Mock
-      public PipelineExecutionStartEvent parseEvent(String source, Class<PipelineExecutionStartEvent> type) throws CloudManagerApiException {
-        return new PipelineExecutionStartEvent();
       }
     };
 
@@ -201,6 +184,6 @@ public class AIOEventPayloadTest {
       result = null;
     }};
 
-    assertNotNull(handler.parse(request, annotation, String.class, PARAM_NAME));
+    assertNotNull(handler.parse(request, annotation, CMEvent.class, PARAM_NAME));
   }
 }

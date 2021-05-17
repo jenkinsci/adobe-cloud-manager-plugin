@@ -86,6 +86,7 @@ public class TestHelper {
       config.setTechnicalAccountId(TECH_ACCT_ID);
       config.setClientSecretCredentialsId(CLIENT_SECRET_CRED_ID);
       config.setPrivateKeyCredentialsId(PRIVATE_KEY_CRED_ID);
+      config.setApiUrl(Jenkins.get().getRootUrl());
       AIO_PROJECT_CONFIGS.add(config);
 
 

@@ -6,7 +6,7 @@
     "xdmEventEnvelope:objectType": "https://ns.adobe.com/experience/cloudmanager/pipeline-execution",
     "activitystreams:published": "",
     "activitystreams:to": {
-      "xdmImsOrg:id": "IMS",
+      "xdmImsOrg:id": "1234567890@AdobeOrg",
       "@type": "xdmImsOrg"
     },
     "activitystreams:object": {

@@ -64,7 +64,7 @@ public class PipelineEndEventSubscriberTest {
 
   @Test
   public void handlesEvent() throws Exception {
-    String payload = IOUtils.resourceToString("events/pipeline-end.json", Charset.defaultCharset(), PipelineEndEventSubscriberTest.class.getClassLoader());
+    String payload = IOUtils.resourceToString("events/pipeline-ended.json", Charset.defaultCharset(), PipelineEndEventSubscriberTest.class.getClassLoader());
     CloudManagerEvent.EventType type = CloudManagerEvent.EventType.from(payload);
     CloudManagerSubscriberEvent subscriberEvent = new CloudManagerSubscriberEvent(AIO_PROJECT_NAME, type, payload);
     PipelineExecutionEndEvent event = CloudManagerEvent.parseEvent(payload, PipelineExecutionEndEvent.class);

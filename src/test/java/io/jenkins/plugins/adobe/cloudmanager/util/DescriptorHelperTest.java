@@ -3,6 +3,7 @@ package io.jenkins.plugin.adobe.cloudmanager.util;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import hudson.util.ListBoxModel;
 import hudson.util.Secret;
@@ -323,12 +324,12 @@ public class DescriptorHelperTest {
     }
 
     @Override
-    public List<Variable> listVariables() throws CloudManagerApiException {
+    public Set<Variable> listVariables() throws CloudManagerApiException {
       return null;
     }
 
     @Override
-    public List<Variable> setVariables(Variable... variables) throws CloudManagerApiException {
+    public Set<Variable> setVariables(Variable... variables) throws CloudManagerApiException {
       return null;
     }
 

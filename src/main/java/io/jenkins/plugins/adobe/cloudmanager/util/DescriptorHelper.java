@@ -1,7 +1,7 @@
 package io.jenkins.plugins.adobe.cloudmanager.util;
 
+import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
@@ -55,7 +55,7 @@ public class DescriptorHelper {
     try {
       if (StringUtils.isNotBlank(aioProject)) {
         CloudManagerApi api = createApi(aioProject);
-        List<Program> programs = api == null ? Collections.emptyList() : api.listPrograms();
+        Collection<Program> programs = api == null ? Collections.emptyList() : api.listPrograms();
         for (Program p : programs) {
           lbm.add(p.getName(), p.getId());
         }
@@ -74,7 +74,7 @@ public class DescriptorHelper {
     if (StringUtils.isNotBlank(aioProject) && StringUtils.isNotBlank(program)) {
       CloudManagerApi api = createApi(aioProject);
       try {
-        List<Pipeline> pipelines = api == null ? Collections.emptyList() : api.listPipelines(program);
+        Collection<Pipeline> pipelines = api == null ? Collections.emptyList() : api.listPipelines(program);
         for (Pipeline p : pipelines) {
           lbm.add(p.getName(), p.getId());
         }

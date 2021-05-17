@@ -1,0 +1,18 @@
+{
+  "event_id": "1",
+  "event": {
+    "@id": "1",
+    "@type": "https://ns.adobe.com/experience/cloudmanager/event/ended",
+    "xdmEventEnvelope:objectType": "https://ns.adobe.com/experience/cloudmanager/pipeline-execution",
+    "activitystreams:published": "",
+    "activitystreams:to": {
+      "xdmImsOrg:id": "IMS",
+      "@type": "xdmImsOrg"
+    },
+    "activitystreams:object": {
+      "@id": "/api/program/4/pipeline/3/execution/4",
+      "@type": "https://ns.adobe.com/experience/cloudmanager/pipeline-execution"
+    }
+  }
+}
+

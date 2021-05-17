@@ -4,13 +4,11 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
-import java.util.function.Function;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
 import org.apache.commons.lang3.StringUtils;
 
-import hudson.AbortException;
 import hudson.model.Result;
 import hudson.model.TaskListener;
 import io.adobe.cloudmanager.PipelineExecution;
@@ -20,7 +18,6 @@ import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.jenkinsci.plugins.workflow.steps.StepExecution;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import static io.adobe.cloudmanager.PipelineExecution.Status.*;
 
 public class PipelineEndExecution extends AbstractStepExecution {
@@ -83,8 +80,8 @@ public class PipelineEndExecution extends AbstractStepExecution {
     }
   }
 
-  public Function<PipelineExecution, Boolean> wants() {
-    return (pe) -> StringUtils.equals(getBuildData().getProgramId(), pe.getProgramId()) &&
+  public boolean isApplicable(PipelineExecution pe) {
+    return StringUtils.equals(getBuildData().getProgramId(), pe.getProgramId()) &&
         StringUtils.equals(getBuildData().getPipelineId(), pe.getPipelineId()) &&
         StringUtils.equals(getBuildData().getExecutionId(), pe.getId());
   }

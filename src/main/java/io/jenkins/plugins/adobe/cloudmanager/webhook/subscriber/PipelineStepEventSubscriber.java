@@ -69,13 +69,13 @@ public class PipelineStepEventSubscriber extends CloudManagerEventSubscriber {
               execution.waiting(pipelineExecution, stepState);
             }
           } catch (IOException | InterruptedException | TimeoutException ex) {
-            LOGGER.error(Messages.PipelineStepEventSubscriber_error_notifyExecution(ex.getLocalizedMessage()));
+            LOGGER.error(Messages.CloudManagerEventSubscriber_error_notifyExecution(ex.getLocalizedMessage()));
           }
         }
         return null;
       });
     } catch (CloudManagerApiException e) {
-      LOGGER.error(Messages.PipelineStepEventSubscriber_error_api(e.getLocalizedMessage()));
+      LOGGER.error(Messages.CloudManagerEventSubscriber_error_api(e.getLocalizedMessage()));
     }
   }
 }

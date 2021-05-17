@@ -14,7 +14,6 @@ import hudson.model.Result;
 import io.adobe.cloudmanager.CloudManagerApi;
 import io.adobe.cloudmanager.PipelineExecution;
 import io.jenkins.plugins.adobe.cloudmanager.action.CloudManagerBuildAction;
-import io.jenkins.plugins.adobe.cloudmanager.action.PipelineWaitingAction;
 import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOProjectConfig;
 import io.jenkins.plugins.adobe.cloudmanager.step.execution.Messages;
 import io.jenkins.plugins.adobe.cloudmanager.step.execution.PipelineEndExecution;
@@ -22,7 +21,6 @@ import io.jenkins.plugins.adobe.cloudmanager.step.execution.PipelineStepStateExe
 import mockit.Expectations;
 import mockit.Mocked;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
-import org.jenkinsci.plugins.workflow.cps.CpsFlowExecution;
 import org.jenkinsci.plugins.workflow.graph.FlowGraphWalker;
 import org.jenkinsci.plugins.workflow.graph.FlowNode;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
@@ -223,7 +221,7 @@ public class PipelineEndStepTest {
               "        acmPipelineStepState()\n " +
               "      }, waiting: {\n" +
               "        waitUntil(initialRecurrencePeriod: 1000) {\n" +
-              "          testStep()\n" +
+              "          testRecurrenceStep()\n" +
               "        }\n" +
               "      }\n" +
               "    }\n" +
@@ -244,7 +242,7 @@ public class PipelineEndStepTest {
       PipelineStepStateExecution psse = (PipelineStepStateExecution) run.getExecution().getCurrentExecutions(false).get().stream().filter(e -> e instanceof PipelineStepStateExecution).findFirst().orElse(null);
       assertNull(psse);
       rule.waitForMessage("Will try again after 1.2 sec", run);
-      TestStep.finished = true;
+      TestRecurrenceStep.finished = true;
 
       rule.waitForCompletion(run);
       assertTrue(run.getLog().contains(Messages.PipelineEndExecution_info_waiting()));
@@ -256,12 +254,12 @@ public class PipelineEndStepTest {
     });
   }
 
-  public static final class TestStep extends Step {
+  public static final class TestRecurrenceStep extends Step {
 
     public static boolean finished = false;
 
     @DataBoundConstructor
-    public TestStep() {
+    public TestRecurrenceStep() {
 
     }
 
@@ -271,11 +269,9 @@ public class PipelineEndStepTest {
     }
 
     public static final class Execution extends StepExecution {
+      public final TestRecurrenceStep step;
 
-      public static int i = 0;
-      public final TestStep step;
-
-      public Execution(StepContext context, TestStep step) {
+      public Execution(StepContext context, TestRecurrenceStep step) {
         super(context);
         this.step = step;
       }
@@ -296,7 +292,7 @@ public class PipelineEndStepTest {
 
       @Override
       public String getFunctionName() {
-        return "testStep";
+        return "testRecurrenceStep";
       }
     }
   }

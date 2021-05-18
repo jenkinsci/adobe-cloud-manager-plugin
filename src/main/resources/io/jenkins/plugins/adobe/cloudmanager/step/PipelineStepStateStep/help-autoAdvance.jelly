@@ -25,11 +25,8 @@
 
 -->
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form" >
-    <f:entry field="recurrencePeriod" title="${%recurrencePeriod.title}">
-        <f:number default="300000" />
-    </f:entry>
-    <f:entry field="quiet" title="${%quiet.title}">
-        <f:checkbox default="false" />
-    </f:entry>
+<j:jelly xmlns:j="jelly:core">
+    <div>
+        ${%help.text}
+    </div>
 </j:jelly>

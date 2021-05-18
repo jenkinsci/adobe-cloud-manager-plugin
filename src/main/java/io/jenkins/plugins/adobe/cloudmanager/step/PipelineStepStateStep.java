@@ -62,6 +62,10 @@ public class PipelineStepStateStep extends Step {
     this.autoAdvance = autoAdvance;
   }
 
+  public StepAction[] listActions() {
+    return StepAction.values();
+  }
+
   @Override
   public StepExecution start(StepContext context) throws Exception {
     return new PipelineStepStateExecution(context, new HashSet<>(getActions()));

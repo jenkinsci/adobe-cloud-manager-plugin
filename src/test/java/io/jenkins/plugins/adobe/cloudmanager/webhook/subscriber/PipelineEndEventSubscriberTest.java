@@ -129,7 +129,7 @@ public class PipelineEndEventSubscriberTest {
       }
 
       @Override
-      public boolean start() throws Exception {
+      public boolean doStart() throws Exception {
         getContext().get(TaskListener.class).getLogger().println(MESSAGE);
         return false;
       }

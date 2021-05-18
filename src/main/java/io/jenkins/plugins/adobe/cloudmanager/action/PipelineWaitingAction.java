@@ -16,7 +16,6 @@ import javax.annotation.Nonnull;
 import org.apache.commons.lang3.StringUtils;
 
 import hudson.model.Run;
-import io.jenkins.plugins.adobe.cloudmanager.step.execution.AbstractStepExecution;
 import io.jenkins.plugins.adobe.cloudmanager.step.execution.PipelineStepStateExecution;
 import jenkins.model.RunAction2;
 import org.jenkinsci.plugins.workflow.flow.FlowExecution;

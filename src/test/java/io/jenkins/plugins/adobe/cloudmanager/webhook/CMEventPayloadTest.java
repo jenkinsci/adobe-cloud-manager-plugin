@@ -3,6 +3,7 @@ package io.jenkins.plugins.adobe.cloudmanager.webhook;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import javax.servlet.ServletInputStream;
 
 import org.apache.commons.io.IOUtils;
@@ -11,7 +12,6 @@ import org.apache.http.entity.ContentType;
 import io.adobe.cloudmanager.CloudManagerApiException;
 import io.adobe.cloudmanager.event.CloudManagerEvent;
 import io.adobe.cloudmanager.event.CloudManagerEvent.EventType;
-import io.adobe.cloudmanager.event.PipelineExecutionStartEvent;
 import mockit.Expectations;
 import mockit.Mock;
 import mockit.MockUp;
@@ -23,6 +23,7 @@ import static org.junit.Assert.*;
 
 public class CMEventPayloadTest {
   private static final String PARAM_NAME = "payload";
+  private static final String CONTENT_TYPE = "application/json; charset=UTF-8";
 
   @Mocked
   private StaplerRequest request;
@@ -72,7 +73,7 @@ public class CMEventPayloadTest {
 
     new Expectations() {{
       request.getContentType();
-      result = ContentType.APPLICATION_JSON.getMimeType();
+      result = CONTENT_TYPE;
       request.getInputStream();
       result = new IOException("Failed");
     }};
@@ -100,7 +101,7 @@ public class CMEventPayloadTest {
 
     new Expectations() {{
       request.getContentType();
-      result = ContentType.APPLICATION_JSON.getMimeType();
+      result = CONTENT_TYPE;
       request.getInputStream();
       result = is;
     }};
@@ -123,7 +124,7 @@ public class CMEventPayloadTest {
 
     new Expectations() {{
       request.getContentType();
-      result = ContentType.APPLICATION_JSON.getMimeType();
+      result = CONTENT_TYPE;
       request.getInputStream();
       result = null;
     }};
@@ -151,7 +152,7 @@ public class CMEventPayloadTest {
 
     new Expectations() {{
       request.getContentType();
-      result = ContentType.APPLICATION_JSON.getMimeType();
+      result = "application/json; charset=UTF-8";
       request.getInputStream();
       result = null;
     }};
@@ -179,7 +180,7 @@ public class CMEventPayloadTest {
 
     new Expectations() {{
       request.getContentType();
-      result = ContentType.APPLICATION_JSON.getMimeType();
+      result = CONTENT_TYPE;
       request.getInputStream();
       result = null;
     }};

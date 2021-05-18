@@ -24,7 +24,6 @@ import org.kohsuke.stapler.HttpResponses;
 import org.kohsuke.stapler.StaplerRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import static io.adobe.cloudmanager.event.CloudManagerEvent.EventType.*;
 
 @Extension
 public class AdobeIOWebHook implements UnprotectedRootAction {

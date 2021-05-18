@@ -14,6 +14,7 @@ import java.util.function.Function;
 import javax.servlet.ServletException;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.entity.ContentType;
 
 import io.adobe.cloudmanager.CloudManagerApiException;
@@ -45,7 +46,6 @@ public @interface CMEventPayload {
     private static final Map<String, Function<StaplerRequest, CMEvent>> PROCESSORS;
     static {
       Map<String, Function<StaplerRequest, CMEvent>> procs = new HashMap<>();
-      procs.put(null, fromParam()); // For Testing
       procs.put(ContentType.APPLICATION_FORM_URLENCODED.getMimeType(), fromParam());
       procs.put(ContentType.APPLICATION_JSON.getMimeType(), fromBody());
       PROCESSORS = Collections.unmodifiableMap(procs);
@@ -54,7 +54,9 @@ public @interface CMEventPayload {
     @Override
     public Object parse(StaplerRequest request, CMEventPayload cmEventPayload, Class clazz, String paramName) throws ServletException {
 
-      String contentType = request.getContentType();
+
+      String contentType = StringUtils.defaultString(request.getContentType(), ContentType.APPLICATION_FORM_URLENCODED.getMimeType());
+      contentType = ContentType.parse(contentType).getMimeType(); // In case of charset parameter.
 
       if (!PROCESSORS.containsKey(contentType)) {
         LOGGER.warn(Messages.CMEventPayload_PayloadHandler_warn_unknownContentType(contentType));

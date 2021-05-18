@@ -53,7 +53,7 @@ public abstract class CloudManagerEventSubscriber implements ExtensionPoint {
     if (aioProject != null) {
       Secret token = aioProject.authenticate();
       if (token != null) {
-        return CloudManagerApi.create(aioProject.getImsOrganizationId(), aioProject.getClientId(), token.getPlainText(), aioProject.getApiUrl());
+        return CloudManagerApi.create(aioProject.getImsOrganizationId(), aioProject.getClientId(), token.getPlainText());
       }
     } else {
       LOGGER.error(Messages.CloudManagerEventSubscriber_error_missingAioProject(projectName));

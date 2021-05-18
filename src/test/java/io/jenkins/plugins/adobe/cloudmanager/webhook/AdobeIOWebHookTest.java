@@ -16,14 +16,9 @@ import javax.ws.rs.HttpMethod;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.entity.ContentType;
 
-import io.adobe.cloudmanager.CloudManagerApi;
 import io.adobe.cloudmanager.event.CloudManagerEvent;
-import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOConfig;
-import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOProjectConfig;
 import io.jenkins.plugins.adobe.cloudmanager.webhook.subscriber.CloudManagerEventSubscriber;
 import io.jenkins.plugins.adobe.cloudmanager.webhook.subscriber.CloudManagerSubscriberEvent;
-import mockit.Expectations;
-import mockit.Mocked;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -37,12 +32,6 @@ public class AdobeIOWebHookTest {
 
   @Rule
   public JenkinsRule rule = new JenkinsRule();
-//
-//  @Mocked
-//  private AdobeIOProjectConfig adobeIOProjectConfig;
-//
-//  @Mocked
-//  private CloudManagerApi api;
 
   private static final String sign(String toSign) throws Exception {
     Mac mac = Mac.getInstance("HmacSHA256");

@@ -3,11 +3,12 @@ package io.jenkins.plugins.adobe.cloudmanager.step.execution;
 import java.io.IOException;
 
 import hudson.AbortException;
+import hudson.model.Run;
 import hudson.util.Secret;
 import io.adobe.cloudmanager.CloudManagerApi;
+import io.jenkins.plugins.adobe.cloudmanager.action.CloudManagerBuildAction;
 import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOConfig;
 import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOProjectConfig;
-import io.jenkins.plugins.adobe.cloudmanager.action.CloudManagerBuildAction;
 import mockit.Expectations;
 import mockit.Injectable;
 import mockit.Mock;
@@ -29,7 +30,10 @@ public class AbstractStepExecutionTest {
   @Injectable
   private StepContext context;
 
-  @Injectable
+  @Mocked
+  private Run<?, ?> run;
+
+  @Mocked
   private CloudManagerBuildAction data;
 
   @Mocked
@@ -39,17 +43,25 @@ public class AbstractStepExecutionTest {
   private AdobeIOProjectConfig projectConfig;
 
   @Before
-  public void before() {
+  public void before() throws Exception {
     new MockUp<AdobeIOConfig>() {
       @Mock
       public AdobeIOProjectConfig projectConfigFor(String name) {
         return found.equals(name) ? projectConfig : null;
       }
     };
+    new Expectations() {{
+      context.get(Run.class);
+      result = run;
+      minTimes = 0;
+      run.getAction(CloudManagerBuildAction.class);
+      result = data;
+      minTimes = 0;
+    }};
   }
 
   @Test
-  public void validateMissingAIOProject() {
+  public void validateMissingAIOProject() throws Exception {
     new Expectations() {{
       data.getAioProjectName();
       result = "Missing";
@@ -58,7 +70,7 @@ public class AbstractStepExecutionTest {
   }
 
   @Test
-  public void validateMissingProgramId() {
+  public void validateMissingProgramId() throws Exception {
     new Expectations() {{
       data.getAioProjectName();
       result = found;
@@ -67,7 +79,7 @@ public class AbstractStepExecutionTest {
   }
 
   @Test
-  public void validateMissingPipelineId() {
+  public void validateMissingPipelineId() throws Exception {
     new Expectations() {{
       data.getAioProjectName();
       result = found;
@@ -78,7 +90,7 @@ public class AbstractStepExecutionTest {
   }
 
   @Test
-  public void validateMissingExecutionId() {
+  public void validateMissingExecutionId() throws Exception {
     new Expectations() {{
       data.getAioProjectName();
       result = found;
@@ -91,7 +103,7 @@ public class AbstractStepExecutionTest {
   }
 
   @Test
-  public void validateSuccess() throws IOException, InterruptedException {
+  public void validateSuccess() throws Exception {
     new Expectations() {{
       data.getAioProjectName();
       result = found;
@@ -106,7 +118,7 @@ public class AbstractStepExecutionTest {
   }
 
   @Test
-  public void projectMissing() {
+  public void projectMissing() throws Exception {
     new Expectations() {{
       data.getAioProjectName();
       result = "Missing";
@@ -115,7 +127,7 @@ public class AbstractStepExecutionTest {
   }
 
   @Test
-  public void projectFound() throws IOException, InterruptedException {
+  public void projectFound() throws Exception {
     new Expectations() {{
       data.getAioProjectName();
       result = found;
@@ -124,7 +136,7 @@ public class AbstractStepExecutionTest {
   }
 
   @Test
-  public void accessTokenFails() {
+  public void accessTokenFails() throws Exception {
     new Expectations() {{
       data.getAioProjectName();
       result = found;
@@ -135,7 +147,7 @@ public class AbstractStepExecutionTest {
   }
 
   @Test
-  public void accessTokenSuccess() throws IOException, InterruptedException {
+  public void accessTokenSuccess() throws Exception {
     new Expectations() {{
       data.getAioProjectName();
       result = found;

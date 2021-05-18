@@ -14,11 +14,14 @@ import hudson.model.Result;
 import io.adobe.cloudmanager.CloudManagerApi;
 import io.adobe.cloudmanager.PipelineExecution;
 import io.jenkins.plugins.adobe.cloudmanager.action.CloudManagerBuildAction;
+import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOConfig;
 import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOProjectConfig;
 import io.jenkins.plugins.adobe.cloudmanager.step.execution.Messages;
 import io.jenkins.plugins.adobe.cloudmanager.step.execution.PipelineEndExecution;
 import io.jenkins.plugins.adobe.cloudmanager.step.execution.PipelineStepStateExecution;
 import mockit.Expectations;
+import mockit.Mock;
+import mockit.MockUp;
 import mockit.Mocked;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.graph.FlowGraphWalker;
@@ -31,6 +34,7 @@ import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
 import org.jenkinsci.plugins.workflow.steps.StepExecution;
 import org.jenkinsci.plugins.workflow.support.actions.PauseAction;
 import org.jenkinsci.plugins.workflow.test.steps.SemaphoreStep;
+import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -52,6 +56,17 @@ public class PipelineEndStepTest {
   private AdobeIOProjectConfig projectConfig;
   @Mocked
   private CloudManagerApi api;
+
+  @Before
+  public void before() {
+    new MockUp<AdobeIOConfig>() {
+      @Mock
+      public AdobeIOProjectConfig projectConfigFor(String name) {
+        return projectConfig;
+      }
+    };
+
+  }
 
   @Test
   public void noBuildData() {
@@ -239,6 +254,7 @@ public class PipelineEndStepTest {
       PipelineEndExecution ex = (PipelineEndExecution) executions.stream().filter(e -> e instanceof PipelineEndExecution).findFirst().orElse(null);
       ex.occurred(pipelineExecution);
 
+      rule.waitForMessage(Messages.PipelineStepStateExecution_info_endQuietly(), run);
       PipelineStepStateExecution psse = (PipelineStepStateExecution) run.getExecution().getCurrentExecutions(false).get().stream().filter(e -> e instanceof PipelineStepStateExecution).findFirst().orElse(null);
       assertNull(psse);
       rule.waitForMessage("Will try again after 1.2 sec", run);
@@ -246,6 +262,47 @@ public class PipelineEndStepTest {
 
       rule.waitForCompletion(run);
       assertTrue(run.getLog().contains(Messages.PipelineEndExecution_info_waiting()));
+      String xml = FileUtils.readFileToString(new File(run.getRootDir(), "build.xml"), Charset.defaultCharset());
+      assertFalse(xml.contains(PipelineEndExecution.class.getName()));
+      rule.assertBuildStatus(Result.SUCCESS, run);
+      assertTrue(run.getLog().contains(Messages.PipelineEndExecution_event_occurred("ExecutionId", "FINISHED")));
+      assertTrue(run.getLog().contains(Messages.PipelineStepStateExecution_info_endQuietly()));
+    });
+  }
+
+  @Test
+  public void handlesRestartDuringBlock() {
+    story.then(rule -> {
+      new Expectations() {{
+        pipelineExecution.getId();
+        result = "ExecutionId";
+        pipelineExecution.getStatusState();
+        result = PipelineExecution.Status.FINISHED;
+      }};
+      WorkflowJob job = rule.jenkins.createProject(WorkflowJob.class, "test");
+      CpsFlowDefinition flow = new CpsFlowDefinition(
+          "node('master') {\n" +
+              "    semaphore 'before'\n" +
+              "    acmPipelineEnd {\n" +
+              "        acmPipelineStepState()\n " +
+              "    }\n" +
+              "}",
+          true);
+      job.setDefinition(flow);
+      WorkflowRun run = job.scheduleBuild2(0).waitForStart();
+      SemaphoreStep.waitForStart("before/1", run);
+      run.addAction(new CloudManagerBuildAction(AIO_PROJECT_NAME, "1", "1", "1"));
+      SemaphoreStep.success("before/1", true);
+
+      rule.waitForMessage(Messages.PipelineStepStateExecution_info_waiting(), run);
+    });
+    story.then(rule -> {
+
+      WorkflowRun run = rule.jenkins.getItemByFullName("test", WorkflowJob.class).getBuildByNumber(1);
+      PipelineEndExecution execution = (PipelineEndExecution) run.getExecution().getCurrentExecutions(false).get().stream().filter(e -> e instanceof PipelineEndExecution).findFirst().orElse(null);
+      execution.occurred(pipelineExecution);
+
+      rule.waitForCompletion(run);
       String xml = FileUtils.readFileToString(new File(run.getRootDir(), "build.xml"), Charset.defaultCharset());
       assertFalse(xml.contains(PipelineEndExecution.class.getName()));
       rule.assertBuildStatus(Result.SUCCESS, run);

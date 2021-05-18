@@ -1,5 +1,7 @@
 package io.jenkins.plugins.adobe.cloudmanager.step.execution;
 
+import java.io.IOException;
+
 import hudson.AbortException;
 import hudson.util.Secret;
 import io.adobe.cloudmanager.CloudManagerApi;
@@ -89,7 +91,7 @@ public class AbstractStepExecutionTest {
   }
 
   @Test
-  public void validateSuccess() throws AbortException {
+  public void validateSuccess() throws IOException, InterruptedException {
     new Expectations() {{
       data.getAioProjectName();
       result = found;
@@ -113,7 +115,7 @@ public class AbstractStepExecutionTest {
   }
 
   @Test
-  public void projectFound() throws AbortException{
+  public void projectFound() throws IOException, InterruptedException {
     new Expectations() {{
       data.getAioProjectName();
       result = found;
@@ -133,7 +135,7 @@ public class AbstractStepExecutionTest {
   }
 
   @Test
-  public void accessTokenSuccess() throws AbortException {
+  public void accessTokenSuccess() throws IOException, InterruptedException {
     new Expectations() {{
       data.getAioProjectName();
       result = found;

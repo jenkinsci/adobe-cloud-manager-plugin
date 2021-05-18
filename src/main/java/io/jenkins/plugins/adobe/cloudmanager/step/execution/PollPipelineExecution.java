@@ -1,5 +1,6 @@
 package io.jenkins.plugins.adobe.cloudmanager.step.execution;
 
+import java.io.IOException;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nonnull;
@@ -33,18 +34,16 @@ public class PollPipelineExecution extends AbstractStepExecution {
   }
 
   @Override
-  public void onResume() {
-    super.onResume();
+  public void doResume() {
     createTask();
   }
 
   @Override
-  public void stop(@Nonnull Throwable cause) throws Exception {
+  public void doStop() throws Exception {
     if (task != null) {
       task.cancel(true);
       task = null;
     }
-    super.stop(cause);
   }
 
   protected void createTask() {
@@ -57,7 +56,7 @@ public class PollPipelineExecution extends AbstractStepExecution {
           task = null;
           getContext().onSuccess(null);
         }
-      } catch (AbortException e) {
+      } catch (IOException | InterruptedException e) {
         task.cancel(true);
         task = null;
         getContext().onFailure(e);

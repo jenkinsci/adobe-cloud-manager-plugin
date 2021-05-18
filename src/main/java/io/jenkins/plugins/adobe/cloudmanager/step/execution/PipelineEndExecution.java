@@ -47,9 +47,17 @@ public class PipelineEndExecution extends AbstractStepExecution {
   }
 
   @Override
-  public void onResume() {
-    super.onResume();
-    getContext().newBodyInvoker().withCallback(new Callback(getId())).start();
+  public void doResume() {
+    try {
+      getTaskListener().getLogger().println(Messages.PipelineEndExecution_info_waiting());
+    } catch (IOException | InterruptedException e) {
+      getContext().onFailure(e);
+    }
+  }
+
+  @Override
+  public void doStop() throws Exception {
+
   }
 
   @CheckForNull
@@ -80,7 +88,7 @@ public class PipelineEndExecution extends AbstractStepExecution {
     }
   }
 
-  public boolean isApplicable(PipelineExecution pe) {
+  public boolean isApplicable(PipelineExecution pe) throws IOException, InterruptedException {
     return StringUtils.equals(getBuildData().getProgramId(), pe.getProgramId()) &&
         StringUtils.equals(getBuildData().getPipelineId(), pe.getPipelineId()) &&
         StringUtils.equals(getBuildData().getExecutionId(), pe.getId());

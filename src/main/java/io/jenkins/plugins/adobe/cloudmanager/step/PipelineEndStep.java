@@ -5,6 +5,8 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.annotation.Nonnull;
+
 import hudson.Extension;
 import hudson.model.Run;
 import hudson.model.TaskListener;
@@ -51,6 +53,12 @@ public class PipelineEndStep extends Step {
     @Override
     public Set<? extends Class<?>> getRequiredContext() {
       return Collections.unmodifiableSet(new HashSet<>(Arrays.asList(Run.class, FlowNode.class, TaskListener.class)));
+    }
+
+    @Nonnull
+    @Override
+    public String getDisplayName() {
+      return Messages.PipelineEndStep_displayName();
     }
 
     @Override

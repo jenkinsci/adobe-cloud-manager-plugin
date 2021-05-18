@@ -412,6 +412,15 @@ public class PipelineStepStateStepTest {
       PipelineStepStateExecution execution = (PipelineStepStateExecution) run.getExecution().getCurrentExecutions(false).get().stream().filter(e -> e instanceof PipelineStepStateExecution).findFirst().orElse(null);
       execution.waiting(pipelineExecution, stepState);
       rule.waitForCompletion(run);
+      List<PauseAction> pauses = new ArrayList<>();
+      for (FlowNode n : new FlowGraphWalker(run.getExecution())) {
+        pauses.addAll(PauseAction.getPauseActions(n));
+      }
+      assertEquals(0, pauses.size());
+      assertFalse(run.getLog().contains(Messages.PipelineStepStateExecution_warn_endPause()));
+      assertFalse(run.getLog().contains(Messages.PipelineStepStateExecution_warn_actionRemoval()));
+      String xml = FileUtils.readFileToString(new File(run.getRootDir(), "build.xml"), Charset.defaultCharset());
+      assertFalse(xml.contains(PipelineStepStateExecution.class.getName()));
       rule.assertBuildStatus(Result.FAILURE, run);
       assertTrue(run.getLog().contains(Messages.PipelineStepStateExecution_error_unknownStepAction("Unknown")));
     });
@@ -434,6 +443,15 @@ public class PipelineStepStateStepTest {
       PipelineStepStateExecution execution = (PipelineStepStateExecution) run.getExecution().getCurrentExecutions(false).get().stream().filter(e -> e instanceof PipelineStepStateExecution).findFirst().orElse(null);
       execution.waiting(pipelineExecution, stepState);
       rule.waitForCompletion(run);
+      List<PauseAction> pauses = new ArrayList<>();
+      for (FlowNode n : new FlowGraphWalker(run.getExecution())) {
+        pauses.addAll(PauseAction.getPauseActions(n));
+      }
+      assertEquals(0, pauses.size());
+      assertFalse(run.getLog().contains(Messages.PipelineStepStateExecution_warn_endPause()));
+      assertFalse(run.getLog().contains(Messages.PipelineStepStateExecution_warn_actionRemoval()));
+      String xml = FileUtils.readFileToString(new File(run.getRootDir(), "build.xml"), Charset.defaultCharset());
+      assertFalse(xml.contains(PipelineStepStateExecution.class.getName()));
       rule.assertBuildStatus(Result.FAILURE, run);
       assertTrue(run.getLog().contains(Messages.PipelineStepStateExecution_error_unknownWaitingAction("build")));
     });
@@ -460,8 +478,7 @@ public class PipelineStepStateStepTest {
       rule.waitForMessage(Messages.PipelineStepStateExecution_prompt_waitingApproval(), run);
       execution.occurred(pipelineExecution, stepState);
 
-      rule.waitForCompletion(run);
-      rule.assertBuildStatus(Result.SUCCESS, run);
+      waitingChecks(rule, run, Result.SUCCESS);
       assertTrue(run.getLog().contains(Messages.PipelineStepStateExecution_event_occurred("ExecutionId", "deploy", "RUNNING")));
     });
   }
@@ -491,7 +508,7 @@ public class PipelineStepStateStepTest {
 
       execution.doEndQuietly();
       waitingChecks(rule, run, Result.SUCCESS);
-      rule.waitForMessage(Messages.PipelineStepStateExecution_info_endQuietly(), run);
+      assertTrue(run.getLog().contains(Messages.PipelineStepStateExecution_info_endQuietly()));
     });
   }
 
@@ -596,8 +613,7 @@ public class PipelineStepStateStepTest {
       }
       assertNotNull(executor);
       executor.interrupt();
-      rule.waitForCompletion(run);
-      rule.assertBuildStatus(Result.ABORTED, run);
+      waitingChecks(rule, run, Result.ABORTED);
     });
   }
 
@@ -644,6 +660,17 @@ public class PipelineStepStateStepTest {
 
       WorkflowRun run = rule.jenkins.getItemByFullName(test, WorkflowJob.class).getBuildByNumber(1);
       rule.waitForCompletion(run);
+      List<PauseAction> pauses = new ArrayList<>();
+      for (FlowNode n : new FlowGraphWalker(run.getExecution())) {
+        pauses.addAll(PauseAction.getPauseActions(n));
+      }
+      assertEquals(1, pauses.size());
+      assertTrue(pauses.get(0).isPaused()); // Can't cancel pause as validation happens outside scope.
+      assertTrue(run.getLog().contains(Messages.PipelineStepStateExecution_info_waiting()));
+      assertFalse(run.getLog().contains(Messages.PipelineStepStateExecution_warn_endPause()));
+      assertFalse(run.getLog().contains(Messages.PipelineStepStateExecution_warn_actionRemoval()));
+      String xml = FileUtils.readFileToString(new File(run.getRootDir(), "build.xml"), Charset.defaultCharset());
+      assertFalse(xml.contains(PipelineStepStateExecution.class.getName()));
       rule.assertBuildStatus(Result.FAILURE, run);
       assertTrue(run.getLog().contains(Messages.AbstractStepExecution_error_missingBuildData()));
     });

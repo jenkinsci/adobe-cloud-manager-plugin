@@ -27,6 +27,7 @@ import io.adobe.cloudmanager.event.CloudManagerEvent.EventType;
 import io.adobe.cloudmanager.event.PipelineExecutionStepEndEvent;
 import io.adobe.cloudmanager.event.PipelineExecutionStepStartEvent;
 import io.adobe.cloudmanager.event.PipelineExecutionStepWaitingEvent;
+import io.jenkins.plugins.adobe.cloudmanager.action.CloudManagerBuildAction;
 import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOConfig;
 import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOProjectConfig;
 import io.jenkins.plugins.adobe.cloudmanager.step.execution.PipelineStepStateExecution;
@@ -42,6 +43,7 @@ import org.jenkinsci.plugins.workflow.steps.Step;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
 import org.jenkinsci.plugins.workflow.steps.StepExecution;
+import org.jenkinsci.plugins.workflow.test.steps.SemaphoreStep;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -107,11 +109,16 @@ public class PipelineStepEventSubscriberTest {
     WorkflowJob job = rule.jenkins.createProject(WorkflowJob.class, "test");
     CpsFlowDefinition flow = new CpsFlowDefinition(
         "node('master') {\n" +
+            "    semaphore 'before'\n" +
             "    testStateSubscriberStep()\n" +
             "}",
         true);
     job.setDefinition(flow);
     WorkflowRun run = job.scheduleBuild2(0).waitForStart();
+    SemaphoreStep.waitForStart("before/1", run);
+    CloudManagerBuildAction action = new CloudManagerBuildAction(AIO_PROJECT_NAME, "1", "1", "1");
+    run.addAction(action);
+    SemaphoreStep.success("before/1", true);
     rule.waitForMessage(MESSAGE, run);
     List<StepExecution> executions = run.getExecution().getCurrentExecutions(false).get();
     TestRecordEventStep.Execution ex = (TestRecordEventStep.Execution) executions.stream().filter(e -> e instanceof TestRecordEventStep.Execution).findFirst().orElse(null);
@@ -156,11 +163,16 @@ public class PipelineStepEventSubscriberTest {
     WorkflowJob job = rule.jenkins.createProject(WorkflowJob.class, "test");
     CpsFlowDefinition flow = new CpsFlowDefinition(
         "node('master') {\n" +
+            "    semaphore 'before'\n" +
             "    testStateSubscriberStep()\n" +
             "}",
         true);
     job.setDefinition(flow);
     WorkflowRun run = job.scheduleBuild2(0).waitForStart();
+    SemaphoreStep.waitForStart("before/1", run);
+    CloudManagerBuildAction action = new CloudManagerBuildAction(AIO_PROJECT_NAME, "1", "1", "1");
+    run.addAction(action);
+    SemaphoreStep.success("before/1", true);
     rule.waitForMessage(MESSAGE, run);
     List<StepExecution> executions = run.getExecution().getCurrentExecutions(false).get();
     TestRecordEventStep.Execution ex = (TestRecordEventStep.Execution) executions.stream().filter(e -> e instanceof TestRecordEventStep.Execution).findFirst().orElse(null);
@@ -205,11 +217,16 @@ public class PipelineStepEventSubscriberTest {
     WorkflowJob job = rule.jenkins.createProject(WorkflowJob.class, "test");
     CpsFlowDefinition flow = new CpsFlowDefinition(
         "node('master') {\n" +
+            "    semaphore 'before'\n" +
             "    testStateSubscriberStep()\n" +
             "}",
         true);
     job.setDefinition(flow);
     WorkflowRun run = job.scheduleBuild2(0).waitForStart();
+    SemaphoreStep.waitForStart("before/1", run);
+    CloudManagerBuildAction action = new CloudManagerBuildAction(AIO_PROJECT_NAME, "1", "1", "1");
+    run.addAction(action);
+    SemaphoreStep.success("before/1", true);
     rule.waitForMessage(MESSAGE, run);
     List<StepExecution> executions = run.getExecution().getCurrentExecutions(false).get();
     TestRecordEventStep.Execution ex = (TestRecordEventStep.Execution) executions.stream().filter(e -> e instanceof TestRecordEventStep.Execution).findFirst().orElse(null);

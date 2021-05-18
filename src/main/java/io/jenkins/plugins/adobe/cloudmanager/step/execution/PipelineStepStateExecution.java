@@ -66,24 +66,20 @@ public class PipelineStepStateExecution extends AbstractStepExecution {
   @Override
   public boolean doStart() throws Exception {
     // Pause the flow.
-    getAction().add(this);
     getTaskListener().getLogger().println(Messages.PipelineStepStateExecution_info_waiting());
     return false;
   }
 
   @Override
-  public void onResume() {
-    try {
-      startWaiting();
-    } catch (IOException | InterruptedException e) {
-      getContext().onFailure(e);
+  public void doResume() throws IOException, InterruptedException {
+    if (reason == null) {
+      getTaskListener().getLogger().println(Messages._PipelineStepStateExecution_info_waiting());
     }
   }
 
   @Override
-  public void stop(@Nonnull Throwable cause) throws Exception {
+  public void doStop() throws Exception {
     doFinish();
-    getContext().onFailure(cause);
   }
 
   // Methods for filtering incoming events
@@ -105,7 +101,7 @@ public class PipelineStepStateExecution extends AbstractStepExecution {
     }
   }
 
-  public boolean isApplicable(PipelineExecution pe) {
+  public boolean isApplicable(PipelineExecution pe) throws IOException, InterruptedException {
     return StringUtils.equals(getBuildData().getProgramId(), pe.getProgramId()) &&
         StringUtils.equals(getBuildData().getPipelineId(), pe.getPipelineId()) &&
         StringUtils.equals(getBuildData().getExecutionId(), pe.getId());
@@ -121,7 +117,6 @@ public class PipelineStepStateExecution extends AbstractStepExecution {
 
   public void waiting(@Nonnull PipelineExecution pe, @Nonnull PipelineExecutionStepState state) throws IOException, InterruptedException, TimeoutException {
     TaskListener listener = getTaskListener();
-    Run<?, ?> run = getRun();
     String action = state.getAction();
     listener.getLogger().println(Messages.PipelineStepStateExecution_event_occurred(pe.getId(), action, state.getStatusState()));
     try {
@@ -140,14 +135,6 @@ public class PipelineStepStateExecution extends AbstractStepExecution {
     }
   }
 
-  // Wait for the user input
-  private void startWaiting() throws IOException, InterruptedException {
-    String url = String.format("/%s%s/", getRun().getUrl(), getAction().getUrlName());
-    getTaskListener().getLogger().println(HyperlinkNote.encodeTo(url, Messages.PipelineStepStateExecution_prompt_waitingApproval()));
-    FlowNode node = Objects.requireNonNull(getContext().get(FlowNode.class));
-    node.addAction(new PauseAction("Pipeline Execution Step State"));
-    getContext().saveState();
-  }
 
   /**
    * If we're waiting, then reason will be populated. It gets removed once something happens.
@@ -199,6 +186,7 @@ public class PipelineStepStateExecution extends AbstractStepExecution {
   @Restricted(NoExternalUse.class)
   public void doEndQuietly() throws IOException, InterruptedException {
     reason = null;
+    // This may be blocking VM threads....
     getTaskListener().getLogger().println(Messages.PipelineStepStateExecution_info_endQuietly());
     doFinish();
     getContext().onSuccess(null);
@@ -265,12 +253,20 @@ public class PipelineStepStateExecution extends AbstractStepExecution {
     return action;
   }
 
+  // Wait for the user input
+  private void startWaiting() throws IOException, InterruptedException, TimeoutException {
+    getContext().saveState();
+    getAction().add(this);
+    String url = String.format("/%s%s/", getRun().getUrl(), getAction().getUrlName());
+    getTaskListener().getLogger().println(HyperlinkNote.encodeTo(url, Messages.PipelineStepStateExecution_prompt_waitingApproval()));
+    FlowNode node = Objects.requireNonNull(getContext().get(FlowNode.class));
+    node.addAction(new PauseAction("Pipeline Execution Step State"));
+  }
+
   // Clean up this when done. Regardless of result.
   private void doFinish() {
     try {
-      Run<?, ?> run = getRun();
       getAction().remove(this);
-      run.save();
     } catch (IOException | InterruptedException | TimeoutException e) {
       LOGGER.warn(Messages.PipelineStepStateExecution_warn_actionRemoval());
     } finally {

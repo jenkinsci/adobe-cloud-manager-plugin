@@ -22,15 +22,14 @@ import org.jenkinsci.plugins.workflow.steps.StepExecution;
 public abstract class AbstractStepExecution extends StepExecution {
 
   private final String id;
-  private CloudManagerBuildAction data;
 
   public AbstractStepExecution(StepContext context) {
     super(context);
     id = UUID.randomUUID().toString();
   }
 
-  protected CloudManagerBuildAction getBuildData() {
-    return data;
+  protected CloudManagerBuildAction getBuildData() throws IOException, InterruptedException {
+    return getRun().getAction(CloudManagerBuildAction.class);
   }
 
   @Nonnull
@@ -38,10 +37,11 @@ public abstract class AbstractStepExecution extends StepExecution {
     return id;
   }
 
-  protected void validateData() throws AbortException {
-    if (data == null) {
+  protected void validateData() throws IOException, InterruptedException {
+    if (getBuildData() == null) {
       throw new AbortException(Messages.AbstractStepExecution_error_missingBuildData());
     }
+    CloudManagerBuildAction data = getBuildData();
     AdobeIOProjectConfig aioProject = AdobeIOConfig.projectConfigFor(data.getAioProjectName());
     // Make sure Build Data is populated - when resuming.
     if (aioProject == null ||
@@ -53,8 +53,8 @@ public abstract class AbstractStepExecution extends StepExecution {
   }
 
   @Nonnull
-  protected AdobeIOProjectConfig getAioProject() throws AbortException {
-    AdobeIOProjectConfig aioProject = AdobeIOConfig.projectConfigFor(data.getAioProjectName());
+  protected AdobeIOProjectConfig getAioProject() throws IOException, InterruptedException {
+    AdobeIOProjectConfig aioProject = AdobeIOConfig.projectConfigFor(getBuildData().getAioProjectName());
     // Restart may be after AIO Project is removed.
     if (aioProject == null) {
       throw new AbortException(Messages.AbstractStepExecution_error_missingBuildData());
@@ -63,7 +63,7 @@ public abstract class AbstractStepExecution extends StepExecution {
   }
 
   @Nonnull
-  protected Secret getAccessToken() throws AbortException {
+  protected Secret getAccessToken() throws IOException, InterruptedException {
     Secret token = getAioProject().authenticate();
     if (token == null) {
       throw new AbortException(Messages.AbstractStepExecution_error_authentication());
@@ -72,10 +72,10 @@ public abstract class AbstractStepExecution extends StepExecution {
   }
 
   @Nonnull
-  protected CloudManagerApi getApi() throws AbortException {
+  protected CloudManagerApi getApi() throws IOException, InterruptedException {
     AdobeIOProjectConfig aioProject = getAioProject();
     Secret token = getAccessToken();
-    return CloudManagerApi.create(aioProject.getImsOrganizationId(), aioProject.getClientId(), token.getPlainText(), aioProject.getApiUrl());
+    return CloudManagerApi.create(aioProject.getImsOrganizationId(), aioProject.getClientId(), token.getPlainText());
   }
 
   @Nonnull
@@ -94,24 +94,33 @@ public abstract class AbstractStepExecution extends StepExecution {
   }
 
   @Override
-  public boolean start() throws Exception {
+  public final boolean start() throws Exception {
     Run<?, ?> run = Objects.requireNonNull(getContext().get(Run.class));
-    data = run.getAction(CloudManagerBuildAction.class);
-    if (data == null) {
+    if (getBuildData() == null) {
       throw new AbortException(Messages.AbstractStepExecution_error_missingBuildData());
     }
     return doStart();
   }
 
   @Override
-  public void onResume() {
+  public final void onResume() {
     try {
       validateData();
-    } catch (AbortException e) {
+      doResume();
+    } catch (IOException | InterruptedException e) {
       getContext().onFailure(e);
     }
   }
 
+  @Override
+  public final void stop(@Nonnull Throwable cause) throws Exception {
+    doStop();
+    getContext().onFailure(cause);
+  }
+
   public abstract boolean doStart() throws Exception;
 
+  public abstract void doResume() throws IOException, InterruptedException;
+
+  public abstract void doStop() throws Exception;
 }

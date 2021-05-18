@@ -86,7 +86,7 @@ public class PipelineStepStateExecutionTest {
   }
 
   @Test
-  public void doesNotWantWrongProgram() {
+  public void doesNotWantWrongProgram() throws Exception {
     PipelineStepStateExecution tested = new PipelineStepStateExecution(context, actions);
     new Expectations() {{
       pipelineExecution.getProgramId();
@@ -97,7 +97,7 @@ public class PipelineStepStateExecutionTest {
   }
 
   @Test
-  public void doesNotWantWrongPipeline() {
+  public void doesNotWantWrongPipeline() throws Exception {
     PipelineStepStateExecution tested = new PipelineStepStateExecution(context, actions);
     new Expectations() {{
       pipelineExecution.getProgramId();
@@ -110,7 +110,7 @@ public class PipelineStepStateExecutionTest {
   }
 
   @Test
-  public void doesNotWantWrongExecution() {
+  public void doesNotWantWrongExecution() throws Exception {
     PipelineStepStateExecution tested = new PipelineStepStateExecution(context, actions);
     new Expectations() {{
       pipelineExecution.getProgramId();
@@ -125,7 +125,7 @@ public class PipelineStepStateExecutionTest {
   }
 
   @Test
-  public void wantsExecution() {
+  public void wantsExecution() throws Exception {
     PipelineStepStateExecution tested = new PipelineStepStateExecution(context, actions);
     new Expectations() {{
       pipelineExecution.getProgramId();

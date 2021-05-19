@@ -26,6 +26,7 @@ package io.jenkins.plugins.adobe.cloudmanager.builder;
  * #L%
  */
 
+import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
 import hudson.AbortException;
@@ -62,6 +63,7 @@ public abstract class CloudManagerBuilder extends Builder implements SimpleBuild
   protected CloudManagerBuilder() {
   }
 
+  @CheckForNull
   public String getAioProject() {
     return aioProject;
   }
@@ -71,6 +73,7 @@ public abstract class CloudManagerBuilder extends Builder implements SimpleBuild
     this.aioProject = aioProject;
   }
 
+  @CheckForNull
   public String getProgram() {
     return program;
   }
@@ -80,6 +83,7 @@ public abstract class CloudManagerBuilder extends Builder implements SimpleBuild
     this.program = program;
   }
 
+  @CheckForNull
   public String getPipeline() {
     return pipeline;
   }
@@ -116,6 +120,7 @@ public abstract class CloudManagerBuilder extends Builder implements SimpleBuild
   /**
    * Get the Program Id for this Builder's configured Program. Program can be specified as Id or Name.
    */
+  @Nonnull
   public String getProgramId(CloudManagerApi api) throws AbortException {
     try {
       return String.valueOf(Integer.parseInt(program));
@@ -137,6 +142,7 @@ public abstract class CloudManagerBuilder extends Builder implements SimpleBuild
   /**
    * Get the Pipeline ID for this builder's configured Pipeline. Pipelines can be specified as an Id or Name.
    */
+  @Nonnull
   public String getPipelineId(CloudManagerApi api, String programId) throws AbortException {
     try {
       return String.valueOf(Integer.parseInt(pipeline));

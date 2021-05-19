@@ -37,6 +37,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
+import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
 import org.apache.commons.lang3.StringUtils;
@@ -124,6 +125,7 @@ public class PipelineWaitingAction implements RunAction2, Serializable {
   /**
    * Returns the execution based on the id.
    */
+  @CheckForNull
   public synchronized PipelineStepStateExecution getExecution(@Nonnull String id) throws InterruptedException, TimeoutException {
     loadExecutions();
     if (executions == null) {
@@ -135,6 +137,7 @@ public class PipelineWaitingAction implements RunAction2, Serializable {
   /**
    * Lists all the stored executions. Used by the UI for form display/submission.
    */
+  @Nonnull
   public synchronized List<PipelineStepStateExecution> getExecutions() throws InterruptedException, TimeoutException {
     loadExecutions();
     return (executions == null) ? Collections.emptyList() : new ArrayList<>(executions);

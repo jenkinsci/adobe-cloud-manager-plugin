@@ -32,6 +32,7 @@ import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import javax.inject.Inject;
 
@@ -88,6 +89,7 @@ public class RepositorySyncBuilder extends Builder implements SimpleBuildStep {
   /**
    * The URL to the Cloud Manager git repository.
    */
+  @CheckForNull
   public String getUrl() {
     return url;
   }
@@ -95,6 +97,7 @@ public class RepositorySyncBuilder extends Builder implements SimpleBuildStep {
   /**
    * The credentials id of the secret containing the Cloud Manager git credentials.
    */
+  @CheckForNull
   public String getCredentialsId() {
     return credentialsId;
   }

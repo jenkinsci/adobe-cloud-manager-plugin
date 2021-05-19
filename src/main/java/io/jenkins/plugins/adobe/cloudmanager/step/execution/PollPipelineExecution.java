@@ -41,6 +41,10 @@ import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOProjectConfig;
 import jenkins.util.Timer;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 
+/**
+ * Execution for a {@link io.jenkins.plugins.adobe.cloudmanager.step.PollPipelineStep}.
+ * Periodically checks if the specified Cloud Manager execution is complete.
+ */
 public class PollPipelineExecution extends AbstractStepExecution {
 
   private final long recurrencePeriod;

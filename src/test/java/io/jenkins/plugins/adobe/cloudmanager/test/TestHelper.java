@@ -1,4 +1,4 @@
-package io.jenkins.plugin.adobe.cloudmanager.test;
+package io.jenkins.plugins.adobe.cloudmanager.test;
 
 /*-
  * #%L

@@ -46,12 +46,11 @@ import io.adobe.cloudmanager.PipelineExecution;
 import io.jenkins.plugins.adobe.cloudmanager.action.CloudManagerBuildAction;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+/**
+ * Starts the specified Cloud Manager pipeline.
+ */
 public class StartPipelineBuilder extends CloudManagerBuilder {
-
-  private static final Logger LOGGER = LoggerFactory.getLogger(StartPipelineBuilder.class);
 
   @DataBoundConstructor
   public StartPipelineBuilder() {
@@ -59,13 +58,14 @@ public class StartPipelineBuilder extends CloudManagerBuilder {
 
   @Override
   public void perform(@Nonnull Run<?, ?> run, @Nonnull EnvVars env, @Nonnull TaskListener listener) throws InterruptedException, IOException {
+    if (run.getAction(CloudManagerBuildAction.class) != null) {
+      throw new AbortException(Messages.StartPipelineBuilder_error_duplicateBuild());
+    }
+
     CloudManagerApi api = createApi();
     String programId = getProgramId(api);
     String pipelineId = getPipelineId(api, programId);
 
-    if (run.getAction(CloudManagerBuildAction.class) != null) {
-      throw new AbortException(Messages.StartPipelineBuilder_error_duplicateBuild());
-    }
     try {
       PrintStream log = listener.getLogger();
       PipelineExecution execution = api.startExecution(programId, pipelineId);
@@ -83,6 +83,7 @@ public class StartPipelineBuilder extends CloudManagerBuilder {
     return Collections.singletonList(new CloudManagerBuildAction());
   }
 
+  // No workspace is necessary to start remote pipeline.
   @Override
   public boolean requiresWorkspace() {
     return false;

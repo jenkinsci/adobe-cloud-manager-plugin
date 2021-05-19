@@ -8,14 +8,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeoutException;
-import java.util.function.Function;
-
 import javax.annotation.Nonnull;
 
 import org.apache.commons.io.IOUtils;
 
 import hudson.Extension;
-import hudson.model.Label;
 import hudson.model.Result;
 import hudson.model.TaskListener;
 import hudson.util.Secret;
@@ -50,7 +47,7 @@ import org.junit.Test;
 import org.jvnet.hudson.test.BuildWatcher;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.kohsuke.stapler.DataBoundConstructor;
-import static io.jenkins.plugin.adobe.cloudmanager.test.TestHelper.*;
+import static io.jenkins.plugins.adobe.cloudmanager.test.TestHelper.*;
 import static org.junit.Assert.*;
 
 public class PipelineStepEventSubscriberTest {
@@ -263,9 +260,8 @@ public class PipelineStepEventSubscriberTest {
       }
 
       @Override
-      public boolean doStart() throws Exception {
+      public void doStart() throws Exception {
         getContext().get(TaskListener.class).getLogger().println(MESSAGE);
-        return false;
       }
 
       @Override

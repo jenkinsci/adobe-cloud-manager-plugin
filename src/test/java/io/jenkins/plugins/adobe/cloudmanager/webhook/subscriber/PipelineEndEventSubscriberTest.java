@@ -17,7 +17,6 @@ import io.adobe.cloudmanager.CloudManagerApi;
 import io.adobe.cloudmanager.PipelineExecution;
 import io.adobe.cloudmanager.event.CloudManagerEvent;
 import io.adobe.cloudmanager.event.PipelineExecutionEndEvent;
-import io.adobe.cloudmanager.event.PipelineExecutionStepStartEvent;
 import io.jenkins.plugins.adobe.cloudmanager.action.CloudManagerBuildAction;
 import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOConfig;
 import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOProjectConfig;
@@ -41,7 +40,7 @@ import org.junit.Test;
 import org.jvnet.hudson.test.BuildWatcher;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.kohsuke.stapler.DataBoundConstructor;
-import static io.jenkins.plugin.adobe.cloudmanager.test.TestHelper.*;
+import static io.jenkins.plugins.adobe.cloudmanager.test.TestHelper.*;
 import static org.junit.Assert.*;
 
 public class PipelineEndEventSubscriberTest {
@@ -136,9 +135,8 @@ public class PipelineEndEventSubscriberTest {
       }
 
       @Override
-      public boolean doStart() throws Exception {
+      public void doStart() throws Exception {
         getContext().get(TaskListener.class).getLogger().println(MESSAGE);
-        return false;
       }
 
       @Override

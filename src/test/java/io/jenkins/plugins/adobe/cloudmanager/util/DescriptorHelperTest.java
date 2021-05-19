@@ -1,4 +1,4 @@
-package io.jenkins.plugin.adobe.cloudmanager.util;
+package io.jenkins.plugins.adobe.cloudmanager.util;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -14,17 +14,15 @@ import io.adobe.cloudmanager.PipelineExecution;
 import io.adobe.cloudmanager.PipelineUpdate;
 import io.adobe.cloudmanager.Program;
 import io.adobe.cloudmanager.Variable;
-import io.jenkins.plugin.adobe.cloudmanager.test.TestHelper;
 import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOConfig;
 import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOProjectConfig;
-import io.jenkins.plugins.adobe.cloudmanager.util.DescriptorHelper;
-import io.jenkins.plugins.adobe.cloudmanager.util.Messages;
+import io.jenkins.plugins.adobe.cloudmanager.test.TestHelper;
 import mockit.Expectations;
 import mockit.Injectable;
 import mockit.Mocked;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import static io.jenkins.plugin.adobe.cloudmanager.test.TestHelper.*;
+import static io.jenkins.plugins.adobe.cloudmanager.test.TestHelper.*;
 import static org.junit.Assert.*;
 
 public class DescriptorHelperTest {

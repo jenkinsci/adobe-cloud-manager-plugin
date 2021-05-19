@@ -25,11 +25,14 @@ import org.kohsuke.stapler.StaplerRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Handles incoming Cloud Manager pipeline events from Adobe IO.
+ */
 @Extension
-public class AdobeIOWebHook implements UnprotectedRootAction {
+public class CloudManagerWebHook implements UnprotectedRootAction {
 
   public static final String URL_NAME = "aio-cloud-manager-webhook";
-  private static final Logger LOGGER = LoggerFactory.getLogger(AdobeIOWebHook.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(CloudManagerWebHook.class);
 
   @Override
   public String getIconFileName() {
@@ -47,21 +50,23 @@ public class AdobeIOWebHook implements UnprotectedRootAction {
   }
 
   /**
-   * Process a AIO WebHook Event
-   *
-   * @param request  request context
-   * @param event  processed payload as a string
-   * @return HTTP Response
+   * Process a AIO WebHook Event.
+   * <p>
+   *   Calls any {@link CloudManagerEventSubscriber} extensions with the payload information.
+   *   These calls are performed asynchronously, as we don't want to block the calling request.
+   * </p>
    */
-  @RequireAIOPayload
+  @RequireCMEventPayload
   public HttpResponse doIndex(StaplerRequest request, final @Nonnull @CMEventPayload CMEvent event) {
     LOGGER.trace(String.format("Payload: %s", event.getPayload()));
     if (StringUtils.equals(HttpMethod.GET, request.getMethod())) {
       return doGet(event.getPayload());
     }
+
+    // Do the notifications async - Don't block the Request thread.
     Timer.get().submit(() -> {
       AdobeIOProjectConfig aioProject = AdobeIOConfig.configuration().getProjectConfigs().stream().filter(cfg -> cfg.getImsOrganizationId().equals(event.getImsOrg())).findFirst().orElse(null);
-      if (aioProject == null) {
+      if (aioProject == null || StringUtils.isBlank(aioProject.getName())) {
         LOGGER.error(Messages.AdobeIOWebHook_error_missingAIOProject(event.getImsOrg()));
         return;
       }
@@ -73,17 +78,16 @@ public class AdobeIOWebHook implements UnprotectedRootAction {
     return HttpResponses.ok();
   }
 
-  /**
-   * Process a Get request - this will only be for a Challenge
-   *
-   * @param payload the challenge payload
-   * @return the HTTP Response
-   */
+  // Helper for processing the challenge request.
   private HttpResponse doGet(String payload) {
     return HttpResponses.text(payload);
   }
 
+  /**
+   * Excludes the WebHook from requiring CSRF tokens for a POST request.
+   */
   @Extension
+  @SuppressWarnings("unused")
   public static class CrumbExclusion extends hudson.security.csrf.CrumbExclusion {
     @Override
     public boolean process(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException {

@@ -12,10 +12,10 @@ package io.jenkins.plugins.adobe.cloudmanager.builder;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -46,6 +46,12 @@ import org.kohsuke.stapler.QueryParameter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Helper builder for steps which interact with Cloud Manager.
+ * <p>
+ * Any {@link org.jenkinsci.plugins.workflow.steps.Step} which interact with Cloud Manager and can be expressed as a {@link Builder} should extend this class.
+ * </p>
+ */
 public abstract class CloudManagerBuilder extends Builder implements SimpleBuildStep {
   protected static final Logger LOGGER = LoggerFactory.getLogger(CloudManagerBuilder.class);
 
@@ -54,7 +60,6 @@ public abstract class CloudManagerBuilder extends Builder implements SimpleBuild
   protected String pipeline;
 
   protected CloudManagerBuilder() {
-
   }
 
   public String getAioProject() {
@@ -86,27 +91,18 @@ public abstract class CloudManagerBuilder extends Builder implements SimpleBuild
 
   /**
    * Authenticate using this Builder's configured Adobe IO Project, and return an access token
-   *
-   * @param config the configuration to use for authentication
-   * @return access token
-   * @throws AbortException when any error occur during authentication
    */
   @Nonnull
   private Secret getAccessToken(@Nonnull AdobeIOProjectConfig config) throws AbortException {
     Secret token = config.authenticate();
     if (token == null) {
-      throw new AbortException(Messages.CloudManagerBuilder_error_authenticate(
-          Messages.CloudManagerBuilder_error_checkLogs()
-      ));
+      throw new AbortException(Messages.CloudManagerBuilder_error_authenticate(Messages.CloudManagerBuilder_error_checkLogs()));
     }
     return token;
   }
 
   /**
    * Create a {@link CloudManagerApi} from this Builder's configured Adobe IO project.
-   *
-   * @return a CloudManagerApi
-   * @throws AbortException when any error occurs during API construction
    */
   @Nonnull
   public CloudManagerApi createApi() throws AbortException {
@@ -118,17 +114,14 @@ public abstract class CloudManagerBuilder extends Builder implements SimpleBuild
   }
 
   /**
-   * Get the Program Id for this Builder's configured Program. Program can be specified as id or Name.
-   *
-   * @param api configured API for looking up the ProgramId.
-   * @return the program id (as a String)
-   * @throws AbortException when any error occurs finding the id
+   * Get the Program Id for this Builder's configured Program. Program can be specified as Id or Name.
    */
   public String getProgramId(CloudManagerApi api) throws AbortException {
     try {
       return String.valueOf(Integer.parseInt(program));
     } catch (NumberFormatException e) {
       try {
+        LOGGER.debug(Messages.CloudManagerBuilder_debug_lookupProgramId(program));
         return api.listPrograms()
             .stream()
             .filter(p -> program.equals(p.getName()))
@@ -143,51 +136,46 @@ public abstract class CloudManagerBuilder extends Builder implements SimpleBuild
 
   /**
    * Get the Pipeline ID for this builder's configured Pipeline. Pipelines can be specified as an Id or Name.
-   *
-   * @param api configured API for looking up pipeline id
-   * @param programId the program id context. Must be the <i>id</i>
-   * @return the pipeline id (as a String)
-   * @throws AbortException when any error occurs finding the id
    */
   public String getPipelineId(CloudManagerApi api, String programId) throws AbortException {
     try {
       return String.valueOf(Integer.parseInt(pipeline));
     } catch (NumberFormatException e) {
       try {
-      return api.listPipelines(programId, new Pipeline.NamePredicate(pipeline))
-          .stream()
-          .findFirst()
-          .orElseThrow(() -> new AbortException(Messages.CloudManagerBuilder_error_missingPipeline(pipeline)))
-          .getId();
+        LOGGER.debug(Messages.CloudManagerBuilder_debug_lookupPipelineId(program));
+        return api.listPipelines(programId, new Pipeline.NamePredicate(pipeline))
+            .stream()
+            .findFirst()
+            .orElseThrow(() -> new AbortException(Messages.CloudManagerBuilder_error_missingPipeline(pipeline)))
+            .getId();
       } catch (CloudManagerApiException ex) {
         throw new AbortException(Messages.CloudManagerBuilder_error_CloudManagerApiException(ex.getLocalizedMessage()));
       }
     }
   }
 
+  /**
+   * Helper descriptor for concrete classes of Cloud Manager Builders.
+   */
   public static class CloudManagerBuilderDescriptor extends BuildStepDescriptor<Builder> {
 
-    protected static CloudManagerApi createApi(String aioProject) {
-      AdobeIOProjectConfig cfg = AdobeIOConfig.projectConfigFor(aioProject);
-
-      if (cfg == null) {
-        return null;
-      }
-      Secret token = cfg.authenticate();
-      if (token == null) {
-        return null;
-      }
-      return CloudManagerApi.create(cfg.getImsOrganizationId(), cfg.getClientId(), token.getPlainText());
-    }
-
+    /**
+     * Lists the Adobe IO Projects available.
+     */
     public ListBoxModel doFillAioProjectItems() {
       return DescriptorHelper.fillAioProjectItems();
     }
 
+    /**
+     * List the Programs available based on the selected Adobe IO Project.
+     */
     public ListBoxModel doFillProgramItems(@QueryParameter String aioProject) {
       return DescriptorHelper.fillProgramItems(aioProject);
     }
 
+    /**
+     * List the Pipelines associated with the selected Program.
+     */
     public ListBoxModel doFillPipelineItems(@QueryParameter String aioProject, @QueryParameter String program) {
       return DescriptorHelper.fillPipelineItems(aioProject, program);
     }

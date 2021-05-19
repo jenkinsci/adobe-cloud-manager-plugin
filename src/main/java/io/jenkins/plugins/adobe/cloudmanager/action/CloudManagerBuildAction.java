@@ -28,7 +28,8 @@ package io.jenkins.plugins.adobe.cloudmanager.action;
 
 import java.io.Serializable;
 
-import edu.umd.cs.findbugs.annotations.CheckForNull;
+import javax.annotation.CheckForNull;
+
 import hudson.model.Action;
 import hudson.model.Run;
 import lombok.Data;
@@ -36,6 +37,9 @@ import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.export.ExportedBean;
 
+/**
+ * Cloud Manager build data used for taking actions.
+ */
 @Data
 @ExportedBean(defaultVisibility = 1500)
 public class CloudManagerBuildAction implements Action, Serializable, Cloneable {

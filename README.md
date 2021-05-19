@@ -45,7 +45,18 @@ Report issues and enhancements in the [Jenkins issue tracker](https://issues.jen
 
 ## Contributing
 
-Refer to our [contribution guidelines](https://github.com/jenkinsci/.github/blob/master/CONTRIBUTING.md)
+Refer to the general Jenkins. [contribution guidelines](https://github.com/jenkinsci/.github/blob/master/CONTRIBUTING.md).
+
+### Code Submissions
+
+Submissions should come as pull request and will be reviewed by project committers. 
+
+### License Headers
+
+Please make sure to run the license header profile before creating a pull request. This can be done with:
+
+
+> $ mvn clean process-sources process-test-resources -Plicense-header-check
 
 ## LICENSE
 

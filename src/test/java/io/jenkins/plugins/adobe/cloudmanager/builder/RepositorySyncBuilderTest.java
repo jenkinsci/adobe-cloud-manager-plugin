@@ -1,4 +1,4 @@
-package io.jenkins.plugin.adobe.cloudmanager.builder;
+package io.jenkins.plugins.adobe.cloudmanager.builder;
 
 /*-
  * #%L
@@ -12,10 +12,10 @@ package io.jenkins.plugin.adobe.cloudmanager.builder;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -42,8 +42,6 @@ import hudson.model.queue.QueueTaskFuture;
 import hudson.plugins.git.GitSCM;
 import hudson.scm.SCM;
 import hudson.tasks.Builder;
-import io.jenkins.plugins.adobe.cloudmanager.builder.RepositorySyncBuilder;
-import io.jenkins.plugins.adobe.cloudmanager.builder.Messages;
 import jenkins.plugins.git.CliGitCommand;
 import jenkins.plugins.git.GitSampleRepoRule;
 import org.eclipse.jetty.server.Server;
@@ -57,12 +55,17 @@ import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+import org.jvnet.hudson.test.BuildWatcher;
 import org.jvnet.hudson.test.JenkinsRule;
 import static org.junit.Assert.*;
 
 public class RepositorySyncBuilderTest {
+
+  @ClassRule
+  public static BuildWatcher watcher = new BuildWatcher();
 
   @Rule
   public JenkinsRule rule = new JenkinsRule();
@@ -152,7 +155,7 @@ public class RepositorySyncBuilderTest {
     destRepo.git("config", "user.email", "gits@mplereporule");
     destRepo.write("testfile", "testfilecontents");
     destRepo.git("add", "testfile");
-    destRepo.git("commit","--message=testfile");
+    destRepo.git("commit", "--message=testfile");
     destRepo.git("push");
     WorkflowJob job = rule.jenkins.createProject(WorkflowJob.class, "test");
     rule.createOnlineSlave(Label.get("runner"));
@@ -183,7 +186,7 @@ public class RepositorySyncBuilderTest {
     destRepo.git("config", "user.email", "gits@mplereporule");
     destRepo.write("testfile", "testfilecontents");
     destRepo.git("add", "testfile");
-    destRepo.git("commit","--message=testfile");
+    destRepo.git("commit", "--message=testfile");
     destRepo.git("push");
     WorkflowJob job = rule.jenkins.createProject(WorkflowJob.class, "test");
     rule.createOnlineSlave(Label.get("runner"));
@@ -217,7 +220,7 @@ public class RepositorySyncBuilderTest {
     destRepo.git("config", "user.email", "gits@mplereporule");
     destRepo.write("testfile", "testfilecontents");
     destRepo.git("add", "testfile");
-    destRepo.git("commit","--message=testfile");
+    destRepo.git("commit", "--message=testfile");
     destRepo.git("push");
     WorkflowJob job = rule.jenkins.createProject(WorkflowJob.class, "test");
     rule.createOnlineSlave(Label.get("runner"));
@@ -329,7 +332,6 @@ public class RepositorySyncBuilderTest {
     server.setHandler(handler);
     server.start();
 
-
     String host = connector.getHost() == null ? "localhost" : connector.getHost();
     String repoUrl = "http://" + host + ":" + connector.getLocalPort() + "/repo";
 
@@ -354,7 +356,6 @@ public class RepositorySyncBuilderTest {
     SCM scm = new GitSCM(srcRepo.toString());
     CpsScmFlowDefinition flow = new CpsScmFlowDefinition(scm, "Jenkinsfile");
     job.setDefinition(flow);
-
 
     QueueTaskFuture<WorkflowRun> future = job.scheduleBuild2(0);
     WorkflowRun run = rule.assertBuildStatus(Result.FAILURE, future);

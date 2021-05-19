@@ -5,7 +5,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
 import javax.annotation.Nonnull;
 
 import hudson.Extension;
@@ -21,6 +20,20 @@ import org.jenkinsci.plugins.workflow.steps.StepExecution;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
+/**
+ * {@link Step} which waits for a Cloud Manager pipeline step event.
+ * <p>
+ *   <strong>Occurrence</strong> events will simply log a message.
+ * </p>
+ * <p>
+ *   <strong>Waiting</strong> events will force the pipeline to pause for user inputs.
+ *   All waiting events only support approval or cancel options.
+ *   User selection will invoke the associated operation in Cloud Manager.
+ * </p>
+ * <p>
+ *   See the <a href="https://www.adobe.io/apis/experiencecloud/cloud-manager/api-reference.html#!AdobeDocs/cloudmanager-api-docs/master/swagger-specs/events.yaml">Cloud Manager Events</a> documentation.
+ * </p>
+ */
 public class PipelineStepStateStep extends Step {
 
   private List<StepAction> actions;
@@ -32,6 +45,10 @@ public class PipelineStepStateStep extends Step {
 
   }
 
+  /**
+   * List of actions to which this Step will respond. <strong>Default:</strong> all events.
+   */
+  @Nonnull
   public List<StepAction> getActions() {
     if (actions == null) {
       actions = Arrays.asList(StepAction.values());
@@ -44,6 +61,9 @@ public class PipelineStepStateStep extends Step {
     this.actions = actions;
   }
 
+  /**
+   * Flag to indicate if this step should store the pipeline logs on the {@link io.jenkins.plugins.adobe.cloudmanager.action.CloudManagerBuildAction} for later reference.
+   */
   public boolean isShowLogs() {
     return showLogs;
   }
@@ -53,6 +73,9 @@ public class PipelineStepStateStep extends Step {
     this.showLogs = showLogs;
   }
 
+  /**
+   * Flag to indicate if this step should auto-advance if it receives a {@code waiting} event.
+   */
   public boolean isAutoAdvance() {
     return autoAdvance;
   }
@@ -62,6 +85,10 @@ public class PipelineStepStateStep extends Step {
     this.autoAdvance = autoAdvance;
   }
 
+  /**
+   * List all actions for the UI generator example.
+   */
+  @Nonnull
   public StepAction[] listActions() {
     return StepAction.values();
   }

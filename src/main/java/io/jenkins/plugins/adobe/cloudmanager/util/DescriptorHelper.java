@@ -19,6 +19,9 @@ import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOProjectConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Helper for generating builder's UI selection lists.
+ */
 public class DescriptorHelper {
 
   public static final Logger LOGGER = LoggerFactory.getLogger(DescriptorHelper.class);

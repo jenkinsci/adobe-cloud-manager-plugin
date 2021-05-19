@@ -3,7 +3,6 @@ package io.jenkins.plugins.adobe.cloudmanager.webhook;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import javax.servlet.ServletInputStream;
 
 import org.apache.commons.io.IOUtils;

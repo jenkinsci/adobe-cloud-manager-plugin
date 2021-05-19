@@ -42,6 +42,9 @@ import org.kohsuke.stapler.interceptor.RequirePOST;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Execution for a {@link io.jenkins.plugins.adobe.cloudmanager.step.PipelineStepStateStep}. Handles the any associated events.
+ */
 public class PipelineStepStateExecution extends AbstractStepExecution {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(PipelineStepStateExecution.class);
@@ -50,6 +53,8 @@ public class PipelineStepStateExecution extends AbstractStepExecution {
       Collections.unmodifiableSet(new HashSet<>(Arrays.asList(StepAction.codeQuality, StepAction.approval)));
 
   private final Set<StepAction> actions;
+
+  // Used as the reason for a waiting action. If its set - then we're waiting for user input.
   private StepAction reason;
 
   public PipelineStepStateExecution(StepContext context, Set<StepAction> actions) {
@@ -64,10 +69,8 @@ public class PipelineStepStateExecution extends AbstractStepExecution {
 
   // Execution Logic
   @Override
-  public boolean doStart() throws Exception {
-    // Pause the flow.
+  public void doStart() throws Exception {
     getTaskListener().getLogger().println(Messages.PipelineStepStateExecution_info_waiting());
-    return false;
   }
 
   @Override
@@ -83,6 +86,10 @@ public class PipelineStepStateExecution extends AbstractStepExecution {
   }
 
   // Methods for filtering incoming events
+
+  /**
+   * Determines if this execution will process the associated remote Step State.
+   */
   public boolean isApplicable(PipelineExecutionStepState stepState) {
     try {
       StepAction action = StepAction.valueOf(stepState.getAction());
@@ -101,6 +108,9 @@ public class PipelineStepStateExecution extends AbstractStepExecution {
     }
   }
 
+  /**
+   * Determines if this execution will process the remote Pipeline Execution.
+   */
   public boolean isApplicable(PipelineExecution pe) throws IOException, InterruptedException {
     return StringUtils.equals(getBuildData().getProgramId(), pe.getProgramId()) &&
         StringUtils.equals(getBuildData().getPipelineId(), pe.getPipelineId()) &&
@@ -108,6 +118,10 @@ public class PipelineStepStateExecution extends AbstractStepExecution {
   }
 
   // Event handling
+
+  /**
+   * Process an <i>occurred</i> event. Essentially, an event that does not require user input, but that should generate some informational message.
+   */
   public void occurred(@Nonnull PipelineExecution pe, @Nonnull PipelineExecutionStepState state) throws IOException, InterruptedException {
     TaskListener listener = getTaskListener();
     listener.getLogger().println(Messages.PipelineStepStateExecution_event_occurred(pe.getId(), state.getAction(), state.getStatusState()));
@@ -115,6 +129,9 @@ public class PipelineStepStateExecution extends AbstractStepExecution {
     getContext().onSuccess(null);
   }
 
+  /**
+   * Process an <i>waiting</i> event. Waiting events pause this step/pipeline/run until a user action is taken.
+   */
   public void waiting(@Nonnull PipelineExecution pe, @Nonnull PipelineExecutionStepState state) throws IOException, InterruptedException, TimeoutException {
     TaskListener listener = getTaskListener();
     String action = state.getAction();
@@ -135,18 +152,14 @@ public class PipelineStepStateExecution extends AbstractStepExecution {
     }
   }
 
-
   /**
-   * If we're waiting, then reason will be populated. It gets removed once something happens.
-   *
-   * @return true if this step is finished waxriting
+   * Flag to indicate that this step is waiting for user interaction.
    */
   public boolean isProcessed() {
     return reason == null;
   }
 
   // User/UI/REST Interaction
-
   /**
    * Form Submission
    */
@@ -166,6 +179,9 @@ public class PipelineStepStateExecution extends AbstractStepExecution {
     return proceed();
   }
 
+  /**
+   * REST Submission
+  */
   @RequirePOST
   public HttpResponse doCancel() throws IOException, InterruptedException {
     try {
@@ -183,6 +199,12 @@ public class PipelineStepStateExecution extends AbstractStepExecution {
     return HttpResponses.redirectTo("../..");
   }
 
+  /**
+   * Used by wrapping block steps to quietly end this step without changing the build status.
+   * <p>
+   *   Primarily intended to be used by {@link io.jenkins.plugins.adobe.cloudmanager.step.PipelineEndStep}.
+   * </p>
+   */
   @Restricted(NoExternalUse.class)
   public void doEndQuietly() throws IOException, InterruptedException {
     reason = null;
@@ -192,6 +214,7 @@ public class PipelineStepStateExecution extends AbstractStepExecution {
     getContext().onSuccess(null);
   }
 
+  // Process the request to complete the wait event as "successful."
   private HttpResponse proceed() throws IOException, InterruptedException {
     User user = User.current();
     Run<?, ?> run = getRun();
@@ -216,6 +239,8 @@ public class PipelineStepStateExecution extends AbstractStepExecution {
   }
 
   // Protection & Validation
+
+  // Make sure the user executing the approval has the right authentication.
   private void preApproveCheck() throws IOException, InterruptedException {
     if (isProcessed()) {
       throw new Failure(Messages.PipelineStepStateExecution_failure_processed());
@@ -225,6 +250,7 @@ public class PipelineStepStateExecution extends AbstractStepExecution {
     }
   }
 
+  // Make sure the user executing the cancel has the right authentication.
   private void preCancelCheck() throws IOException, InterruptedException {
     if (isProcessed()) {
       throw new Failure(Messages.PipelineStepStateExecution_failure_processed());
@@ -242,7 +268,7 @@ public class PipelineStepStateExecution extends AbstractStepExecution {
     return getRun().getParent().hasPermission(Job.CANCEL);
   }
 
-  // Make sure Action exists
+  // Create the Run action to handle storing the execution which will process the Approval/Rejection
   private PipelineWaitingAction getAction() throws IOException, InterruptedException {
     Run<?, ?> run = getRun();
     PipelineWaitingAction action = run.getAction(PipelineWaitingAction.class);

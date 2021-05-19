@@ -1,4 +1,4 @@
-package io.jenkins.plugin.adobe.cloudmanager.builder;
+package io.jenkins.plugins.adobe.cloudmanager.builder;
 
 /*-
  * #%L
@@ -37,11 +37,9 @@ import io.adobe.cloudmanager.CloudManagerApiException;
 import io.adobe.cloudmanager.Pipeline;
 import io.adobe.cloudmanager.PipelineExecution;
 import io.adobe.cloudmanager.Program;
-import io.jenkins.plugin.adobe.cloudmanager.util.DescriptorHelperTest;
-import io.jenkins.plugins.adobe.cloudmanager.builder.Messages;
-import io.jenkins.plugins.adobe.cloudmanager.builder.StartPipelineBuilder;
-import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOProjectConfig;
 import io.jenkins.plugins.adobe.cloudmanager.action.CloudManagerBuildAction;
+import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOProjectConfig;
+import io.jenkins.plugins.adobe.cloudmanager.util.DescriptorHelperTest;
 import mockit.Expectations;
 import mockit.Mock;
 import mockit.MockUp;
@@ -53,7 +51,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
-import static io.jenkins.plugin.adobe.cloudmanager.test.TestHelper.*;
+import static io.jenkins.plugins.adobe.cloudmanager.test.TestHelper.*;
 import static org.junit.Assert.*;
 
 public class StartPipelineBuilderTest {

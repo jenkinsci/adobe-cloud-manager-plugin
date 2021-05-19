@@ -12,10 +12,10 @@ package io.jenkins.plugins.adobe.cloudmanager.config;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -47,10 +47,18 @@ import org.slf4j.LoggerFactory;
  */
 @Extension
 public class AdobeIOConfig extends GlobalConfiguration {
+
+  // XML Config file name for storage.
   public static final String CLOUD_MANAGER_CONFIGURATION_ID = "adobe-cloud-manager-plugin-config";
+
   private static final Logger LOGGER = LoggerFactory.getLogger(AdobeIOConfig.class);
+
+  // Protect against no configurations done, and NPE.
   private static final AdobeIOConfig EMPTY_CONFIG = new AdobeIOConfig(Collections.emptyList());
+
   private List<AdobeIOProjectConfig> projectConfigs = new ArrayList<>();
+
+  // Webhook is disabled by default - make a conscious decision to enable it.
   private boolean webhookEnabled = false;
 
   public AdobeIOConfig() {
@@ -62,6 +70,37 @@ public class AdobeIOConfig extends GlobalConfiguration {
     this.projectConfigs = projectConfigs;
   }
 
+  /**
+   * Helper for looking up this configuration, protecting against null.
+   */
+  @Nonnull
+  public static AdobeIOConfig configuration() {
+    AdobeIOConfig config = AdobeIOConfig.all().get(AdobeIOConfig.class);
+    if (config == null) {
+      config = EMPTY_CONFIG;
+    }
+    return config;
+  }
+
+  /**
+   * Helper to find an AIO Project config based on a name.
+   * <p>
+   *   Name must match exactly.
+   * </p>
+   * <p>
+   *   Useful for checking after restarts or for long running builds.
+   * </p>
+   *
+   * @param name the name of the AIO Project Config
+   * @return config or null
+   */
+  @CheckForNull
+  public static AdobeIOProjectConfig projectConfigFor(@Nonnull String name) {
+    return AdobeIOConfig.configuration().getProjectConfigs()
+        .stream()
+        .filter(c -> StringUtils.equals(name, c.getName()))
+        .findFirst().orElse(null);
+  }
 
   @Nonnull
   public List<AdobeIOProjectConfig> getProjectConfigs() {
@@ -80,28 +119,6 @@ public class AdobeIOConfig extends GlobalConfiguration {
   @DataBoundSetter
   public void setWebhookEnabled(boolean webhookEnabled) {
     this.webhookEnabled = webhookEnabled;
-  }
-
-  /**
-   * Helper for looking up this configuration.
-   *
-   * @return Adobe IO Configuration
-   */
-  @Nonnull
-  public static AdobeIOConfig configuration() {
-    AdobeIOConfig config = AdobeIOConfig.all().get(AdobeIOConfig.class);
-    if (config == null) {
-      config = EMPTY_CONFIG;
-    }
-    return config;
-  }
-
-  @CheckForNull
-  public static AdobeIOProjectConfig projectConfigFor(@Nonnull String name) {
-    return AdobeIOConfig.configuration().getProjectConfigs()
-        .stream()
-        .filter(c -> StringUtils.equals(name, c.getName()))
-        .findFirst().orElse(null);
   }
 
   /**
@@ -124,6 +141,4 @@ public class AdobeIOConfig extends GlobalConfiguration {
     save();
     return true;
   }
-
-
 }

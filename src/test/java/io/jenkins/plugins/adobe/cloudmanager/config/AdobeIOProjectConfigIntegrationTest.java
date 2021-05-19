@@ -1,5 +1,4 @@
-
-package io.jenkins.plugin.adobe.cloudmanager.config;
+package io.jenkins.plugins.adobe.cloudmanager.config;
 
 /*-
  * #%L
@@ -27,7 +26,6 @@ package io.jenkins.plugin.adobe.cloudmanager.config;
  * #L%
  */
 
-
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLDecoder;
@@ -45,8 +43,7 @@ import com.gargoylesoftware.htmlunit.HttpMethod;
 import com.gargoylesoftware.htmlunit.Page;
 import com.gargoylesoftware.htmlunit.WebRequest;
 import hudson.security.GlobalMatrixAuthorizationStrategy;
-import io.jenkins.plugin.adobe.cloudmanager.test.TestHelper;
-import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOProjectConfig;
+import io.jenkins.plugins.adobe.cloudmanager.test.TestHelper;
 import jenkins.model.Jenkins;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
@@ -59,8 +56,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.For;
 import org.jvnet.hudson.test.JenkinsRule;
+import static io.jenkins.plugins.adobe.cloudmanager.test.TestHelper.*;
 import static org.junit.Assert.*;
-import static io.jenkins.plugin.adobe.cloudmanager.test.TestHelper.*;
 
 /*
   Modeled after GitHubServerConfigIntegrationTest.

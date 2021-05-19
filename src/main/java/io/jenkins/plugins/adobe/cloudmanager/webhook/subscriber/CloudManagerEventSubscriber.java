@@ -10,7 +10,6 @@ import hudson.ExtensionList;
 import hudson.ExtensionPoint;
 import hudson.util.Secret;
 import io.adobe.cloudmanager.CloudManagerApi;
-import io.adobe.cloudmanager.CloudManagerApiException;
 import io.adobe.cloudmanager.event.CloudManagerEvent;
 import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOConfig;
 import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOProjectConfig;
@@ -18,6 +17,9 @@ import jenkins.model.Jenkins;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Abstract subscriber for Cloud Manager events. Provides standard logic for looking up concrete extensions.
+ */
 public abstract class CloudManagerEventSubscriber implements ExtensionPoint {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(CloudManagerEventSubscriber.class);
@@ -68,7 +70,7 @@ public abstract class CloudManagerEventSubscriber implements ExtensionPoint {
   protected abstract Set<CloudManagerEvent.EventType> types();
 
   /**
-   * Processes the event payload.
+   * Processes the event.
    */
   protected abstract void onEvent(final CloudManagerSubscriberEvent event);
 

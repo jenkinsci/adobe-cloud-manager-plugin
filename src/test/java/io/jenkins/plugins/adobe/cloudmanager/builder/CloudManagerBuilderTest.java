@@ -1,4 +1,4 @@
-package io.jenkins.plugin.adobe.cloudmanager.builder;
+package io.jenkins.plugins.adobe.cloudmanager.builder;
 
 /*-
  * #%L
@@ -33,31 +33,22 @@ import java.util.List;
 import org.apache.commons.lang.StringUtils;
 
 import hudson.AbortException;
-import hudson.util.ListBoxModel;
 import hudson.util.Secret;
 import io.adobe.cloudmanager.CloudManagerApi;
 import io.adobe.cloudmanager.CloudManagerApiException;
 import io.adobe.cloudmanager.Pipeline;
-import io.adobe.cloudmanager.PipelineExecution;
-import io.adobe.cloudmanager.PipelineUpdate;
 import io.adobe.cloudmanager.Program;
-import io.adobe.cloudmanager.Variable;
-import io.jenkins.plugin.adobe.cloudmanager.test.TestHelper;
-import io.jenkins.plugin.adobe.cloudmanager.util.DescriptorHelperTest;
-import io.jenkins.plugins.adobe.cloudmanager.builder.CloudManagerBuilder;
-import io.jenkins.plugins.adobe.cloudmanager.builder.Messages;
 import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOConfig;
 import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOProjectConfig;
-import io.jenkins.plugins.adobe.cloudmanager.util.DescriptorHelper;
+import io.jenkins.plugins.adobe.cloudmanager.test.TestHelper;
+import io.jenkins.plugins.adobe.cloudmanager.util.DescriptorHelperTest;
 import mockit.Expectations;
 import mockit.Injectable;
-import mockit.Mock;
-import mockit.MockUp;
 import mockit.Mocked;
 import mockit.Tested;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import static io.jenkins.plugin.adobe.cloudmanager.test.TestHelper.*;
+import static io.jenkins.plugins.adobe.cloudmanager.test.TestHelper.*;
 import static org.junit.Assert.*;
 
 public class CloudManagerBuilderTest {

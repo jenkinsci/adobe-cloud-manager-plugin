@@ -30,7 +30,6 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-
 import javax.annotation.Nonnull;
 
 import hudson.Util;
@@ -38,11 +37,11 @@ import hudson.model.Result;
 import hudson.util.Secret;
 import io.adobe.cloudmanager.CloudManagerApi;
 import io.adobe.cloudmanager.CloudManagerApiException;
+import io.jenkins.plugins.adobe.cloudmanager.action.CloudManagerBuildAction;
 import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOConfig;
 import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOProjectConfig;
 import io.jenkins.plugins.adobe.cloudmanager.step.execution.Messages;
 import io.jenkins.plugins.adobe.cloudmanager.step.execution.PollPipelineExecution;
-import io.jenkins.plugins.adobe.cloudmanager.action.CloudManagerBuildAction;
 import mockit.Expectations;
 import mockit.Mock;
 import mockit.MockUp;
@@ -55,14 +54,19 @@ import org.jenkinsci.plugins.workflow.steps.Step;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.jenkinsci.plugins.workflow.steps.StepExecution;
 import org.jenkinsci.plugins.workflow.test.steps.SemaphoreStep;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+import org.jvnet.hudson.test.BuildWatcher;
 import org.jvnet.hudson.test.RestartableJenkinsRule;
 import org.jvnet.hudson.test.TestExtension;
-import static io.jenkins.plugin.adobe.cloudmanager.test.TestHelper.*;
+import static io.jenkins.plugins.adobe.cloudmanager.test.TestHelper.*;
 import static org.junit.Assert.*;
 
 public class PollPipelineStepTest {
+
+  @ClassRule
+  public static BuildWatcher watcher = new BuildWatcher();
 
   @Rule
   public RestartableJenkinsRule story = new RestartableJenkinsRule();

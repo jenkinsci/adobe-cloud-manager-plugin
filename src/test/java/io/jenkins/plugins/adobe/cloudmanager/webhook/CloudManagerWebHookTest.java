@@ -24,10 +24,10 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.TestExtension;
-import static io.jenkins.plugin.adobe.cloudmanager.test.TestHelper.*;
+import static io.jenkins.plugins.adobe.cloudmanager.test.TestHelper.*;
 import static org.junit.Assert.*;
 
-public class AdobeIOWebHookTest {
+public class CloudManagerWebHookTest {
   public static final String PAYLOAD = "Payload";
 
   @Rule
@@ -49,7 +49,7 @@ public class AdobeIOWebHookTest {
   public void testChallengeEvent() throws Exception {
 
     String challenge = "ChallengeParameter";
-    String url = String.format("%s%s/?challenge=%s", rule.getURL().toString(), AdobeIOWebHook.URL_NAME, challenge);
+    String url = String.format("%s%s/?challenge=%s", rule.getURL().toString(), CloudManagerWebHook.URL_NAME, challenge);
     HttpURLConnection con = (HttpURLConnection) new URL(url).openConnection();
     con.setRequestMethod(HttpMethod.GET);
     con.setRequestProperty(CloudManagerEvent.SIGNATURE_HEADER, sign(challenge));
@@ -64,7 +64,7 @@ public class AdobeIOWebHookTest {
   public void testPipelineExecutionStartEvent() throws Exception {
 
     String body = IOUtils.resourceToString("events/pipeline-started.json", Charset.defaultCharset(), this.getClass().getClassLoader());
-    String url = String.format("%s%s/", rule.getURL().toString(), AdobeIOWebHook.URL_NAME);
+    String url = String.format("%s%s/", rule.getURL().toString(), CloudManagerWebHook.URL_NAME);
     HttpURLConnection con = (HttpURLConnection) new URL(url).openConnection();
     con.setRequestMethod(HttpMethod.POST);
     con.setRequestProperty(CloudManagerEvent.SIGNATURE_HEADER, sign(body));
@@ -86,7 +86,7 @@ public class AdobeIOWebHookTest {
   public void testPipelineExecutionStepEvent() throws Exception {
 
     String body = IOUtils.resourceToString("events/step-started.json", Charset.defaultCharset(), this.getClass().getClassLoader());
-    String url = String.format("%s%s/", rule.getURL().toString(), AdobeIOWebHook.URL_NAME);
+    String url = String.format("%s%s/", rule.getURL().toString(), CloudManagerWebHook.URL_NAME);
     HttpURLConnection con = (HttpURLConnection) new URL(url).openConnection();
     con.setRequestMethod(HttpMethod.POST);
     con.setRequestProperty(CloudManagerEvent.SIGNATURE_HEADER, sign(body));
@@ -108,7 +108,7 @@ public class AdobeIOWebHookTest {
   public void testPipelineExecutionEndEvent() throws Exception {
 
     String body = IOUtils.resourceToString("events/pipeline-ended.json", Charset.defaultCharset(), this.getClass().getClassLoader());
-    String url = String.format("%s%s/", rule.getURL().toString(), AdobeIOWebHook.URL_NAME);
+    String url = String.format("%s%s/", rule.getURL().toString(), CloudManagerWebHook.URL_NAME);
     HttpURLConnection con = (HttpURLConnection) new URL(url).openConnection();
     con.setRequestMethod(HttpMethod.POST);
     con.setRequestProperty(CloudManagerEvent.SIGNATURE_HEADER, sign(body));

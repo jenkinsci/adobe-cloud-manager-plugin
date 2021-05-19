@@ -31,18 +31,23 @@ import org.kohsuke.stapler.StaplerRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static io.adobe.cloudmanager.event.CloudManagerEvent.EventType.*;
-
+/**
+ * Transform Stapler Request into a {@link CMEvent} for invoking the WebHook.
+ */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.PARAMETER)
 @Documented
 @InjectedParameter(CMEventPayload.PayloadHandler.class)
 public @interface CMEventPayload {
+  /**
+   * Annotation Handler for processing the payload.
+   */
   class PayloadHandler extends AnnotationHandler<CMEventPayload> {
     private static final Logger LOGGER = LoggerFactory.getLogger(CMEventPayload.PayloadHandler.class);
 
     public static final String CHALLENGE_PARAM = "challenge";
 
+    // Functions are based on Request MIME Type.
     private static final Map<String, Function<StaplerRequest, CMEvent>> PROCESSORS;
     static {
       Map<String, Function<StaplerRequest, CMEvent>> procs = new HashMap<>();
@@ -51,11 +56,14 @@ public @interface CMEventPayload {
       PROCESSORS = Collections.unmodifiableMap(procs);
     }
 
+    /**
+     * Parse the request into a {@link CMEvent} object. A {@code null} value is returned if the request can't be parsed.
+     */
     @Override
     public Object parse(StaplerRequest request, CMEventPayload cmEventPayload, Class clazz, String paramName) throws ServletException {
 
-
-      String contentType = StringUtils.defaultString(request.getContentType(), ContentType.APPLICATION_FORM_URLENCODED.getMimeType());
+      // Challenge is a GET so it's Content-Type is null/blank.
+      String contentType = StringUtils.defaultIfBlank(request.getContentType(), ContentType.APPLICATION_FORM_URLENCODED.getMimeType());
       contentType = ContentType.parse(contentType).getMimeType(); // In case of charset parameter.
 
       if (!PROCESSORS.containsKey(contentType)) {
@@ -69,6 +77,9 @@ public @interface CMEventPayload {
       return event;
     }
 
+    /**
+     * Processes the payload from a challenge parameter request.
+     */
     protected static Function<StaplerRequest, CMEvent> fromParam() {
       return (request) -> {
         if (request.getParameter(CHALLENGE_PARAM) == null) {
@@ -79,6 +90,9 @@ public @interface CMEventPayload {
       };
     }
 
+    /**
+     * Processes the payload from a POST body with JSON content.
+     */
     protected static Function<StaplerRequest, CMEvent> fromBody() {
       return (request) -> {
         try {
@@ -105,7 +119,8 @@ public @interface CMEventPayload {
                 break;
             }
           } catch (NullPointerException e) {
-            // Protect against poorly formatted JSON?
+            // Protect against poorly formatted or incomplete JSON
+            // Any of the method chains above could return null - this is easier than checking each
             LOGGER.warn(Messages.CMEventPayload_PayloadHandler_warn_eventParse(body));
             return null;
           }

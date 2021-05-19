@@ -1,4 +1,4 @@
-package io.jenkins.plugin.adobe.cloudmanager.config;
+package io.jenkins.plugins.adobe.cloudmanager.config;
 
 /*-
  * #%L
@@ -26,12 +26,9 @@ package io.jenkins.plugin.adobe.cloudmanager.config;
  * #L%
  */
 
-
 import java.util.ArrayList;
 import java.util.List;
 
-import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOConfig;
-import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOProjectConfig;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;

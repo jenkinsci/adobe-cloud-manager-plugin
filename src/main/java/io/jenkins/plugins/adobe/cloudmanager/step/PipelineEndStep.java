@@ -4,7 +4,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-
 import javax.annotation.Nonnull;
 
 import hudson.Extension;
@@ -19,6 +18,19 @@ import org.jenkinsci.plugins.workflow.steps.StepExecution;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
+/**
+ * {@link Step} which waits for a Cloud Manager pipeline end event.
+ * <p>
+ *   If an Pipeline end event is received, all inner {@link PipelineStepStateStep} instances are quietly ended.
+ *   Any other inner steps are allowed to complete as configured.
+ * </p>
+ * <p>
+ *   See the <a href="https://www.adobe.io/apis/experiencecloud/cloud-manager/api-reference.html#!AdobeDocs/cloudmanager-api-docs/master/swagger-specs/events.yaml">Cloud Manager Events</a> documentation.
+ * </p>
+ * <p>
+ *   <strong>Note:</strong> Syntax wise, until <a href="https://issues.jenkins.io/browse/JENKINS-65646">JENKINS-65646</a> is resolved, a block must be specified, even if its empty.
+ * </p>
+ */
 public class PipelineEndStep extends Step {
 
   private boolean mirror = true;
@@ -28,6 +40,9 @@ public class PipelineEndStep extends Step {
 
   }
 
+  /**
+   * Flag if this step mirror the remote state. (Remote aborted results in local failure.)
+   */
   public boolean isMirror() {
     return mirror;
   }
@@ -65,6 +80,5 @@ public class PipelineEndStep extends Step {
     public boolean takesImplicitBlockArgument() {
       return true;
     }
-
   }
 }

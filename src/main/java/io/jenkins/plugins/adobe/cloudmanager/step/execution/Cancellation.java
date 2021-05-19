@@ -5,6 +5,9 @@ import javax.annotation.CheckForNull;
 import hudson.model.User;
 import jenkins.model.CauseOfInterruption;
 
+/**
+ * An interruption which occurs due to user deciding to cancel a Cloud Manager waiting step.
+ */
 public class Cancellation extends CauseOfInterruption {
   private static final long serialVersionUID = 1;
 

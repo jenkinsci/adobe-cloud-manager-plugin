@@ -72,36 +72,30 @@ import org.slf4j.LoggerFactory;
 
 /**
  * A single Adobe IO Project configuration.
+ * <p>
+ *   Provides wrapper/convenience for interactions with IMS's API.
+ * </p>
  */
 public class AdobeIOProjectConfig extends AbstractDescribableImpl<AdobeIOProjectConfig> {
 
   /**
-   * For filtering out Credentials for the dropdown.
+   * For filtering out Credentials for the dropdown. Credentials will only be listed if they match this domain restriction.
    */
   public static final String ADOBE_IO_DOMAIN = "ims-na1.adobelogin.com";
 
+  /**
+   * Default IMS API endpoint.
+   */
   public static final String ADOBE_IO_URL = "https://" + ADOBE_IO_DOMAIN;
 
   private static final Logger LOGGER = LoggerFactory.getLogger(AdobeIOProjectConfig.class);
 
-  @CheckForNull
   private String name;
-
   private String apiUrl = ADOBE_IO_URL;
-
-  @CheckForNull
   private String clientId;
-
-  @CheckForNull
   private String imsOrganizationId;
-
-  @CheckForNull
   private String technicalAccountId;
-
-  @CheckForNull
   private String clientSecretCredentialsId;
-
-  @CheckForNull
   private String privateKeyCredentialsId;
 
   @DataBoundConstructor
@@ -112,66 +106,73 @@ public class AdobeIOProjectConfig extends AbstractDescribableImpl<AdobeIOProject
     return new HostnameRequirement(AdobeIOProjectConfig.ADOBE_IO_DOMAIN);
   }
 
+  @CheckForNull
   public String getName() {
     return name;
   }
 
   @DataBoundSetter
-  public void setName(@CheckForNull String name) {
+  public void setName(String name) {
     this.name = name;
   }
 
+  @CheckForNull
   public String getApiUrl() {
     return apiUrl;
   }
 
   @DataBoundSetter
-  public void setApiUrl(@CheckForNull String apiUrl) {
+  public void setApiUrl(String apiUrl) {
     this.apiUrl = StringUtils.defaultIfBlank(apiUrl, ADOBE_IO_URL);
   }
 
+  @CheckForNull
   public String getClientId() {
     return clientId;
   }
 
   @DataBoundSetter
-  public void setClientId(@CheckForNull String clientId) {
+  public void setClientId(String clientId) {
     this.clientId = clientId;
   }
 
+  @CheckForNull
   public String getImsOrganizationId() {
     return imsOrganizationId;
   }
 
   @DataBoundSetter
-  public void setImsOrganizationId(@CheckForNull String imsOrganizationId) {
+  public void setImsOrganizationId(String imsOrganizationId) {
     this.imsOrganizationId = imsOrganizationId;
   }
 
+  @CheckForNull
   public String getTechnicalAccountId() {
     return technicalAccountId;
   }
 
   @DataBoundSetter
-  public void setTechnicalAccountId(@CheckForNull String technicalAccountId) {
+  public void setTechnicalAccountId(String technicalAccountId) {
     this.technicalAccountId = technicalAccountId;
   }
 
+  @CheckForNull
   public String getClientSecretCredentialsId() {
     return clientSecretCredentialsId;
   }
 
   @DataBoundSetter
-  public void setClientSecretCredentialsId(@CheckForNull String clientSecretCredentialsId) {
+  public void setClientSecretCredentialsId(String clientSecretCredentialsId) {
     this.clientSecretCredentialsId = clientSecretCredentialsId;
   }
 
+  @CheckForNull
   public String getPrivateKeyCredentialsId() {
     return privateKeyCredentialsId;
   }
 
   @DataBoundSetter
-  public void setPrivateKeyCredentialsId(@CheckForNull String privateKeyCredentialsId) {
+  public void setPrivateKeyCredentialsId(String privateKeyCredentialsId) {
     this.privateKeyCredentialsId = privateKeyCredentialsId;
   }
 
@@ -248,23 +249,15 @@ public class AdobeIOProjectConfig extends AbstractDescribableImpl<AdobeIOProject
     return CredentialsUtil.aioScopedCredentialsFor(generateCredentialsId(), StringCredentials.class).map(StringCredentials::getSecret).orElse(null);
   }
 
-  private String generateCredentialsId() {
-    return StringUtils.join(new String[]{ getName(), getClientId() }).replaceAll("[^a-zA-Z0-9_.-]+", "");
-  }
-
-  /**
-   * Returns the display name, the configured name and the IMS Org Id.
-   *
-   * @return formatted display name
-   */
   @Nonnull
   public String getDisplayName() {
     return Messages.AdobeIOProjectConfig_displayName(getName(), getImsOrganizationId());
   }
 
-  /**
-   * Descriptor for the form to manage the Adobe IO Projects.
-   */
+  private String generateCredentialsId() {
+    return StringUtils.join(new String[]{ getName(), getClientId() }).replaceAll("[^a-zA-Z0-9_.-]+", "");
+  }
+
   @Extension
   public static class DescriptorImpl extends Descriptor<AdobeIOProjectConfig> {
 
@@ -275,10 +268,7 @@ public class AdobeIOProjectConfig extends AbstractDescribableImpl<AdobeIOProject
     }
 
     /**
-     * Check that the name is provided.
-     *
-     * @param name the name of the configuration
-     * @return form status
+     * Name check - it's required
      */
     @SuppressWarnings("unused")
     public FormValidation doCheckName(@QueryParameter String name) {
@@ -289,10 +279,7 @@ public class AdobeIOProjectConfig extends AbstractDescribableImpl<AdobeIOProject
     }
 
     /**
-     * Check that the client id (aka API Key) is provided.
-     *
-     * @param clientId the client id
-     * @return form status
+     * Client Id (aka API Key) check - it's required.
      */
     @SuppressWarnings("unused")
     public FormValidation doCheckClientId(@QueryParameter String clientId) {
@@ -303,10 +290,7 @@ public class AdobeIOProjectConfig extends AbstractDescribableImpl<AdobeIOProject
     }
 
     /**
-     * Check that the IMS Org id is provided.
-     *
-     * @param imsOrganizationId the IMS Org Id
-     * @return form status
+     * IMS Org Id check = it's required.
      */
     @SuppressWarnings("unused")
     public FormValidation doCheckImsOrganizationId(@QueryParameter String imsOrganizationId) {
@@ -317,10 +301,7 @@ public class AdobeIOProjectConfig extends AbstractDescribableImpl<AdobeIOProject
     }
 
     /**
-     * Checks if the Technical account Id is provided.
-     *
-     * @param technicalAccountId the technical account id
-     * @return form status
+     * Technical Account Id check = it's required.
      */
     @SuppressWarnings("unused")
     public FormValidation doCheckTechnicalAccountId(@QueryParameter String technicalAccountId) {
@@ -331,10 +312,7 @@ public class AdobeIOProjectConfig extends AbstractDescribableImpl<AdobeIOProject
     }
 
     /**
-     * Checks if the Client Secret credentials id is provided and is of the correct type.
-     *
-     * @param clientSecretCredentialsId the client secret credentials reference
-     * @return the form status
+     * Client Secret credential id check - it's required.
      */
     @SuppressWarnings("unused")
     public FormValidation doCheckClientSecretCredentialsId(@QueryParameter String clientSecretCredentialsId) {
@@ -349,10 +327,7 @@ public class AdobeIOProjectConfig extends AbstractDescribableImpl<AdobeIOProject
     }
 
     /**
-     * Checks if the Private Key credential id is provided and of the correct type.
-     *
-     * @param privateKeyCredentialsId the private key credential reference
-     * @return form status
+     * Private Key credential id check - it's required.
      */
     @SuppressWarnings("unused")
     public FormValidation doCheckPrivateKeyCredentialsId(@QueryParameter String privateKeyCredentialsId) {
@@ -369,8 +344,7 @@ public class AdobeIOProjectConfig extends AbstractDescribableImpl<AdobeIOProject
     /**
      * List all of the possible Credentials that can be used for the Client Secret.
      *
-     * @param credentialsId the current client secret credential id
-     * @return list of credential ids
+     * <p>Client Secrets must be in a domain restricted by {@link #ADOBE_IO_DOMAIN}.</p>
      */
     @SuppressWarnings("unused")
     public ListBoxModel doFillClientSecretCredentialsIdItems(@QueryParameter String credentialsId) {
@@ -390,8 +364,7 @@ public class AdobeIOProjectConfig extends AbstractDescribableImpl<AdobeIOProject
     /**
      * List all of the possible Credentials that can be used for the Private Key.
      *
-     * @param credentialsId the current private key credential id
-     * @return list of credential ids
+     * <p>Private Keys must be in a domain restricted by {@link #ADOBE_IO_DOMAIN}.</p>
      */
     @SuppressWarnings("unused")
     public ListBoxModel doFillPrivateKeyCredentialsIdItems(@QueryParameter String credentialsId) {
@@ -410,14 +383,6 @@ public class AdobeIOProjectConfig extends AbstractDescribableImpl<AdobeIOProject
 
     /**
      * Verify that the provided information is able to authenticate to Adobe IO.
-     *
-     * @param apiUrl                    the Adobe IO URL endpoint
-     * @param imsOrganizationId         the IMS Org Id
-     * @param technicalAccountId        the Technical Account Id
-     * @param clientId                  the client id (aka API Key)
-     * @param clientSecretCredentialsId the client secret credentials id
-     * @param privateKeyCredentialsId   the private key credentials id
-     * @return the form validation
      */
     @RequirePOST
     @Restricted(DoNotUse.class)

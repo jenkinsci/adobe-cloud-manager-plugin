@@ -67,6 +67,9 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 
+/**
+ * Synchronizes the repository associated with this build to the configured Cloud Manager repository.
+ */
 public class RepositorySyncBuilder extends Builder implements SimpleBuildStep {
 
   private final String url;
@@ -75,8 +78,6 @@ public class RepositorySyncBuilder extends Builder implements SimpleBuildStep {
 
   /**
    * Create an new Repository Sync Builder using the specified Cloud Manager URL and Credentials.
-   * @param url the Cloud Manager Git URL
-   * @param credentialsId the repository credentials
    */
   @DataBoundConstructor
   public RepositorySyncBuilder(@Nonnull String url, @Nonnull String credentialsId) {
@@ -84,28 +85,41 @@ public class RepositorySyncBuilder extends Builder implements SimpleBuildStep {
     this.credentialsId = credentialsId;
   }
 
+  /**
+   * The URL to the Cloud Manager git repository.
+   */
   public String getUrl() {
     return url;
   }
 
+  /**
+   * The credentials id of the secret containing the Cloud Manager git credentials.
+   */
   public String getCredentialsId() {
     return credentialsId;
   }
 
   /**
    * Whether or not to force the <code>push</code> to Cloud Manager's repository
-   *
-   * @return force flag
    */
   public boolean isForce() {
     return force;
   }
 
+  /**
+   * Set whether or not the sync to Cloud Manager's Git should be forced.
+   * <p>
+   *   Use with caution, this will overwrite <strong>all</strong> remote content.
+   * </p>
+   */
   @DataBoundSetter
   public void setForce(boolean force) {
     this.force = force;
   }
 
+  /*
+    Get the first SCM from the provided list. Run/Build SCM is required for this builder to work.
+   */
   private GitSCM findFirst(@Nonnull List<SCM> list, @Nonnull PrintStream log) throws AbortException {
 
     if (list.isEmpty()) {
@@ -123,14 +137,17 @@ public class RepositorySyncBuilder extends Builder implements SimpleBuildStep {
     return git;
   }
 
+  // Workflow jobs could have more than one SCM.
   private GitSCM getScm(@Nonnull WorkflowRun run, @Nonnull PrintStream log) throws AbortException {
     return findFirst(run.getSCMs(), log);
   }
 
+  // Builds only ever(?) have one SCM.
   private GitSCM getScm(@Nonnull AbstractBuild<?, ?> build, @Nonnull PrintStream log) throws AbortException {
     return findFirst(Collections.singletonList(build.getParent().getScm()), log);
   }
 
+  // Creates a Git client for the SCM.
   private GitClient createClient(@Nonnull GitSCM scm,
                                  @Nonnull Run<?, ?> run,
                                  @Nonnull FilePath workspace,
@@ -152,6 +169,7 @@ public class RepositorySyncBuilder extends Builder implements SimpleBuildStep {
     return creds.get();
   }
 
+  // The actual work of syncing to Cloud Manager's git.
   private void push(@Nonnull GitClient client, @Nonnull EnvVars env, @Nonnull PrintStream log) throws AbortException {
 
     String branch = env.get(GitSCM.GIT_BRANCH, "");
@@ -194,6 +212,7 @@ public class RepositorySyncBuilder extends Builder implements SimpleBuildStep {
     push(client, env, log);
   }
 
+  // Sync requires a workspace, as the client needs the files to push up to Cloud Manager remote.
   @Override
   public boolean requiresWorkspace() {
     return true;
@@ -203,16 +222,11 @@ public class RepositorySyncBuilder extends Builder implements SimpleBuildStep {
   @Extension
   public static class DescriptorImpl extends BuildStepDescriptor<Builder> {
 
-    @Inject
+    @Inject // Can this be replaced with a lookup?
     private UserRemoteConfig.DescriptorImpl delegate;
 
     /**
      * Create a list of the credentials that are valid for this Step.
-     *
-     * @param project       the project context
-     * @param url           the Cloud Manager Repository URL
-     * @param credentialsId the current credentials id for the Cloud Manager authentication
-     * @return list of credentials
      */
     public ListBoxModel doFillCredentialsIdItems(@AncestorInPath Item project, @QueryParameter String url, @QueryParameter String credentialsId) {
       return delegate.doFillCredentialsIdItems(project, url, credentialsId);
@@ -220,13 +234,6 @@ public class RepositorySyncBuilder extends Builder implements SimpleBuildStep {
 
     /**
      * Check if the provided Cloud Manager url is valid.
-     *
-     * @param project       the project context
-     * @param url           the Cloud Manager Repository URL
-     * @param credentialsId the current credentials id for the Cloud Manager authentication
-     * @return the form status
-     * @throws IOException          if an error occurs
-     * @throws InterruptedException if an error occurs
      */
     public FormValidation doCheckUrl(@AncestorInPath Item project, @QueryParameter String url, @QueryParameter String credentialsId) throws IOException, InterruptedException {
       return delegate.doCheckUrl(project, credentialsId, url);

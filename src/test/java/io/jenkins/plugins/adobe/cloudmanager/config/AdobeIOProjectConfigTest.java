@@ -1,4 +1,4 @@
-package io.jenkins.plugin.adobe.cloudmanager.config;
+package io.jenkins.plugins.adobe.cloudmanager.config;
 
 /*-
  * #%L
@@ -36,8 +36,6 @@ import hudson.util.Secret;
 import io.adobe.cloudmanager.AdobeClientCredentials;
 import io.adobe.cloudmanager.IdentityManagementApi;
 import io.adobe.cloudmanager.IdentityManagementApiException;
-import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOConfig;
-import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOProjectConfig;
 import mockit.Expectations;
 import mockit.Mock;
 import mockit.MockUp;
@@ -48,7 +46,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
-import static io.jenkins.plugin.adobe.cloudmanager.test.TestHelper.*;
+import static io.jenkins.plugins.adobe.cloudmanager.test.TestHelper.*;
 import static org.junit.Assert.*;
 
 public class AdobeIOProjectConfigTest {

@@ -15,17 +15,17 @@ import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.kohsuke.stapler.StaplerRequest;
 import static io.adobe.cloudmanager.event.CloudManagerEvent.EventType.*;
-import static io.jenkins.plugin.adobe.cloudmanager.test.TestHelper.*;
+import static io.jenkins.plugins.adobe.cloudmanager.test.TestHelper.*;
 import static org.junit.Assert.*;
 
-public class RequireAIOPayloadTest {
+public class RequireCMEventPayloadTest {
 
   private static final String PAYLOAD = "{}";
   private static final CMEvent EVENT = new CMEvent(PIPELINE_ENDED, IMS_ORG_ID, PAYLOAD);
   @Rule
   public JenkinsRule rule = new JenkinsRule();
   @Tested
-  private RequireAIOPayload.Processor processor;
+  private RequireCMEventPayload.Processor processor;
   @Mocked
   private StaplerRequest request;
 
@@ -53,7 +53,7 @@ public class RequireAIOPayloadTest {
 
   @Test
   public void failsOnWrongArg() {
-    assertThrows(InvocationTargetException.class, () -> processor.requiresValidPayload(new Object[]{ request, new AdobeIOWebHook() }));
+    assertThrows(InvocationTargetException.class, () -> processor.requiresValidPayload(new Object[]{ request, new CloudManagerWebHook() }));
   }
 
   @Test

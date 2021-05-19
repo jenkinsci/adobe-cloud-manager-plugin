@@ -27,8 +27,9 @@ import org.slf4j.LoggerFactory;
 /**
  * Action for Pipeline Executions which need to be paused and display info.
  * <p>
- * Executions could be put into parallel blocks, so have to handle this.
+ * Executions could be put into parallel blocks, so have to handle this. Also Jenkins could shut down while waiting.
  * A lot of this is modeled off of {@code InputAction}
+ * </p>
  */
 public class PipelineWaitingAction implements RunAction2, Serializable {
   private static final Logger LOGGER = LoggerFactory.getLogger(PipelineWaitingAction.class);
@@ -81,6 +82,9 @@ public class PipelineWaitingAction implements RunAction2, Serializable {
     }
   }
 
+  /**
+   * Add the step to the list of executions, for later reloading.
+   */
   public synchronized void add(@Nonnull PipelineStepStateExecution step) throws IOException, InterruptedException, TimeoutException {
     loadExecutions();
     if (executions == null) {
@@ -91,7 +95,10 @@ public class PipelineWaitingAction implements RunAction2, Serializable {
     run.save();
   }
 
-  public synchronized PipelineStepStateExecution getExecution(String id) throws InterruptedException, TimeoutException {
+  /**
+   * Returns the execution based on the id.
+   */
+  public synchronized PipelineStepStateExecution getExecution(@Nonnull String id) throws InterruptedException, TimeoutException {
     loadExecutions();
     if (executions == null) {
       return null;
@@ -99,11 +106,17 @@ public class PipelineWaitingAction implements RunAction2, Serializable {
     return executions.stream().filter(e -> StringUtils.equals(id, e.getId())).findFirst().orElse(null);
   }
 
+  /**
+   * Lists all the stored executions. Used by the UI for form display/submission.
+   */
   public synchronized List<PipelineStepStateExecution> getExecutions() throws InterruptedException, TimeoutException {
     loadExecutions();
     return (executions == null) ? Collections.emptyList() : new ArrayList<>(executions);
   }
 
+  /**
+   * Remove the specified step from the list of known executions.
+   */
   public synchronized void remove(@Nonnull PipelineStepStateExecution step) throws IOException, InterruptedException, TimeoutException {
     loadExecutions();
     if (executions == null) {
@@ -115,12 +128,13 @@ public class PipelineWaitingAction implements RunAction2, Serializable {
   }
 
   /**
-   * For URL Access
+   * Used by the UI for iterating over the executions and displaying.
    */
   public PipelineStepStateExecution getDynamic(String id) throws InterruptedException, TimeoutException {
     return getExecution(id);
   }
 
+  // Load all of the executions. Be careful with the logic here, can sometimes block the VM thread - don't want that.
   private synchronized void loadExecutions() throws InterruptedException, TimeoutException {
     if (executions == null) { // Loaded after restart.
       try {

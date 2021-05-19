@@ -3,6 +3,9 @@ package io.jenkins.plugins.adobe.cloudmanager.action;
 import io.adobe.cloudmanager.StepAction;
 import org.jenkinsci.plugins.workflow.actions.PersistentAction;
 
+/**
+ * Action for storing the decision made by a user on a Cloud Manager build step.
+ */
 public class PipelineStepDecisionAction implements PersistentAction {
 
   private final String userId;
@@ -27,9 +30,12 @@ public class PipelineStepDecisionAction implements PersistentAction {
 
   @Override
   public String getUrlName() {
-    return null;
+    return null;  // Returning null keeps it off the left nav.
   }
 
+  /**
+   * Options for a decision.
+   */
   public enum Decision {
     APPROVED, REJECTED
   }

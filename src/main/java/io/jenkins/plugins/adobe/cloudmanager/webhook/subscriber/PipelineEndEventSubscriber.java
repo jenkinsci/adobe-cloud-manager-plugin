@@ -16,6 +16,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import static io.adobe.cloudmanager.event.CloudManagerEvent.EventType.*;
 
+/**
+ * Subscriber for Cloud Manager pipeline execution end events.
+ */
 public class PipelineEndEventSubscriber extends CloudManagerEventSubscriber {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(PipelineEndEventSubscriber.class);
@@ -27,6 +30,9 @@ public class PipelineEndEventSubscriber extends CloudManagerEventSubscriber {
     return EVENTS;
   }
 
+  /**
+   * Calls all {@link io.jenkins.plugins.adobe.cloudmanager.step.PipelineEndStep} instances waiting for an event.
+   */
   @Override
   protected void onEvent(CloudManagerSubscriberEvent event) {
     CloudManagerApi api = createApi(event.getAioProjectName());

@@ -20,13 +20,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import static io.adobe.cloudmanager.PipelineExecution.Status.*;
 
+/**
+ * Execution for a {@link io.jenkins.plugins.adobe.cloudmanager.step.PipelineEndStep}. Handles the any associated events.
+ */
 public class PipelineEndExecution extends AbstractStepExecution {
   private static final Logger LOGGER = LoggerFactory.getLogger(PipelineEndExecution.class);
 
   private final Boolean mirror;
-  PipelineExecution.Status status;
-
+  // Event status' which are associated with a remote pipeline failure.
   private final List<PipelineExecution.Status> FAILURES = Arrays.asList(FAILED, ERROR, CANCELLED);
+  // Final status indicating that this execution is complete.
+  private PipelineExecution.Status status;
 
   public PipelineEndExecution(StepContext context, boolean mirror) {
     super(context);
@@ -38,12 +42,11 @@ public class PipelineEndExecution extends AbstractStepExecution {
   }
 
   @Override
-  public boolean doStart() throws Exception {
+  public void doStart() throws Exception {
     getTaskListener().getLogger().println(Messages.PipelineEndExecution_info_waiting());
     if (getContext().hasBody()) {
       getContext().newBodyInvoker().withCallback(new Callback(getId())).start();
     }
-    return false;
   }
 
   @Override
@@ -71,14 +74,14 @@ public class PipelineEndExecution extends AbstractStepExecution {
   }
 
   /**
-   * Called when this hasn't received the remote event, to repeat any body logic.
+   * Reruns the body, as this step hasn't receiving an end event as yet.
    */
   public void rerun(StepContext bodyContext) {
     bodyContext.newBodyInvoker().withCallback(new Callback(getId())).start();
   }
 
   /**
-   * We're done working and the body has finished its work.
+   * Ends this step when receiving an associated event.
    */
   public void end() {
     if (mirror && FAILURES.contains(status)) {
@@ -88,6 +91,9 @@ public class PipelineEndExecution extends AbstractStepExecution {
     }
   }
 
+  /**
+   * indicates if this executions is associated with the remote Cloud Manager pipeline.
+   */
   public boolean isApplicable(PipelineExecution pe) throws IOException, InterruptedException {
     return StringUtils.equals(getBuildData().getProgramId(), pe.getProgramId()) &&
         StringUtils.equals(getBuildData().getPipelineId(), pe.getPipelineId()) &&
@@ -97,9 +103,10 @@ public class PipelineEndExecution extends AbstractStepExecution {
   // Event handling
 
   /**
-   * Processes the execution event, will quietly terminate any internal {@link PipelineStepStateExecution}s.
-   *
-   * If any unknown body steps are waiting, they'll block this event processing from early termination of this step.
+   * Processes the execution event, will quietly terminate any internal running {@link PipelineStepStateExecution} instances.
+   * <p>
+   *  If any unknown body steps are waiting, they'll block this event processing from early termination of this step.
+   * </p>
    */
   public void occurred(@Nonnull PipelineExecution pe) throws IOException, InterruptedException {
     status = pe.getStatusState();
@@ -120,7 +127,7 @@ public class PipelineEndExecution extends AbstractStepExecution {
   }
 
   /**
-   * Callback for handling end of body block
+   * Callback for handling end of body block.
    */
   private static final class Callback extends BodyExecutionCallback {
     private static final long serialVersionUID = 1;
@@ -129,6 +136,10 @@ public class PipelineEndExecution extends AbstractStepExecution {
     Callback(String id) {
       this.id = id;
     }
+
+    /**
+     * Called when the body completes. If this execution isn't complete, will rerun the body.
+     */
     @Override
     public void onSuccess(StepContext context, Object result) {
       StepExecution.applyAll(PipelineEndExecution.class, (execution) -> {

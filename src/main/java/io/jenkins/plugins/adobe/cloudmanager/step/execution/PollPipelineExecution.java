@@ -28,9 +28,8 @@ public class PollPipelineExecution extends AbstractStepExecution {
   }
 
   @Override
-  public boolean doStart() throws Exception {
+  public void doStart() throws Exception {
     createTask();
-    return false;
   }
 
   @Override

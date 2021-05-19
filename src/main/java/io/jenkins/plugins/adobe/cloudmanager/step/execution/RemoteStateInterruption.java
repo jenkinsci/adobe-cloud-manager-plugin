@@ -3,6 +3,10 @@ package io.jenkins.plugins.adobe.cloudmanager.step.execution;
 import io.adobe.cloudmanager.PipelineExecution;
 import jenkins.model.CauseOfInterruption;
 
+
+/**
+ * An interruption which occurs due to remote selection, cancellation or otherwise.
+ */
 public class RemoteStateInterruption extends CauseOfInterruption {
 
   private final PipelineExecution.Status reason;

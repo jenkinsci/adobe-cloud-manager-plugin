@@ -1,4 +1,4 @@
-package io.jenkins.plugin.adobe.cloudmanager.config;
+package io.jenkins.plugins.adobe.cloudmanager.config;
 
 /*-
  * #%L
@@ -26,11 +26,8 @@ package io.jenkins.plugin.adobe.cloudmanager.config;
  * #L%
  */
 
-
 import java.util.List;
 
-import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOConfig;
-import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOProjectConfig;
 import io.jenkins.plugins.casc.ConfigurationContext;
 import io.jenkins.plugins.casc.Configurator;
 import io.jenkins.plugins.casc.ConfiguratorRegistry;

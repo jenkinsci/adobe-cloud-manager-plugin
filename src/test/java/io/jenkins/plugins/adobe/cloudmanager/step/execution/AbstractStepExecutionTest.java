@@ -1,7 +1,5 @@
 package io.jenkins.plugins.adobe.cloudmanager.step.execution;
 
-import java.io.IOException;
-
 import hudson.AbortException;
 import hudson.model.Run;
 import hudson.util.Secret;

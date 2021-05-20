@@ -32,6 +32,7 @@ import java.util.Optional;
 import java.util.Set;
 import javax.annotation.Nonnull;
 
+import hudson.Extension;
 import io.adobe.cloudmanager.CloudManagerApi;
 import io.adobe.cloudmanager.CloudManagerApiException;
 import io.adobe.cloudmanager.PipelineExecution;
@@ -47,6 +48,7 @@ import static io.adobe.cloudmanager.event.CloudManagerEvent.EventType.*;
 /**
  * Subscriber for Cloud Manager pipeline execution end events.
  */
+@Extension
 public class PipelineEndEventSubscriber extends CloudManagerEventSubscriber {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(PipelineEndEventSubscriber.class);

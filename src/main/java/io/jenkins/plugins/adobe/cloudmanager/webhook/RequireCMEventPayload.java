@@ -96,7 +96,8 @@ public @interface RequireCMEventPayload {
     protected void requiresWebhookEnabled() throws InvocationTargetException {
       AdobeIOConfig config = AdobeIOConfig.all().get(AdobeIOConfig.class);
       if (config == null || !config.isWebhookEnabled()) {
-        throw new InvocationTargetException(HttpResponses.error(SC_NOT_FOUND, Messages.RequireAIOPayload_Processor_warn_webhookDisabled()));
+        LOGGER.warn(Messages.RequireCMEventPayload_Processor_warn_webhookDisabled());
+        throw new InvocationTargetException(HttpResponses.error(SC_NOT_FOUND, "Not Found"));
       }
     }
 
@@ -104,14 +105,14 @@ public @interface RequireCMEventPayload {
      * Precheck that the arguments contain a parsable payload.
      */
     protected void requiresValidPayload(@Nonnull Object[] args) throws InvocationTargetException {
-      isTrue(args.length == 2, Messages.RequireAIOPayload_Processor_error_invalidArgs());
-      isTrue(args[1] instanceof CMEvent, Messages.RequireAIOPayload_Processor_error_invalidArgs());
+      isTrue(args.length == 2, Messages.RequireCMEventPayload_Processor_error_invalidArgs());
+      isTrue(args[1] instanceof CMEvent, Messages.RequireCMEventPayload_Processor_error_invalidArgs());
 
       CMEvent event = (CMEvent) args[1];
-      isTrue(event != null, Messages.RequireAIOPayload_Processor_error_missingBody());
+      isTrue(event != null, Messages.RequireCMEventPayload_Processor_error_missingBody());
       StaplerRequest request = (StaplerRequest) args[0];
       if (HttpMethod.POST.equals(request.getMethod())) {
-        isTrue(event.getEventType() != null, Messages.RequireAIOPayload_Processor_error_missingBody());
+        isTrue(event.getEventType() != null, Messages.RequireCMEventPayload_Processor_error_missingBody());
       }
     }
 
@@ -121,7 +122,7 @@ public @interface RequireCMEventPayload {
     protected void requiresValidSignature(Object[] args) throws InvocationTargetException {
       StaplerRequest request = (StaplerRequest) args[0];
       Optional<String> header = Optional.ofNullable(request.getHeader(SIGNATURE_HEADER));
-      isTrue(header.isPresent(), Messages.RequireAIOPayload_Processor_error_missingSignature());
+      isTrue(header.isPresent(), Messages.RequireCMEventPayload_Processor_error_missingSignature());
 
       final CMEvent event = (CMEvent) args[1];
       List<Secret> secrets = AdobeIOConfig.configuration().getProjectConfigs().stream()
@@ -132,7 +133,7 @@ public @interface RequireCMEventPayload {
           .filter(Optional::isPresent)
           .map(Optional::get)
           .collect(Collectors.toList());
-      isTrue(!secrets.isEmpty(), Messages.RequireAIOPayload_Processor_error_missingAIOProject());
+      isTrue(!secrets.isEmpty(), Messages.RequireCMEventPayload_Processor_error_missingAIOProject());
 
       final String digest = header.get();
       isTrue(
@@ -140,11 +141,11 @@ public @interface RequireCMEventPayload {
             try {
               return CloudManagerEvent.isValidSignature(event.getPayload(), digest, s.getPlainText());
             } catch (CloudManagerApiException e) {
-              LOGGER.warn(Messages.RequireAIOPayload_Processor_warn_signatureValidationError(e.getLocalizedMessage()));
+              LOGGER.warn(Messages.RequireCMEventPayload_Processor_warn_signatureValidationError(e.getLocalizedMessage()));
               return false;
             }
           }),
-          Messages.RequireAIOPayload_Processor_error_missingSignature()
+          Messages.RequireCMEventPayload_Processor_error_missingSignature()
       );
     }
   }

@@ -27,11 +27,15 @@ package io.jenkins.plugins.adobe.cloudmanager.action;
  */
 
 import io.adobe.cloudmanager.StepAction;
+import lombok.Data;
 import org.jenkinsci.plugins.workflow.actions.PersistentAction;
+import org.kohsuke.stapler.export.ExportedBean;
 
 /**
  * Action for storing the decision made by a user on a Cloud Manager build step.
  */
+@Data
+@ExportedBean(defaultVisibility = 1510)
 public class PipelineStepDecisionAction implements PersistentAction {
 
   private final String userId;

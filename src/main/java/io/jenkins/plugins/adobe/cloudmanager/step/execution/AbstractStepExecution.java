@@ -64,32 +64,18 @@ public abstract class AbstractStepExecution extends StepExecution {
   /**
    * Get the Cloud Manager Build info from the run.
     */
-  @CheckForNull
+  @Nonnull
   protected CloudManagerBuildAction getBuildData() throws IOException, InterruptedException {
-    return getRun().getAction(CloudManagerBuildAction.class);
+    CloudManagerBuildAction data = getRun().getAction(CloudManagerBuildAction.class);
+    if (data == null) {
+      throw new AbortException(Messages.AbstractStepExecution_error_missingBuildData());
+    }
+    return data;
   }
 
   @Nonnull
   public String getId() {
     return id;
-  }
-
-  /**
-   * Validate that the data exists for the current run, any missing information will fail the run.
-   */
-  protected void validateData() throws IOException, InterruptedException {
-    CloudManagerBuildAction data = getBuildData();
-    if (data == null) {
-      throw new AbortException(Messages.AbstractStepExecution_error_missingBuildData());
-    }
-    AdobeIOProjectConfig aioProject = AdobeIOConfig.projectConfigFor(data.getAioProjectName());
-    // Make sure Build Data is populated - when resuming.
-    if (aioProject == null ||
-        StringUtils.isBlank(data.getProgramId()) ||
-        StringUtils.isBlank(data.getPipelineId()) ||
-        StringUtils.isBlank(data.getExecutionId())) {
-      throw new AbortException(Messages.AbstractStepExecution_error_missingBuildData());
-    }
   }
 
   /**
@@ -103,6 +89,20 @@ public abstract class AbstractStepExecution extends StepExecution {
       throw new AbortException(Messages.AbstractStepExecution_error_missingBuildData());
     }
     return aioProject;
+  }
+
+  /**
+   * Validate that the data exists for the current run, any missing information will fail the run.
+   */
+  protected void validateData() throws IOException, InterruptedException {
+    getAioProject();
+    CloudManagerBuildAction data = getBuildData();
+    // Make sure Build Data is populated - when resuming.
+    if (StringUtils.isBlank(data.getProgramId()) ||
+        StringUtils.isBlank(data.getPipelineId()) ||
+        StringUtils.isBlank(data.getExecutionId())) {
+      throw new AbortException(Messages.AbstractStepExecution_error_missingBuildData());
+    }
   }
 
   /**
@@ -156,9 +156,7 @@ public abstract class AbstractStepExecution extends StepExecution {
    */
   @Override
   public final boolean start() throws Exception {
-    if (getBuildData() == null) {
-      throw new AbortException(Messages.AbstractStepExecution_error_missingBuildData());
-    }
+    validateData();
     doStart();
     return false;
   }

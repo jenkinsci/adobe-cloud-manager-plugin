@@ -40,16 +40,18 @@ import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import hudson.util.Secret;
 import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOProjectConfig;
-import io.jenkins.plugins.adobe.cloudmanager.config.Messages;
 import jenkins.model.Jenkins;
 import org.jenkinsci.plugins.plaincredentials.FileCredentials;
 import org.jenkinsci.plugins.plaincredentials.StringCredentials;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Utility class for looking up Credentials for different forms.
  */
 public class CredentialsUtil {
 
+  private static final Logger LOGGER = LoggerFactory.getLogger(CredentialsUtil.class);
   /**
    * Find the Client Secret for the specified credential id.
    *
@@ -74,7 +76,7 @@ public class CredentialsUtil {
           try {
             return Secret.fromString(IOUtils.toString(creds.getContent(), Charset.defaultCharset()));
           } catch (IOException e) {
-            Messages.AdobeIOProjectConfig_error_privateKeyError(credentialsId);
+            LOGGER.error(Messages.CredentialsUtil_error_privateKeyError(credentialsId, e.getLocalizedMessage()));
             return null;
           }
         });

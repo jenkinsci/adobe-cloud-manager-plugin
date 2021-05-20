@@ -26,8 +26,12 @@ package io.jenkins.plugins.adobe.cloudmanager.step.execution;
  * #L%
  */
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 
+import hudson.model.TaskListener;
 import io.adobe.cloudmanager.PipelineExecution;
 import io.adobe.cloudmanager.PipelineExecutionStepState;
 import io.adobe.cloudmanager.StepAction;
@@ -55,6 +59,9 @@ public class PipelineStepStateExecutionTest {
   private StepContext context;
 
   @Mocked
+  private TaskListener taskListener;
+
+  @Mocked
   private PipelineExecutionStepState stepState;
 
   @Mocked
@@ -79,14 +86,23 @@ public class PipelineStepStateExecutionTest {
   }
 
   @Test
-  public void handlesInvalidAction() {
+  public void handlesInvalidAction() throws Exception {
+    final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    PrintStream ps = new PrintStream(baos, true);
+
     PipelineStepStateExecution tested = new PipelineStepStateExecution(context, actions);
     new Expectations() {{
       stepState.getAction();
       result = "Unknown";
+      context.get(TaskListener.class);
+      result = taskListener;
+      taskListener.getLogger();
+      result = ps;
     }};
 
     assertFalse(tested.isApplicable(stepState));
+    ps.close();
+    assertEquals(baos.toString(), Messages.PipelineStepStateExecution_unknownStepAction("Unknown") + '\n');
   }
 
   @Test

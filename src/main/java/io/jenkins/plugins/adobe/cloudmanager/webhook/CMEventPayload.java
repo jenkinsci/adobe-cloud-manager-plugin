@@ -109,7 +109,7 @@ public @interface CMEventPayload {
     protected static Function<StaplerRequest, CMEvent> fromParam() {
       return (request) -> {
         if (request.getParameter(CHALLENGE_PARAM) == null) {
-          LOGGER.error(Messages.CMEventPayload_PayloadHandler_warn_missingChallengeParameter());
+          LOGGER.warn(Messages.CMEventPayload_PayloadHandler_warn_missingChallengeParameter());
           return null;
         }
         return new CMEvent(null, null, request.getParameter(CHALLENGE_PARAM));

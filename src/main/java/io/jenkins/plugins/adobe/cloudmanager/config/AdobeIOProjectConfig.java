@@ -195,7 +195,7 @@ public class AdobeIOProjectConfig extends AbstractDescribableImpl<AdobeIOProject
       }
       return getToken();
     } catch (NoSuchElementException e) {
-      LOGGER.error(Messages.AdobeIOProjectConfig_error_unresolvableCredentials());
+      LOGGER.error(Messages.AdobeIOProjectConfig_error_authenticate_unresolvableCredentials(clientSecretCredentialsId, privateKeyCredentialsId));
     } catch (IOException e) {
       LOGGER.error(Messages.AdobeIOProjectConfig_error_credentialsAccess(e.getLocalizedMessage()));
     } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
@@ -232,7 +232,7 @@ public class AdobeIOProjectConfig extends AbstractDescribableImpl<AdobeIOProject
       }
     }
     if (store == null || domain == null) {
-      throw new NoSuchElementException(Messages.AdobeIOProjectConfig_error_unresolvableCredentials());
+      throw new NoSuchElementException(Messages.AdobeIOProjectConfig_error_unresolvableCredentialStore());
     }
 
     Optional<StringCredentials> current = CredentialsUtil.aioScopedCredentialsFor(generateCredentialsId(), StringCredentials.class);

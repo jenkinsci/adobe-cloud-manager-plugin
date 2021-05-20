@@ -114,7 +114,7 @@ public class PipelineStepStateStepTest {
     SemaphoreStep.waitForStart("before/1", run);
     run.addAction(new CloudManagerBuildAction(AIO_PROJECT_NAME, "1", "1", "1"));
     SemaphoreStep.success("before/1", true);
-    rule.waitForMessage(Messages.PipelineStepStateExecution_info_waiting(), run);
+    rule.waitForMessage(Messages.PipelineStepStateExecution_waiting(), run);
     return run;
   }
 
@@ -154,7 +154,7 @@ public class PipelineStepStateStepTest {
       execution.occurred(pipelineExecution, stepState);
       rule.waitForCompletion(run);
       rule.assertBuildStatus(Result.SUCCESS, run);
-      assertTrue(run.getLog().contains(Messages.PipelineStepStateExecution_event_occurred("ExecutionId", "build", "RUNNING")));
+      assertTrue(run.getLog().contains(Messages.PipelineStepStateExecution_occurred("ExecutionId", "build", "RUNNING")));
     });
   }
 
@@ -180,9 +180,9 @@ public class PipelineStepStateStepTest {
       execution.occurred(pipelineExecution, stepState);
       rule.waitForCompletion(run);
       rule.assertBuildStatus(Result.SUCCESS, run);
-      assertTrue(run.getLog().contains(Messages.PipelineStepStateExecution_event_occurred("ExecutionId", "build", "RUNNING")));
+      assertTrue(run.getLog().contains(Messages.PipelineStepStateExecution_occurred("ExecutionId", "build", "RUNNING")));
       // This will show a bug in the logic.
-      assertFalse(run.getLog().contains(Messages.PipelineStepStateExecution_prompt_waitingApproval()));
+      assertFalse(run.getLog().contains(Messages.PipelineStepStateExecution_waitingApproval()));
     });
   }
 
@@ -204,7 +204,7 @@ public class PipelineStepStateStepTest {
       CloudManagerBuildAction action = new CloudManagerBuildAction(AIO_PROJECT_NAME, "1", "1", "1");
       run.addAction(action);
       SemaphoreStep.success("before/1", true);
-      rule.waitForMessage(Messages.PipelineStepStateExecution_info_waiting(), run);
+      rule.waitForMessage(Messages.PipelineStepStateExecution_waiting(), run);
       run.removeAction(action);
       run.save();
     });
@@ -238,10 +238,10 @@ public class PipelineStepStateStepTest {
 
       PipelineStepStateExecution execution = (PipelineStepStateExecution) run.getExecution().getCurrentExecutions(false).get().stream().filter(e -> e instanceof PipelineStepStateExecution).findFirst().orElse(null);
       execution.waiting(pipelineExecution, stepState);
-      rule.waitForMessage(Messages.PipelineStepStateExecution_event_occurred("ExecutionId", "codeQuality", "WAITING"), run);
+      rule.waitForMessage(Messages.PipelineStepStateExecution_occurred("ExecutionId", "codeQuality", "WAITING"), run);
       assertFalse(execution.isProcessed());
       assertEquals(StepAction.codeQuality, execution.getReason());
-      rule.waitForMessage(Messages.PipelineStepStateExecution_prompt_waitingApproval(), run);
+      rule.waitForMessage(Messages.PipelineStepStateExecution_waitingApproval(), run);
 
       PipelineWaitingAction action = run.getAction(PipelineWaitingAction.class);
       JenkinsRule.WebClient client = rule.createWebClient();
@@ -273,10 +273,10 @@ public class PipelineStepStateStepTest {
 
       PipelineStepStateExecution execution = (PipelineStepStateExecution) run.getExecution().getCurrentExecutions(false).get().stream().filter(e -> e instanceof PipelineStepStateExecution).findFirst().orElse(null);
       execution.waiting(pipelineExecution, stepState);
-      rule.waitForMessage(Messages.PipelineStepStateExecution_event_occurred("ExecutionId", "approval", "WAITING"), run);
+      rule.waitForMessage(Messages.PipelineStepStateExecution_occurred("ExecutionId", "approval", "WAITING"), run);
       assertFalse(execution.isProcessed());
       assertEquals(StepAction.approval, execution.getReason());
-      rule.waitForMessage(Messages.PipelineStepStateExecution_prompt_waitingApproval(), run);
+      rule.waitForMessage(Messages.PipelineStepStateExecution_waitingApproval(), run);
 
       PipelineWaitingAction action = run.getAction(PipelineWaitingAction.class);
       JenkinsRule.WebClient client = rule.createWebClient();
@@ -306,10 +306,10 @@ public class PipelineStepStateStepTest {
       WorkflowRun run = setupRun(rule, test);
       PipelineStepStateExecution execution = (PipelineStepStateExecution) run.getExecution().getCurrentExecutions(false).get().stream().filter(e -> e instanceof PipelineStepStateExecution).findFirst().orElse(null);
       execution.waiting(pipelineExecution, stepState);
-      rule.waitForMessage(Messages.PipelineStepStateExecution_event_occurred("ExecutionId", "codeQuality", "WAITING"), run);
+      rule.waitForMessage(Messages.PipelineStepStateExecution_occurred("ExecutionId", "codeQuality", "WAITING"), run);
       assertFalse(execution.isProcessed());
       assertEquals(StepAction.codeQuality, execution.getReason());
-      rule.waitForMessage(Messages.PipelineStepStateExecution_prompt_waitingApproval(), run);
+      rule.waitForMessage(Messages.PipelineStepStateExecution_waitingApproval(), run);
 
       PipelineWaitingAction action = run.getAction(PipelineWaitingAction.class);
       JenkinsRule.WebClient client = rule.createWebClient();
@@ -339,10 +339,10 @@ public class PipelineStepStateStepTest {
 
       PipelineStepStateExecution execution = (PipelineStepStateExecution) run.getExecution().getCurrentExecutions(false).get().stream().filter(e -> e instanceof PipelineStepStateExecution).findFirst().orElse(null);
       execution.waiting(pipelineExecution, stepState);
-      rule.waitForMessage(Messages.PipelineStepStateExecution_event_occurred("ExecutionId", "codeQuality", "WAITING"), run);
+      rule.waitForMessage(Messages.PipelineStepStateExecution_occurred("ExecutionId", "codeQuality", "WAITING"), run);
       assertFalse(execution.isProcessed());
       assertEquals(StepAction.codeQuality, execution.getReason());
-      rule.waitForMessage(Messages.PipelineStepStateExecution_prompt_waitingApproval(), run);
+      rule.waitForMessage(Messages.PipelineStepStateExecution_waitingApproval(), run);
 
       PipelineWaitingAction action = run.getAction(PipelineWaitingAction.class);
       JenkinsRule.WebClient client = rule.createWebClient();
@@ -373,12 +373,12 @@ public class PipelineStepStateStepTest {
 
       PipelineStepStateExecution execution = (PipelineStepStateExecution) run.getExecution().getCurrentExecutions(false).get().stream().filter(e -> e instanceof PipelineStepStateExecution).findFirst().orElse(null);
       execution.waiting(pipelineExecution, stepState);
-      rule.waitForMessage(Messages.PipelineStepStateExecution_event_occurred("ExecutionId", "approval", "WAITING"), run);
+      rule.waitForMessage(Messages.PipelineStepStateExecution_occurred("ExecutionId", "approval", "WAITING"), run);
       assertFalse(execution.isProcessed());
       assertEquals(StepAction.approval, execution.getReason());
 
       PipelineWaitingAction action = run.getAction(PipelineWaitingAction.class);
-      rule.waitForMessage(Messages.PipelineStepStateExecution_prompt_waitingApproval(), run);
+      rule.waitForMessage(Messages.PipelineStepStateExecution_waitingApproval(), run);
       JenkinsRule.WebClient client = rule.createWebClient();
       HtmlPage page = client.getPage(run, action.getUrlName());
       rule.submit(page.getFormByName(execution.getId()), "cancel");
@@ -408,10 +408,10 @@ public class PipelineStepStateStepTest {
 
       PipelineStepStateExecution execution = (PipelineStepStateExecution) run.getExecution().getCurrentExecutions(false).get().stream().filter(e -> e instanceof PipelineStepStateExecution).findFirst().orElse(null);
       execution.waiting(pipelineExecution, stepState);
-      rule.waitForMessage(Messages.PipelineStepStateExecution_event_occurred("ExecutionId", "codeQuality", "WAITING"), run);
+      rule.waitForMessage(Messages.PipelineStepStateExecution_occurred("ExecutionId", "codeQuality", "WAITING"), run);
       assertFalse(execution.isProcessed());
       assertEquals(StepAction.codeQuality, execution.getReason());
-      rule.waitForMessage(Messages.PipelineStepStateExecution_prompt_waitingApproval(), run);
+      rule.waitForMessage(Messages.PipelineStepStateExecution_waitingApproval(), run);
 
       PipelineWaitingAction action = run.getAction(PipelineWaitingAction.class);
       JenkinsRule.WebClient client = rule.createWebClient();
@@ -448,7 +448,7 @@ public class PipelineStepStateStepTest {
       String xml = FileUtils.readFileToString(new File(run.getRootDir(), "build.xml"), Charset.defaultCharset());
       assertFalse(xml.contains(PipelineStepStateExecution.class.getName()));
       rule.assertBuildStatus(Result.FAILURE, run);
-      assertTrue(run.getLog().contains(Messages.PipelineStepStateExecution_error_unknownStepAction("Unknown")));
+      assertTrue(run.getLog().contains(Messages.PipelineStepStateExecution_unknownStepAction("Unknown")));
     });
   }
 
@@ -479,7 +479,7 @@ public class PipelineStepStateStepTest {
       String xml = FileUtils.readFileToString(new File(run.getRootDir(), "build.xml"), Charset.defaultCharset());
       assertFalse(xml.contains(PipelineStepStateExecution.class.getName()));
       rule.assertBuildStatus(Result.FAILURE, run);
-      assertTrue(run.getLog().contains(Messages.PipelineStepStateExecution_error_unknownWaitingAction("build")));
+      assertTrue(run.getLog().contains(Messages.PipelineStepStateExecution_unknownWaitingAction("build")));
     });
   }
 
@@ -501,11 +501,11 @@ public class PipelineStepStateStepTest {
       WorkflowRun run = setupRun(rule, test);
       PipelineStepStateExecution execution = (PipelineStepStateExecution) run.getExecution().getCurrentExecutions(false).get().stream().filter(e -> e instanceof PipelineStepStateExecution).findFirst().orElse(null);
       execution.waiting(pipelineExecution, stepState);
-      rule.waitForMessage(Messages.PipelineStepStateExecution_prompt_waitingApproval(), run);
+      rule.waitForMessage(Messages.PipelineStepStateExecution_waitingApproval(), run);
       execution.occurred(pipelineExecution, stepState);
 
       waitingChecks(rule, run, Result.SUCCESS);
-      assertTrue(run.getLog().contains(Messages.PipelineStepStateExecution_event_occurred("ExecutionId", "deploy", "RUNNING")));
+      assertTrue(run.getLog().contains(Messages.PipelineStepStateExecution_occurred("ExecutionId", "deploy", "RUNNING")));
     });
   }
 
@@ -527,14 +527,14 @@ public class PipelineStepStateStepTest {
 
       PipelineStepStateExecution execution = (PipelineStepStateExecution) run.getExecution().getCurrentExecutions(false).get().stream().filter(e -> e instanceof PipelineStepStateExecution).findFirst().orElse(null);
       execution.waiting(pipelineExecution, stepState);
-      rule.waitForMessage(Messages.PipelineStepStateExecution_event_occurred("ExecutionId", "codeQuality", "WAITING"), run);
+      rule.waitForMessage(Messages.PipelineStepStateExecution_occurred("ExecutionId", "codeQuality", "WAITING"), run);
       assertFalse(execution.isProcessed());
       assertEquals(StepAction.codeQuality, execution.getReason());
-      rule.waitForMessage(Messages.PipelineStepStateExecution_prompt_waitingApproval(), run);
+      rule.waitForMessage(Messages.PipelineStepStateExecution_waitingApproval(), run);
 
       execution.doEndQuietly();
       waitingChecks(rule, run, Result.SUCCESS);
-      assertTrue(run.getLog().contains(Messages.PipelineStepStateExecution_info_endQuietly()));
+      assertTrue(run.getLog().contains(Messages.PipelineStepStateExecution_endQuietly()));
     });
   }
 
@@ -555,10 +555,10 @@ public class PipelineStepStateStepTest {
       WorkflowRun run = setupRun(rule, test);
       PipelineStepStateExecution execution = (PipelineStepStateExecution) run.getExecution().getCurrentExecutions(false).get().stream().filter(e -> e instanceof PipelineStepStateExecution).findFirst().orElse(null);
       execution.waiting(pipelineExecution, stepState);
-      rule.waitForMessage(Messages.PipelineStepStateExecution_event_occurred("ExecutionId", "codeQuality", "WAITING"), run);
+      rule.waitForMessage(Messages.PipelineStepStateExecution_occurred("ExecutionId", "codeQuality", "WAITING"), run);
       assertFalse(execution.isProcessed());
       assertEquals(StepAction.codeQuality, execution.getReason());
-      rule.waitForMessage(Messages.PipelineStepStateExecution_prompt_waitingApproval(), run);
+      rule.waitForMessage(Messages.PipelineStepStateExecution_waitingApproval(), run);
 
     });
 
@@ -599,7 +599,7 @@ public class PipelineStepStateStepTest {
       }};
 
       WorkflowRun run = rule.jenkins.getItemByFullName(test, WorkflowJob.class).getBuildByNumber(1);
-      rule.waitForMessage(Messages.PipelineStepStateExecution_info_waiting(), run);
+      rule.waitForMessage(Messages.PipelineStepStateExecution_waiting(), run);
       Executor executor;
       while ((executor = run.getExecutor()) == null) {
         Thread.sleep(100); // probably a race condition: AfterRestartTask could take a moment to be registered
@@ -628,11 +628,11 @@ public class PipelineStepStateStepTest {
       }};
 
       WorkflowRun run = rule.jenkins.getItemByFullName(test, WorkflowJob.class).getBuildByNumber(1);
-      rule.waitForMessage(Messages.PipelineStepStateExecution_info_waiting(), run);
+      rule.waitForMessage(Messages.PipelineStepStateExecution_waiting(), run);
       PipelineStepStateExecution execution = (PipelineStepStateExecution) run.getExecution().getCurrentExecutions(false).get().stream().filter(e -> e instanceof PipelineStepStateExecution).findFirst().orElse(null);
       execution.waiting(pipelineExecution, stepState);
 
-      rule.waitForMessage(Messages.PipelineStepStateExecution_prompt_waitingApproval(), run);
+      rule.waitForMessage(Messages.PipelineStepStateExecution_waitingApproval(), run);
       Executor executor;
       while ((executor = run.getExecutor()) == null) {
         Thread.sleep(100); // probably a race condition: AfterRestartTask could take a moment to be registered
@@ -670,14 +670,14 @@ public class PipelineStepStateStepTest {
       CloudManagerBuildAction action = new CloudManagerBuildAction(AIO_PROJECT_NAME, "1", "1", "1");
       run.addAction(action);
       SemaphoreStep.success("before/1", true);
-      rule.waitForMessage(Messages.PipelineStepStateExecution_info_waiting(), run);
+      rule.waitForMessage(Messages.PipelineStepStateExecution_waiting(), run);
 
       PipelineStepStateExecution execution = (PipelineStepStateExecution) run.getExecution().getCurrentExecutions(false).get().stream().filter(e -> e instanceof PipelineStepStateExecution).findFirst().orElse(null);
       execution.waiting(pipelineExecution, stepState);
-      rule.waitForMessage(Messages.PipelineStepStateExecution_event_occurred("ExecutionId", "codeQuality", "WAITING"), run);
+      rule.waitForMessage(Messages.PipelineStepStateExecution_occurred("ExecutionId", "codeQuality", "WAITING"), run);
       assertFalse(execution.isProcessed());
       assertEquals(StepAction.codeQuality, execution.getReason());
-      rule.waitForMessage(Messages.PipelineStepStateExecution_prompt_waitingApproval(), run);
+      rule.waitForMessage(Messages.PipelineStepStateExecution_waitingApproval(), run);
       run.removeAction(action);
       run.save();
     });
@@ -692,7 +692,7 @@ public class PipelineStepStateStepTest {
       }
       assertEquals(1, pauses.size());
       assertTrue(pauses.get(0).isPaused()); // Can't cancel pause as validation happens outside scope.
-      assertTrue(run.getLog().contains(Messages.PipelineStepStateExecution_info_waiting()));
+      assertTrue(run.getLog().contains(Messages.PipelineStepStateExecution_waiting()));
       assertFalse(run.getLog().contains(Messages.PipelineStepStateExecution_warn_endPause()));
       assertFalse(run.getLog().contains(Messages.PipelineStepStateExecution_warn_actionRemoval()));
       String xml = FileUtils.readFileToString(new File(run.getRootDir(), "build.xml"), Charset.defaultCharset());
@@ -729,12 +729,12 @@ public class PipelineStepStateStepTest {
       SemaphoreStep.waitForStart("before/1", run);
       run.addAction(new CloudManagerBuildAction(AIO_PROJECT_NAME, "1", "1", "1"));
       SemaphoreStep.success("before/1", true);
-      rule.waitForMessage(Messages.PipelineStepStateExecution_info_waiting(), run);
+      rule.waitForMessage(Messages.PipelineStepStateExecution_waiting(), run);
       PipelineStepStateExecution execution = (PipelineStepStateExecution) run.getExecution().getCurrentExecutions(false).get().stream().filter(e -> e instanceof PipelineStepStateExecution).findFirst().orElse(null);
       execution.occurred(pipelineExecution, stepState);
       rule.waitForCompletion(run);
       rule.assertBuildStatus(Result.SUCCESS, run);
-      assertTrue(run.getLog().contains(Messages.PipelineStepStateExecution_event_occurred("ExecutionId", "build", "RUNNING")));
+      assertTrue(run.getLog().contains(Messages.PipelineStepStateExecution_occurred("ExecutionId", "build", "RUNNING")));
     });
   }
 
@@ -746,7 +746,7 @@ public class PipelineStepStateStepTest {
     }
     assertEquals(1, pauses.size());
     assertFalse(pauses.get(0).isPaused());
-    assertTrue(run.getLog().contains(Messages.PipelineStepStateExecution_info_waiting()));
+    assertTrue(run.getLog().contains(Messages.PipelineStepStateExecution_waiting()));
     assertFalse(run.getLog().contains(Messages.PipelineStepStateExecution_warn_endPause()));
     assertFalse(run.getLog().contains(Messages.PipelineStepStateExecution_warn_actionRemoval()));
     String xml = FileUtils.readFileToString(new File(run.getRootDir(), "build.xml"), Charset.defaultCharset());

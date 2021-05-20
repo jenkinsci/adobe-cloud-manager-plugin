@@ -33,6 +33,7 @@ import javax.annotation.CheckForNull;
 import hudson.model.Action;
 import hudson.model.Run;
 import lombok.Data;
+import org.jenkinsci.plugins.workflow.actions.PersistentAction;
 import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.export.ExportedBean;
@@ -42,7 +43,7 @@ import org.kohsuke.stapler.export.ExportedBean;
  */
 @Data
 @ExportedBean(defaultVisibility = 1500)
-public class CloudManagerBuildAction implements Action, Serializable, Cloneable {
+public class CloudManagerBuildAction implements PersistentAction, Serializable {
 
   private static final long serialVersionUID = 1L;
 

@@ -96,13 +96,13 @@ public class PipelineStepStateExecution extends AbstractStepExecution {
   // Execution Logic
   @Override
   public void doStart() throws Exception {
-    getTaskListener().getLogger().println(Messages.PipelineStepStateExecution_info_waiting());
+    getTaskListener().getLogger().println(Messages.PipelineStepStateExecution_waiting());
   }
 
   @Override
   public void doResume() throws IOException, InterruptedException {
     if (reason == null) {
-      getTaskListener().getLogger().println(Messages._PipelineStepStateExecution_info_waiting());
+      getTaskListener().getLogger().println(Messages._PipelineStepStateExecution_waiting());
     }
   }
 
@@ -121,12 +121,8 @@ public class PipelineStepStateExecution extends AbstractStepExecution {
       StepAction action = StepAction.valueOf(stepState.getAction());
       return actions.contains(action);
     } catch (IllegalArgumentException e) {
-      TaskListener listener;
       try {
-        listener = getContext().get(TaskListener.class);
-        if (listener != null) {
-          listener.getLogger().println(Messages.PipelineStepStateExecution_error_unknownStepAction(stepState.getAction()));
-        }
+          getTaskListener().getLogger().println(Messages.PipelineStepStateExecution_unknownStepAction(stepState.getAction()));
       } catch (IOException | InterruptedException ex) {
         // Nothing we can do, can't even log it.
       }
@@ -149,8 +145,7 @@ public class PipelineStepStateExecution extends AbstractStepExecution {
    * Process an <i>occurred</i> event. Essentially, an event that does not require user input, but that should generate some informational message.
    */
   public void occurred(@Nonnull PipelineExecution pe, @Nonnull PipelineExecutionStepState state) throws IOException, InterruptedException {
-    TaskListener listener = getTaskListener();
-    listener.getLogger().println(Messages.PipelineStepStateExecution_event_occurred(pe.getId(), state.getAction(), state.getStatusState()));
+    getTaskListener().getLogger().println(Messages.PipelineStepStateExecution_occurred(pe.getId(), state.getAction(), state.getStatusState()));
     doFinish();
     getContext().onSuccess(null);
   }
@@ -159,20 +154,19 @@ public class PipelineStepStateExecution extends AbstractStepExecution {
    * Process an <i>waiting</i> event. Waiting events pause this step/pipeline/run until a user action is taken.
    */
   public void waiting(@Nonnull PipelineExecution pe, @Nonnull PipelineExecutionStepState state) throws IOException, InterruptedException, TimeoutException {
-    TaskListener listener = getTaskListener();
     String action = state.getAction();
-    listener.getLogger().println(Messages.PipelineStepStateExecution_event_occurred(pe.getId(), action, state.getStatusState()));
+    getTaskListener().getLogger().println(Messages.PipelineStepStateExecution_occurred(pe.getId(), action, state.getStatusState()));
     try {
       reason = StepAction.valueOf(action);
       if (WAITING_ACTIONS.contains(reason)) {
         startWaiting();
       } else {
-        listener.getLogger().println(Messages.PipelineStepStateExecution_error_unknownWaitingAction(action));
+        getTaskListener().getLogger().println(Messages.PipelineStepStateExecution_unknownWaitingAction(action));
         doFinish();
-        getContext().onFailure(new IllegalArgumentException(Messages.PipelineStepStateExecution_error_unknownWaitingAction(action)));
+        getContext().onFailure(new IllegalArgumentException(Messages.PipelineStepStateExecution_unknownWaitingAction(action)));
       }
     } catch (IllegalArgumentException e) {
-      listener.getLogger().println(Messages.PipelineStepStateExecution_error_unknownStepAction(action));
+      getTaskListener().getLogger().println(Messages.PipelineStepStateExecution_unknownStepAction(action));
       doFinish();
       getContext().onFailure(e);
     }
@@ -235,7 +229,7 @@ public class PipelineStepStateExecution extends AbstractStepExecution {
   public void doEndQuietly() throws IOException, InterruptedException {
     reason = null;
     // This may be blocking VM threads....
-    getTaskListener().getLogger().println(Messages.PipelineStepStateExecution_info_endQuietly());
+    getTaskListener().getLogger().println(Messages.PipelineStepStateExecution_endQuietly());
     doFinish();
     getContext().onSuccess(null);
   }
@@ -247,7 +241,7 @@ public class PipelineStepStateExecution extends AbstractStepExecution {
     TaskListener listener = getTaskListener();
     if (user != null) {
       run.addAction(new PipelineStepDecisionAction(user.getId(), reason, PipelineStepDecisionAction.Decision.APPROVED));
-      listener.getLogger().println(Messages.PipelineStepStateExecution_info_approvedBy(ModelHyperlinkNote.encodeTo(user)));
+      listener.getLogger().println(Messages.PipelineStepStateExecution_approvedBy(ModelHyperlinkNote.encodeTo(user)));
     }
 
     try {
@@ -310,7 +304,7 @@ public class PipelineStepStateExecution extends AbstractStepExecution {
     getContext().saveState();
     getAction().add(this);
     String url = String.format("/%s%s/", getRun().getUrl(), getAction().getUrlName());
-    getTaskListener().getLogger().println(HyperlinkNote.encodeTo(url, Messages.PipelineStepStateExecution_prompt_waitingApproval()));
+    getTaskListener().getLogger().println(HyperlinkNote.encodeTo(url, Messages.PipelineStepStateExecution_waitingApproval()));
     FlowNode node = Objects.requireNonNull(getContext().get(FlowNode.class));
     node.addAction(new PauseAction("Pipeline Execution Step State"));
   }

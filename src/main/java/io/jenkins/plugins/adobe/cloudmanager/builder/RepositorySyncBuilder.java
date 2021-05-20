@@ -249,7 +249,7 @@ public class RepositorySyncBuilder extends Builder implements SimpleBuildStep {
 
     @Nonnull
     @Override
-    public String getDisplayName() { return Messages.RepositorySyncBuilder_displayName();
+    public String getDisplayName() { return Messages.RepositorySyncBuilder_DescriptorImpl_displayName();
     }
   }
 }

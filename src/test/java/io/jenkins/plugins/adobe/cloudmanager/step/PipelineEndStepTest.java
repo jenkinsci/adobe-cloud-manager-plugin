@@ -140,7 +140,7 @@ public class PipelineEndStepTest {
       SemaphoreStep.success("inside/1", run);
       rule.waitForCompletion(run);
       rule.assertBuildStatus(result, run);
-      assertTrue(run.getLog().contains(Messages.PipelineEndExecution_event_occurred("ExecutionId", status.name())));
+      assertTrue(run.getLog().contains(Messages.PipelineEndExecution_occurred("ExecutionId", status.name())));
     });
   }
 
@@ -201,7 +201,7 @@ public class PipelineEndStepTest {
       String xml = FileUtils.readFileToString(new File(run.getRootDir(), "build.xml"), Charset.defaultCharset());
       assertFalse(xml.contains(PipelineEndExecution.class.getName()));
       rule.assertBuildStatus(Result.SUCCESS, run);
-      assertTrue(run.getLog().contains(Messages.PipelineEndExecution_event_occurred("ExecutionId", "ERROR")));
+      assertTrue(run.getLog().contains(Messages.PipelineEndExecution_occurred("ExecutionId", "ERROR")));
     });
   }
 
@@ -229,7 +229,7 @@ public class PipelineEndStepTest {
       run.addAction(new CloudManagerBuildAction(AIO_PROJECT_NAME, "1", "1", "1"));
       SemaphoreStep.success("before/1", true);
 
-      rule.waitForMessage(Messages.PipelineStepStateExecution_info_waiting(), run);
+      rule.waitForMessage(Messages.PipelineStepStateExecution_waiting(), run);
       PipelineEndExecution execution = (PipelineEndExecution) run.getExecution().getCurrentExecutions(false).get().stream().filter(e -> e instanceof PipelineEndExecution).findFirst().orElse(null);
       execution.occurred(pipelineExecution);
 
@@ -238,8 +238,8 @@ public class PipelineEndStepTest {
       String xml = FileUtils.readFileToString(new File(run.getRootDir(), "build.xml"), Charset.defaultCharset());
       assertFalse(xml.contains(PipelineEndExecution.class.getName()));
       rule.assertBuildStatus(Result.SUCCESS, run);
-      assertTrue(run.getLog().contains(Messages.PipelineEndExecution_event_occurred("ExecutionId", "FINISHED")));
-      assertTrue(run.getLog().contains(Messages.PipelineStepStateExecution_info_endQuietly()));
+      assertTrue(run.getLog().contains(Messages.PipelineEndExecution_occurred("ExecutionId", "FINISHED")));
+      assertTrue(run.getLog().contains(Messages.PipelineStepStateExecution_endQuietly()));
 
     });
   }
@@ -274,25 +274,25 @@ public class PipelineEndStepTest {
       run.addAction(new CloudManagerBuildAction(AIO_PROJECT_NAME, "1", "1", "1"));
       SemaphoreStep.success("before/1", true);
 
-      rule.waitForMessage(Messages.PipelineStepStateExecution_info_waiting(), run);
+      rule.waitForMessage(Messages.PipelineStepStateExecution_waiting(), run);
       // Poke the Execution to make it end.
       List<StepExecution> executions = run.getExecution().getCurrentExecutions(false).get();
       PipelineEndExecution ex = (PipelineEndExecution) executions.stream().filter(e -> e instanceof PipelineEndExecution).findFirst().orElse(null);
       ex.occurred(pipelineExecution);
 
-      rule.waitForMessage(Messages.PipelineStepStateExecution_info_endQuietly(), run);
+      rule.waitForMessage(Messages.PipelineStepStateExecution_endQuietly(), run);
       PipelineStepStateExecution psse = (PipelineStepStateExecution) run.getExecution().getCurrentExecutions(false).get().stream().filter(e -> e instanceof PipelineStepStateExecution).findFirst().orElse(null);
       assertNull(psse);
       rule.waitForMessage("Will try again after 1.2 sec", run);
       TestRecurrenceStep.finished = true;
 
       rule.waitForCompletion(run);
-      assertTrue(run.getLog().contains(Messages.PipelineEndExecution_info_waiting()));
+      assertTrue(run.getLog().contains(Messages.PipelineEndExecution_waiting()));
       String xml = FileUtils.readFileToString(new File(run.getRootDir(), "build.xml"), Charset.defaultCharset());
       assertFalse(xml.contains(PipelineEndExecution.class.getName()));
       rule.assertBuildStatus(Result.SUCCESS, run);
-      assertTrue(run.getLog().contains(Messages.PipelineEndExecution_event_occurred("ExecutionId", "FINISHED")));
-      assertTrue(run.getLog().contains(Messages.PipelineStepStateExecution_info_endQuietly()));
+      assertTrue(run.getLog().contains(Messages.PipelineEndExecution_occurred("ExecutionId", "FINISHED")));
+      assertTrue(run.getLog().contains(Messages.PipelineStepStateExecution_endQuietly()));
     });
   }
 
@@ -320,7 +320,7 @@ public class PipelineEndStepTest {
       run.addAction(new CloudManagerBuildAction(AIO_PROJECT_NAME, "1", "1", "1"));
       SemaphoreStep.success("before/1", true);
 
-      rule.waitForMessage(Messages.PipelineStepStateExecution_info_waiting(), run);
+      rule.waitForMessage(Messages.PipelineStepStateExecution_waiting(), run);
     });
     story.then(rule -> {
 
@@ -332,8 +332,8 @@ public class PipelineEndStepTest {
       String xml = FileUtils.readFileToString(new File(run.getRootDir(), "build.xml"), Charset.defaultCharset());
       assertFalse(xml.contains(PipelineEndExecution.class.getName()));
       rule.assertBuildStatus(Result.SUCCESS, run);
-      assertTrue(run.getLog().contains(Messages.PipelineEndExecution_event_occurred("ExecutionId", "FINISHED")));
-      assertTrue(run.getLog().contains(Messages.PipelineStepStateExecution_info_endQuietly()));
+      assertTrue(run.getLog().contains(Messages.PipelineEndExecution_occurred("ExecutionId", "FINISHED")));
+      assertTrue(run.getLog().contains(Messages.PipelineStepStateExecution_endQuietly()));
     });
   }
 

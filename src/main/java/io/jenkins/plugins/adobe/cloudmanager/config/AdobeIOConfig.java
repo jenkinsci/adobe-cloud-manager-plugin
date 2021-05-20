@@ -51,8 +51,6 @@ public class AdobeIOConfig extends GlobalConfiguration {
   // XML Config file name for storage.
   public static final String CLOUD_MANAGER_CONFIGURATION_ID = "adobe-cloud-manager-plugin-config";
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(AdobeIOConfig.class);
-
   // Protect against no configurations done, and NPE.
   private static final AdobeIOConfig EMPTY_CONFIG = new AdobeIOConfig(Collections.emptyList());
 

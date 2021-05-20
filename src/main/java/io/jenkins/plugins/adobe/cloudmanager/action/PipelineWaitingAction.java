@@ -171,7 +171,7 @@ public class PipelineWaitingAction implements RunAction2, Serializable {
           try {
             return ex.getOwner().getExecutable() == run;
           } catch (IOException e) {
-            LOGGER.error(Messages.PipelineWaitingAction_error_loadExecutions(e.getLocalizedMessage()));
+            LOGGER.warn(Messages.PipelineWaitingAction_error_loadExecutions(e.getLocalizedMessage()));
           }
           return false;
         }).findFirst();

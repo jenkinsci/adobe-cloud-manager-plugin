@@ -69,7 +69,7 @@ public class PipelineEndExecution extends AbstractStepExecution {
 
   @Override
   public void doStart() throws Exception {
-    getTaskListener().getLogger().println(Messages.PipelineEndExecution_info_waiting());
+    getTaskListener().getLogger().println(Messages.PipelineEndExecution_waiting());
     if (getContext().hasBody()) {
       getContext().newBodyInvoker().withCallback(new Callback(getId())).start();
     }
@@ -78,7 +78,7 @@ public class PipelineEndExecution extends AbstractStepExecution {
   @Override
   public void doResume() {
     try {
-      getTaskListener().getLogger().println(Messages.PipelineEndExecution_info_waiting());
+      getTaskListener().getLogger().println(Messages.PipelineEndExecution_waiting());
     } catch (IOException | InterruptedException e) {
       getContext().onFailure(e);
     }
@@ -149,7 +149,7 @@ public class PipelineEndExecution extends AbstractStepExecution {
     } catch (ExecutionException e) {
       getContext().onFailure(e);
     }
-    listener.getLogger().println(Messages.PipelineEndExecution_event_occurred(pe.getId(), pe.getStatusState()));
+    listener.getLogger().println(Messages.PipelineEndExecution_occurred(pe.getId(), pe.getStatusState()));
   }
 
   /**

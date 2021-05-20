@@ -43,6 +43,7 @@ import io.adobe.cloudmanager.PipelineExecution;
 import io.adobe.cloudmanager.PipelineExecutionStepState;
 import io.adobe.cloudmanager.StepAction;
 import io.jenkins.plugins.adobe.cloudmanager.action.CloudManagerBuildAction;
+import io.jenkins.plugins.adobe.cloudmanager.action.PipelineStep;
 import io.jenkins.plugins.adobe.cloudmanager.action.PipelineWaitingAction;
 import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOConfig;
 import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOProjectConfig;
@@ -147,6 +148,8 @@ public class PipelineStepStateStepTest {
         result = StepAction.build.name();
         stepState.getStatusState();
         result = PipelineExecutionStepState.Status.RUNNING;
+        stepState.hasLogs();
+        result = true;
       }};
 
       WorkflowRun run = setupRun(rule, "notificationEvent");
@@ -155,6 +158,10 @@ public class PipelineStepStateStepTest {
       rule.waitForCompletion(run);
       rule.assertBuildStatus(Result.SUCCESS, run);
       assertTrue(run.getLog().contains(Messages.PipelineStepStateExecution_occurred("ExecutionId", "build", "RUNNING")));
+      CloudManagerBuildAction data = run.getAction(CloudManagerBuildAction.class);
+      assertEquals(1, data.getSteps().size());
+      PipelineStep expected = new PipelineStep(StepAction.valueOf("build"), PipelineExecutionStepState.Status.valueOf("RUNNING"), true);
+      assertEquals(expected, data.getSteps().get(0));
     });
   }
 

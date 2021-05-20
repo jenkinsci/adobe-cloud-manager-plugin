@@ -53,6 +53,7 @@ import io.adobe.cloudmanager.PipelineExecution;
 import io.adobe.cloudmanager.PipelineExecutionStepState;
 import io.adobe.cloudmanager.StepAction;
 import io.jenkins.plugins.adobe.cloudmanager.action.CloudManagerBuildAction;
+import io.jenkins.plugins.adobe.cloudmanager.action.PipelineStep;
 import io.jenkins.plugins.adobe.cloudmanager.action.PipelineStepDecisionAction;
 import io.jenkins.plugins.adobe.cloudmanager.action.PipelineWaitingAction;
 import org.jenkinsci.plugins.workflow.graph.FlowNode;
@@ -145,7 +146,10 @@ public class PipelineStepStateExecution extends AbstractStepExecution {
    * Process an <i>occurred</i> event. Essentially, an event that does not require user input, but that should generate some informational message.
    */
   public void occurred(@Nonnull PipelineExecution pe, @Nonnull PipelineExecutionStepState state) throws IOException, InterruptedException {
-    getTaskListener().getLogger().println(Messages.PipelineStepStateExecution_occurred(pe.getId(), state.getAction(), state.getStatusState()));
+    StepAction action = StepAction.valueOf(state.getAction());
+    PipelineExecutionStepState.Status status = state.getStatusState();
+    getBuildData().addStep(new PipelineStep(action, status, state.hasLogs()));
+    getTaskListener().getLogger().println(Messages.PipelineStepStateExecution_occurred(pe.getId(), action, status));
     doFinish();
     getContext().onSuccess(null);
   }

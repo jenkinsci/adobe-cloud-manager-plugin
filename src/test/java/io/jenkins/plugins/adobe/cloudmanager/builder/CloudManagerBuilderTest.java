@@ -12,10 +12,10 @@ package io.jenkins.plugins.adobe.cloudmanager.builder;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -29,23 +29,25 @@ package io.jenkins.plugins.adobe.cloudmanager.builder;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
+import java.util.function.Function;
 
 import org.apache.commons.lang.StringUtils;
 
 import hudson.AbortException;
-import hudson.util.Secret;
 import io.adobe.cloudmanager.CloudManagerApi;
 import io.adobe.cloudmanager.CloudManagerApiException;
 import io.adobe.cloudmanager.Pipeline;
 import io.adobe.cloudmanager.Program;
-import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOConfig;
-import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOProjectConfig;
-import io.jenkins.plugins.adobe.cloudmanager.test.TestHelper;
+import io.jenkins.plugins.adobe.cloudmanager.util.CloudManagerApiUtil;
 import io.jenkins.plugins.adobe.cloudmanager.util.DescriptorHelperTest;
 import mockit.Expectations;
 import mockit.Injectable;
+import mockit.Mock;
+import mockit.MockUp;
 import mockit.Mocked;
 import mockit.Tested;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static io.jenkins.plugins.adobe.cloudmanager.test.TestHelper.*;
@@ -53,31 +55,20 @@ import static org.junit.Assert.*;
 
 public class CloudManagerBuilderTest {
 
+  private static final String PROGRAM_ID = "2";
+  private static final String PIPELINE_ID = "4";
+  private static final List<Program> programs = new ArrayList<>();
+  private static final List<Pipeline> pipelines = new ArrayList<>();
   @Injectable
   private final String aioProject = AIO_PROJECT_NAME;
-
   @Injectable
   private final String program = "Program Name";
-  private static final String PROGRAM_ID = "2";
-
   @Injectable
   private final String pipeline = "Pipeline Name";
-  private static final String PIPELINE_ID = "4";
-
   @Tested
   private CloudManagerBuilder builder;
-
-  @Mocked
-  private AdobeIOConfig aioConfig;
-
-  @Mocked
-  private AdobeIOProjectConfig adobeIOProjectConfig;
-
   @Mocked
   private CloudManagerApi api;
-
-  private static final List<Program> programs = new ArrayList<>();;
-  private static final List<Pipeline> pipelines = new ArrayList<>();;
 
   @BeforeClass
   public static void beforeClass() {
@@ -86,40 +77,27 @@ public class CloudManagerBuilderTest {
     pipelines.add(new DescriptorHelperTest.PipelineImpl(PIPELINE_ID, "Pipeline Name"));
   }
 
-  @Test
-  public void missingAioProject() {
-    new Expectations() {{
-      AdobeIOConfig.projectConfigFor(TestHelper.AIO_PROJECT_NAME);
-      result = null;
-    }};
-
-    AbortException exception = assertThrows(AbortException.class, () -> builder.createApi());
-    assertEquals(Messages.CloudManagerBuilder_error_missingAioProject(AIO_PROJECT_NAME), exception.getLocalizedMessage());
-  }
-
-  @Test
-  public void unableToAuthenticate() {
-    new Expectations() {{
-      AdobeIOConfig.projectConfigFor(TestHelper.AIO_PROJECT_NAME);
-      result = adobeIOProjectConfig;
-      adobeIOProjectConfig.authenticate();
-      result = null;
-    }};
-
-    AbortException exception = assertThrows(AbortException.class, () -> builder.createApi());
-    assertEquals(Messages.CloudManagerBuilder_error_authenticate(Messages.CloudManagerBuilder_error_checkLogs()), exception.getLocalizedMessage());
+  @Before
+  public void before() {
+    new MockUp<CloudManagerApiUtil>() {
+      @Mock
+      public Function<String, Optional<CloudManagerApi>> createApi() { return (name) -> Optional.of(api); }
+    };
   }
 
   @Test
   public void createApi() throws Exception {
-    new Expectations() {{
-      AdobeIOConfig.projectConfigFor(TestHelper.AIO_PROJECT_NAME);
-      result = adobeIOProjectConfig;
-      adobeIOProjectConfig.authenticate();
-      result = Secret.fromString(ACCESS_TOKEN);
-    }};
-
     assertNotNull(builder.createApi());
+  }
+
+  @Test
+  public void createApiFailed() throws Exception {
+    new MockUp<CloudManagerApiUtil>() {
+      @Mock
+      public Function<String, Optional<CloudManagerApi>> createApi() { return (name) -> Optional.empty(); }
+    };
+
+    assertThrows(AbortException.class, () -> builder.createApi());
   }
 
   @Test
@@ -157,7 +135,6 @@ public class CloudManagerBuilderTest {
     localBuilder.setProgram(PROGRAM_ID);
     assertEquals(PROGRAM_ID, localBuilder.getProgramId(api));
   }
-
 
   @Test
   public void missingPipeline() throws Exception {

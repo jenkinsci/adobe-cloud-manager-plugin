@@ -8,8 +8,19 @@
             <h1>${%page.title}</h1>
             <br/>
             <strong>Program</strong>: ${it.programId}
+            <br/>
             <strong>Pipeline</strong>: ${it.pipelineId}
+            <br/>
             <strong>Execution</strong>: ${it.executionId}
+            <br/>
+            <p>
+                <h3>${%steps.heading}</h3>
+                <ul>
+                <j:forEach var="step" items="${it.steps}" indexVar="idx">
+                    <li>${%step.status(step.action, step.status)} <j:if test="${step.hasLogs}"><a href="getLog/${step.action}.log?step=${idx}">${%download.text}</a></j:if></li>
+                </j:forEach>
+                </ul>
+            </p>
         </l:main-panel>
     </l:layout>
 </j:jelly>

@@ -42,6 +42,7 @@ import io.adobe.cloudmanager.CloudManagerApi;
 import io.jenkins.plugins.adobe.cloudmanager.action.CloudManagerBuildAction;
 import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOConfig;
 import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOProjectConfig;
+import io.jenkins.plugins.adobe.cloudmanager.util.CloudManagerApiUtil;
 import org.jenkinsci.plugins.workflow.graph.FlowNode;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.jenkinsci.plugins.workflow.steps.StepExecution;
@@ -78,6 +79,7 @@ public abstract class AbstractStepExecution extends StepExecution {
     return id;
   }
 
+
   /**
    * Retrieve the configured Adobe IO Project configured based on the information configured in the Run.
    */
@@ -90,7 +92,6 @@ public abstract class AbstractStepExecution extends StepExecution {
     }
     return aioProject;
   }
-
   /**
    * Validate that the data exists for the current run, any missing information will fail the run.
    */
@@ -106,25 +107,11 @@ public abstract class AbstractStepExecution extends StepExecution {
   }
 
   /**
-   * Authenticate to Adobe IO and get a valid token, for API potential API requests.
-   */
-  @Nonnull
-  protected Secret getAccessToken() throws IOException, InterruptedException {
-    Secret token = getAioProject().authenticate();
-    if (token == null) {
-      throw new AbortException(Messages.AbstractStepExecution_error_authentication());
-    }
-    return token;
-  }
-
-  /**
    * Build a Cloud Manager API based on the configured Adobe IO Project.
    */
   @Nonnull
   protected CloudManagerApi getApi() throws IOException, InterruptedException {
-    AdobeIOProjectConfig aioProject = getAioProject();
-    Secret token = getAccessToken();
-    return CloudManagerApi.create(aioProject.getImsOrganizationId(), aioProject.getClientId(), token.getPlainText());
+    return CloudManagerApiUtil.createApi().apply(getBuildData().getAioProjectName()).orElseThrow(() -> new AbortException(Messages.AbstractStepExecution_error_missingBuildData()));
   }
 
   /**

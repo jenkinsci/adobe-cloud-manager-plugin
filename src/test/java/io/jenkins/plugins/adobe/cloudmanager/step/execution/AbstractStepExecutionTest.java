@@ -158,26 +158,4 @@ public class AbstractStepExecutionTest {
     }};
     assertNotNull(tested.getAioProject());
   }
-
-  @Test
-  public void accessTokenFails() throws Exception {
-    new Expectations() {{
-      data.getAioProjectName();
-      result = found;
-      projectConfig.authenticate();
-      result = null;
-    }};
-    assertThrows(AbortException.class, () -> tested.getAccessToken());
-  }
-
-  @Test
-  public void accessTokenSuccess() throws Exception {
-    new Expectations() {{
-      data.getAioProjectName();
-      result = found;
-      projectConfig.authenticate();
-      result = Secret.fromString("Test");
-    }};
-    assertNotNull(tested.getAccessToken());
-  }
 }

@@ -38,6 +38,7 @@ import hudson.util.Secret;
 import io.adobe.cloudmanager.CloudManagerApi;
 import io.adobe.cloudmanager.CloudManagerApiException;
 import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOProjectConfig;
+import io.jenkins.plugins.adobe.cloudmanager.util.CloudManagerApiUtil;
 import jenkins.util.Timer;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 
@@ -79,8 +80,7 @@ public class PollPipelineExecution extends AbstractStepExecution {
     task = Timer.get().scheduleWithFixedDelay(() -> {
       try {
         AdobeIOProjectConfig aioProject = getAioProject();
-        Secret token = getAccessToken();
-        if (checkExecution(aioProject, token)) {
+        if (checkExecution(aioProject.getName())) {
           task.cancel(true);
           task = null;
           getContext().onSuccess(null);
@@ -93,9 +93,9 @@ public class PollPipelineExecution extends AbstractStepExecution {
     }, 0, recurrencePeriod, TimeUnit.MILLISECONDS);
   }
 
-  private boolean checkExecution(AdobeIOProjectConfig aioProject, Secret token) throws AbortException {
+  private boolean checkExecution(String aioProjectName) throws AbortException {
     try {
-      CloudManagerApi api = CloudManagerApi.create(aioProject.getImsOrganizationId(), aioProject.getClientId(), token.getPlainText());
+      CloudManagerApi api = CloudManagerApiUtil.createApi().apply(aioProjectName).orElseThrow(() -> new AbortException(Messages.AbstractStepExecution_error_missingBuildData()));
       if (api.isExecutionRunning(getBuildData().getProgramId(), getBuildData().getPipelineId(), getBuildData().getExecutionId())) {
         if (!quiet) {
           getContext().get(TaskListener.class).getLogger().println(Messages.PollPipelineExecution_waiting(Util.getTimeSpanString(recurrencePeriod)));
@@ -103,6 +103,8 @@ public class PollPipelineExecution extends AbstractStepExecution {
         return false;
       }
       getContext().get(TaskListener.class).getLogger().println(Messages.PollPipelineExecution_complete());
+    } catch (AbortException e) {
+      throw e;
     } catch (CloudManagerApiException e) {
       throw new AbortException(Messages.PollPipelineExecution_error_CloudManagerApiException(e.getLocalizedMessage()));
     } catch (Exception e) {

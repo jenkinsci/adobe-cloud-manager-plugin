@@ -28,6 +28,7 @@ package io.jenkins.plugins.adobe.cloudmanager.webhook.subscriber;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.Optional;
 import java.util.Set;
 import javax.annotation.Nonnull;
 
@@ -37,6 +38,7 @@ import io.adobe.cloudmanager.PipelineExecution;
 import io.adobe.cloudmanager.event.CloudManagerEvent;
 import io.adobe.cloudmanager.event.PipelineExecutionEndEvent;
 import io.jenkins.plugins.adobe.cloudmanager.step.execution.PipelineEndExecution;
+import io.jenkins.plugins.adobe.cloudmanager.util.CloudManagerApiUtil;
 import org.jenkinsci.plugins.workflow.steps.StepExecution;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,13 +63,13 @@ public class PipelineEndEventSubscriber extends CloudManagerEventSubscriber {
    */
   @Override
   protected void onEvent(CloudManagerSubscriberEvent event) {
-    CloudManagerApi api = createApi(event.getAioProjectName());
-    if (api == null) {
+    Optional<CloudManagerApi> api = CloudManagerApiUtil.createApi().apply(event.getAioProjectName());
+    if (!api.isPresent()) {
       LOGGER.error(Messages.CloudManagerEventSubscriber_error_createApi());
       return;
     }
     try {
-      final PipelineExecution pe = api.getExecution(CloudManagerEvent.parseEvent(event.getPayload(), PipelineExecutionEndEvent.class));
+      final PipelineExecution pe = api.get().getExecution(CloudManagerEvent.parseEvent(event.getPayload(), PipelineExecutionEndEvent.class));
       StepExecution.applyAll(PipelineEndExecution.class, (execution) -> {
         try {
           if (execution.isApplicable(pe)) {

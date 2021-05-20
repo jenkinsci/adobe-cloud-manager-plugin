@@ -28,6 +28,7 @@ package io.jenkins.plugins.adobe.cloudmanager.util;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Optional;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
@@ -52,19 +53,6 @@ public class DescriptorHelper {
 
   public static final Logger LOGGER = LoggerFactory.getLogger(DescriptorHelper.class);
 
-  @CheckForNull
-  public static CloudManagerApi createApi(@Nonnull String aioProject) {
-    AdobeIOProjectConfig cfg = AdobeIOConfig.projectConfigFor(aioProject);
-
-    if (cfg == null) {
-      return null;
-    }
-    Secret token = cfg.authenticate();
-    if (token == null) {
-      return null;
-    }
-    return CloudManagerApi.create(cfg.getImsOrganizationId(), cfg.getClientId(), token.getPlainText());
-  }
 
   @Nonnull
   public static ListBoxModel fillAioProjectItems() {
@@ -83,8 +71,8 @@ public class DescriptorHelper {
     lbm.add(Messages.DescriptorHelper_defaultListItem(), "");
     try {
       if (StringUtils.isNotBlank(aioProject)) {
-        CloudManagerApi api = createApi(aioProject);
-        Collection<Program> programs = api == null ? Collections.emptyList() : api.listPrograms();
+        Optional<CloudManagerApi> api = CloudManagerApiUtil.createApi().apply(aioProject);
+        Collection<Program> programs = api.isPresent() ? api.get().listPrograms() : Collections.emptyList();
         for (Program p : programs) {
           lbm.add(p.getName(), p.getId());
         }
@@ -101,9 +89,9 @@ public class DescriptorHelper {
     lbm.add(Messages.DescriptorHelper_defaultListItem(), "");
 
     if (StringUtils.isNotBlank(aioProject) && StringUtils.isNotBlank(program)) {
-      CloudManagerApi api = createApi(aioProject);
+      Optional<CloudManagerApi> api = CloudManagerApiUtil.createApi().apply(aioProject);
       try {
-        Collection<Pipeline> pipelines = api == null ? Collections.emptyList() : api.listPipelines(program);
+        Collection<Pipeline> pipelines = api.isPresent() ? api.get().listPipelines(program) : Collections.emptyList();
         for (Pipeline p : pipelines) {
           lbm.add(p.getName(), p.getId());
         }

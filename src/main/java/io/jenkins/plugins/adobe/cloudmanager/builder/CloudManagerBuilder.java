@@ -34,12 +34,10 @@ import hudson.model.AbstractProject;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import hudson.util.ListBoxModel;
-import hudson.util.Secret;
 import io.adobe.cloudmanager.CloudManagerApi;
 import io.adobe.cloudmanager.CloudManagerApiException;
 import io.adobe.cloudmanager.Pipeline;
-import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOConfig;
-import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOProjectConfig;
+import io.jenkins.plugins.adobe.cloudmanager.util.CloudManagerApiUtil;
 import io.jenkins.plugins.adobe.cloudmanager.util.DescriptorHelper;
 import jenkins.tasks.SimpleBuildStep;
 import org.kohsuke.stapler.DataBoundSetter;
@@ -94,27 +92,11 @@ public abstract class CloudManagerBuilder extends Builder implements SimpleBuild
   }
 
   /**
-   * Authenticate using this Builder's configured Adobe IO Project, and return an access token
-   */
-  @Nonnull
-  private Secret getAccessToken(@Nonnull AdobeIOProjectConfig config) throws AbortException {
-    Secret token = config.authenticate();
-    if (token == null) {
-      throw new AbortException(Messages.CloudManagerBuilder_error_authenticate(Messages.CloudManagerBuilder_error_checkLogs()));
-    }
-    return token;
-  }
-
-  /**
    * Create a {@link CloudManagerApi} from this Builder's configured Adobe IO project.
    */
   @Nonnull
   public CloudManagerApi createApi() throws AbortException {
-    AdobeIOProjectConfig config = AdobeIOConfig.projectConfigFor(aioProject);
-    if (config == null) {
-      throw new AbortException(Messages.CloudManagerBuilder_error_missingAioProject(aioProject));
-    }
-    return CloudManagerApi.create(config.getImsOrganizationId(), config.getClientId(), getAccessToken(config).getPlainText());
+    return CloudManagerApiUtil.createApi().apply(aioProject).orElseThrow(() -> new AbortException(Messages.CloudManagerBuilder_error_missingAioProject(aioProject)));
   }
 
   /**

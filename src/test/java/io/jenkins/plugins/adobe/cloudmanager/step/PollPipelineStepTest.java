@@ -29,7 +29,9 @@ package io.jenkins.plugins.adobe.cloudmanager.step;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import javax.annotation.Nonnull;
 
 import hudson.Util;
@@ -42,6 +44,7 @@ import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOConfig;
 import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOProjectConfig;
 import io.jenkins.plugins.adobe.cloudmanager.step.execution.Messages;
 import io.jenkins.plugins.adobe.cloudmanager.step.execution.PollPipelineExecution;
+import io.jenkins.plugins.adobe.cloudmanager.util.CloudManagerApiUtil;
 import mockit.Expectations;
 import mockit.Mock;
 import mockit.MockUp;
@@ -54,6 +57,7 @@ import org.jenkinsci.plugins.workflow.steps.Step;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.jenkinsci.plugins.workflow.steps.StepExecution;
 import org.jenkinsci.plugins.workflow.test.steps.SemaphoreStep;
+import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -76,6 +80,14 @@ public class PollPipelineStepTest {
 
   @Mocked
   private CloudManagerApi api;
+
+  @Before
+  public void before() {
+    new MockUp<CloudManagerApiUtil>() {
+      @Mock
+      public Function<String, Optional<CloudManagerApi>> createApi() { return (name) -> Optional.of(api); }
+    };
+  }
 
   @Test
   public void noBuildData() {
@@ -120,7 +132,7 @@ public class PollPipelineStepTest {
   }
 
   @Test
-  public void authenticationFails() {
+  public void apiCreationFails() {
 
     story.then(rule -> {
 
@@ -131,10 +143,10 @@ public class PollPipelineStepTest {
         }
       };
 
-      new Expectations(projectConfig) {{
-        projectConfig.authenticate();
-        result = null;
-      }};
+      new MockUp<CloudManagerApiUtil>() {
+        @Mock
+        public Function<String, Optional<CloudManagerApi>> createApi() { return (name) -> Optional.empty(); }
+      };
 
       WorkflowJob job = rule.jenkins.createProject(WorkflowJob.class, "test");
       CpsFlowDefinition flow = new CpsFlowDefinition(
@@ -148,7 +160,7 @@ public class PollPipelineStepTest {
       SemaphoreStep.waitForStart("before/1", run);
       run.addAction(new CloudManagerBuildAction(AIO_PROJECT_NAME, "1", "1", "1"));
       SemaphoreStep.success("before/1", true);
-      rule.waitForMessage(Messages.AbstractStepExecution_error_authentication(), run);
+      rule.waitForMessage(Messages.AbstractStepExecution_error_missingBuildData(), run);
       rule.assertBuildStatus(Result.FAILURE, run);
     });
   }

@@ -29,7 +29,9 @@ package io.jenkins.plugins.adobe.cloudmanager.util;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 
 import hudson.util.ListBoxModel;
 import hudson.util.Secret;
@@ -45,7 +47,10 @@ import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOProjectConfig;
 import io.jenkins.plugins.adobe.cloudmanager.test.TestHelper;
 import mockit.Expectations;
 import mockit.Injectable;
+import mockit.Mock;
+import mockit.MockUp;
 import mockit.Mocked;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static io.jenkins.plugins.adobe.cloudmanager.test.TestHelper.*;
@@ -67,6 +72,7 @@ public class DescriptorHelperTest {
   private AdobeIOConfig aioConfig;
   @Mocked
   private AdobeIOProjectConfig adobeIOProjectConfig;
+
   @Mocked
   private CloudManagerApi api;
 
@@ -77,37 +83,14 @@ public class DescriptorHelperTest {
     pipelines.add(new PipelineImpl(PIPELINE_ID, "Pipeline Name"));
   }
 
-  @Test
-  public void createApiMissingAioProject() {
-    new Expectations() {{
-      AdobeIOConfig.projectConfigFor(AIO_PROJECT_NAME);
-      result = null;
-    }};
-    assertNull(DescriptorHelper.createApi(aioProject));
+  @Before
+  public void before() {
+    new MockUp<CloudManagerApiUtil>() {
+      @Mock
+      public Function<String, Optional<CloudManagerApi>> createApi() { return (name) -> Optional.of(api); }
+    };
   }
 
-  @Test
-  public void createApiUnableToAuthenticate() {
-    new Expectations() {{
-      AdobeIOConfig.projectConfigFor(TestHelper.AIO_PROJECT_NAME);
-      result = adobeIOProjectConfig;
-      adobeIOProjectConfig.authenticate();
-      result = null;
-    }};
-    assertNull(DescriptorHelper.createApi(aioProject));
-  }
-
-  @Test
-  public void createApiSuccess() throws Exception {
-    new Expectations() {{
-      AdobeIOConfig.projectConfigFor(TestHelper.AIO_PROJECT_NAME);
-      result = adobeIOProjectConfig;
-      adobeIOProjectConfig.authenticate();
-      result = Secret.fromString(ACCESS_TOKEN);
-    }};
-
-    assertNotNull(DescriptorHelper.createApi(aioProject));
-  }
 
   @Test
   public void fillAioProjectItemsEmpty() {
@@ -153,11 +136,11 @@ public class DescriptorHelperTest {
   }
 
   @Test
-  public void fillProgramItemsAuthFailed() {
-    new Expectations() {{
-      AdobeIOConfig.projectConfigFor(AIO_PROJECT_NAME);
-      result = null;
-    }};
+  public void fillProgramItemsApiCreationFailed() {
+    new MockUp<CloudManagerApiUtil>() {
+      @Mock
+      public Function<String, Optional<CloudManagerApi>> createApi() { return (name) -> Optional.empty(); }
+    };
 
     ListBoxModel lbm = DescriptorHelper.fillProgramItems(aioProject);
     assertEquals(1, lbm.size());
@@ -167,10 +150,6 @@ public class DescriptorHelperTest {
   @Test
   public void fillProgramItemsApiFailed() throws Exception {
     new Expectations() {{
-      AdobeIOConfig.projectConfigFor(AIO_PROJECT_NAME);
-      result = adobeIOProjectConfig;
-      adobeIOProjectConfig.authenticate();
-      result = Secret.fromString(ACCESS_TOKEN);
       api.listPrograms();
       result = new CloudManagerApiException(CloudManagerApiException.ErrorType.FIND_PROGRAM, PROGRAM_ID);
     }};
@@ -183,10 +162,6 @@ public class DescriptorHelperTest {
   @Test
   public void fillProgramItemsSuccess() throws Exception {
     new Expectations() {{
-      AdobeIOConfig.projectConfigFor(AIO_PROJECT_NAME);
-      result = adobeIOProjectConfig;
-      adobeIOProjectConfig.authenticate();
-      result = Secret.fromString(ACCESS_TOKEN);
       api.listPrograms();
       result = programs;
     }};
@@ -217,11 +192,11 @@ public class DescriptorHelperTest {
   }
 
   @Test
-  public void fillPipelineItemsAuthFailed() {
-    new Expectations() {{
-      AdobeIOConfig.projectConfigFor(AIO_PROJECT_NAME);
-      result = null;
-    }};
+  public void fillPipelineItemsApiCreationFailed() {
+    new MockUp<CloudManagerApiUtil>() {
+      @Mock
+      public Function<String, Optional<CloudManagerApi>> createApi() { return (name) -> Optional.empty(); }
+    };
 
     ListBoxModel lbm = DescriptorHelper.fillPipelineItems(aioProject, PROGRAM_ID);
     assertEquals(1, lbm.size());
@@ -231,10 +206,6 @@ public class DescriptorHelperTest {
   @Test
   public void fillPipelineItemsApiFailed() throws Exception {
     new Expectations() {{
-      AdobeIOConfig.projectConfigFor(AIO_PROJECT_NAME);
-      result = adobeIOProjectConfig;
-      adobeIOProjectConfig.authenticate();
-      result = Secret.fromString(ACCESS_TOKEN);
       api.listPipelines(PROGRAM_ID);
       result = new CloudManagerApiException(CloudManagerApiException.ErrorType.FIND_PROGRAM, PROGRAM_ID);
     }};
@@ -247,10 +218,6 @@ public class DescriptorHelperTest {
   @Test
   public void fillPipelineItemsSuccess() throws Exception {
     new Expectations() {{
-      AdobeIOConfig.projectConfigFor(AIO_PROJECT_NAME);
-      result = adobeIOProjectConfig;
-      adobeIOProjectConfig.authenticate();
-      result = Secret.fromString(ACCESS_TOKEN);
       api.listPipelines(PROGRAM_ID);
       result = pipelines;
     }};

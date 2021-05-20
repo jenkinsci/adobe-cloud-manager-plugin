@@ -75,19 +75,7 @@ public abstract class CloudManagerEventSubscriber implements ExtensionPoint {
     };
   }
 
-  @CheckForNull
-  protected CloudManagerApi createApi(String projectName) {
-    AdobeIOProjectConfig aioProject = AdobeIOConfig.projectConfigFor(projectName);
-    if (aioProject != null) {
-      Secret token = aioProject.authenticate();
-      if (token != null) {
-        return CloudManagerApi.create(aioProject.getImsOrganizationId(), aioProject.getClientId(), token.getPlainText());
-      }
-    } else {
-      LOGGER.error(Messages.CloudManagerEventSubscriber_error_missingAioProject(projectName));
-    }
-    return null;
-  }
+
 
   /**
    * List of event types that this subscriber can process.

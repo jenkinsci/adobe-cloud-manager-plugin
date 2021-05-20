@@ -29,6 +29,7 @@ package io.jenkins.plugins.adobe.cloudmanager.webhook.subscriber;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeoutException;
 import javax.annotation.Nonnull;
@@ -43,6 +44,7 @@ import io.adobe.cloudmanager.event.PipelineExecutionStepEndEvent;
 import io.adobe.cloudmanager.event.PipelineExecutionStepStartEvent;
 import io.adobe.cloudmanager.event.PipelineExecutionStepWaitingEvent;
 import io.jenkins.plugins.adobe.cloudmanager.step.execution.PipelineStepStateExecution;
+import io.jenkins.plugins.adobe.cloudmanager.util.CloudManagerApiUtil;
 import org.jenkinsci.plugins.workflow.steps.StepExecution;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,8 +70,8 @@ public class PipelineStepEventSubscriber extends CloudManagerEventSubscriber {
    */
   @Override
   protected void onEvent(final CloudManagerSubscriberEvent event) {
-    CloudManagerApi api = createApi(event.getAioProjectName());
-    if (api == null) {
+    Optional<CloudManagerApi> api = CloudManagerApiUtil.createApi().apply(event.getAioProjectName());
+    if (!api.isPresent()) {
       LOGGER.error(Messages.CloudManagerEventSubscriber_error_createApi());
       return;
     }
@@ -78,13 +80,13 @@ public class PipelineStepEventSubscriber extends CloudManagerEventSubscriber {
       final PipelineExecutionStepState stepState;
       switch (event.getType()) {
         case STEP_STARTED:
-          stepState = api.getExecutionStepState(CloudManagerEvent.parseEvent(event.getPayload(), PipelineExecutionStepStartEvent.class));
+          stepState = api.get().getExecutionStepState(CloudManagerEvent.parseEvent(event.getPayload(), PipelineExecutionStepStartEvent.class));
           break;
         case STEP_WAITING:
-          stepState = api.getExecutionStepState(CloudManagerEvent.parseEvent(event.getPayload(), PipelineExecutionStepWaitingEvent.class));
+          stepState = api.get().getExecutionStepState(CloudManagerEvent.parseEvent(event.getPayload(), PipelineExecutionStepWaitingEvent.class));
           break;
         case STEP_ENDED:
-          stepState = api.getExecutionStepState(CloudManagerEvent.parseEvent(event.getPayload(), PipelineExecutionStepEndEvent.class));
+          stepState = api.get().getExecutionStepState(CloudManagerEvent.parseEvent(event.getPayload(), PipelineExecutionStepEndEvent.class));
           break;
         default:
           LOGGER.warn(Messages.PipelineStepEventSubscriber_warn_invalidStepState(event.getType()));

@@ -137,7 +137,7 @@ public class PipelineStepStateStepTest {
   }
 
   @Test
-  public void notificationEvent() {
+  public void runningNotificationEvent() {
 
     story.then(rule -> {
       new Expectations() {{
@@ -152,7 +152,7 @@ public class PipelineStepStateStepTest {
         result = true;
       }};
 
-      WorkflowRun run = setupRun(rule, "notificationEvent");
+      WorkflowRun run = setupRun(rule, "runningNotificationEvent");
       PipelineStepStateExecution execution = (PipelineStepStateExecution) run.getExecution().getCurrentExecutions(false).get().stream().filter(e -> e instanceof PipelineStepStateExecution).findFirst().orElse(null);
       execution.occurred(pipelineExecution, stepState);
       rule.waitForCompletion(run);
@@ -160,8 +160,39 @@ public class PipelineStepStateStepTest {
       assertTrue(run.getLog().contains(Messages.PipelineStepStateExecution_occurred("ExecutionId", "build", "RUNNING")));
       CloudManagerBuildAction data = run.getAction(CloudManagerBuildAction.class);
       assertEquals(1, data.getSteps().size());
-      PipelineStep expected = new PipelineStep(StepAction.valueOf("build"), PipelineExecutionStepState.Status.valueOf("RUNNING"), true);
+      PipelineStep expected = new PipelineStep(StepAction.valueOf("build"), PipelineExecutionStepState.Status.valueOf("RUNNING"), false);
       assertEquals(expected, data.getSteps().get(0));
+      assertFalse(data.getSteps().get(0).isHasLogs());
+    });
+  }
+
+  @Test
+  public void finishedNotificationEvent() {
+
+    story.then(rule -> {
+      new Expectations() {{
+
+        pipelineExecution.getId();
+        result = "ExecutionId";
+        stepState.getAction();
+        result = StepAction.build.name();
+        stepState.getStatusState();
+        result = PipelineExecutionStepState.Status.FINISHED;
+        stepState.hasLogs();
+        result = true;
+      }};
+
+      WorkflowRun run = setupRun(rule, "finishedNotificationEvent");
+      PipelineStepStateExecution execution = (PipelineStepStateExecution) run.getExecution().getCurrentExecutions(false).get().stream().filter(e -> e instanceof PipelineStepStateExecution).findFirst().orElse(null);
+      execution.occurred(pipelineExecution, stepState);
+      rule.waitForCompletion(run);
+      rule.assertBuildStatus(Result.SUCCESS, run);
+      assertTrue(run.getLog().contains(Messages.PipelineStepStateExecution_occurred("ExecutionId", "build", "FINISHED")));
+      CloudManagerBuildAction data = run.getAction(CloudManagerBuildAction.class);
+      assertEquals(1, data.getSteps().size());
+      PipelineStep expected = new PipelineStep(StepAction.valueOf("build"), PipelineExecutionStepState.Status.valueOf("FINISHED"), true);
+      assertEquals(expected, data.getSteps().get(0));
+      assertTrue(data.getSteps().get(0).isHasLogs());
     });
   }
 

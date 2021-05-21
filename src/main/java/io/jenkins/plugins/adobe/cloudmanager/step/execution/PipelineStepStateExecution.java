@@ -69,6 +69,8 @@ import org.kohsuke.stapler.interceptor.RequirePOST;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static io.adobe.cloudmanager.PipelineExecutionStepState.Status.*;
+
 /**
  * Execution for a {@link io.jenkins.plugins.adobe.cloudmanager.step.PipelineStepStateStep}. Handles the any associated events.
  */
@@ -78,6 +80,9 @@ public class PipelineStepStateExecution extends AbstractStepExecution {
   // We can only handle a few of the waiting actions. If more come up, add them here.
   private static final Set<StepAction> WAITING_ACTIONS =
       Collections.unmodifiableSet(new HashSet<>(Arrays.asList(StepAction.codeQuality, StepAction.approval)));
+
+  private static final Set<PipelineExecutionStepState.Status> ENDED_STATUS =
+      Collections.unmodifiableSet(new HashSet<>(Arrays.asList(ERROR, FINISHED, FAILED, ROLLED_BACK, CANCELLED)));
 
   private final Set<StepAction> actions;
 
@@ -148,7 +153,7 @@ public class PipelineStepStateExecution extends AbstractStepExecution {
   public void occurred(@Nonnull PipelineExecution pe, @Nonnull PipelineExecutionStepState state) throws IOException, InterruptedException {
     StepAction action = StepAction.valueOf(state.getAction());
     PipelineExecutionStepState.Status status = state.getStatusState();
-    getBuildData().addStep(new PipelineStep(action, status, state.hasLogs()));
+    getBuildData().addStep(new PipelineStep(action, status, state.hasLogs() && ENDED_STATUS.contains(status)));
     getTaskListener().getLogger().println(Messages.PipelineStepStateExecution_occurred(pe.getId(), action, status));
     doFinish();
     getContext().onSuccess(null);
@@ -210,7 +215,6 @@ public class PipelineStepStateExecution extends AbstractStepExecution {
   public HttpResponse doCancel() throws IOException, InterruptedException {
     try {
       preCancelCheck();
-      reason = null;
       CloudManagerBuildAction buildData = getRun().getAction(CloudManagerBuildAction.class);
       getApi().cancelExecution(buildData.getProgramId(), buildData.getPipelineId(), buildData.getExecutionId());
       FlowInterruptedException e = new FlowInterruptedException(Result.ABORTED, new Cancellation(User.current()));
@@ -231,7 +235,6 @@ public class PipelineStepStateExecution extends AbstractStepExecution {
    */
   @Restricted(NoExternalUse.class)
   public void doEndQuietly() throws IOException, InterruptedException {
-    reason = null;
     // This may be blocking VM threads....
     getTaskListener().getLogger().println(Messages.PipelineStepStateExecution_endQuietly());
     doFinish();
@@ -250,7 +253,6 @@ public class PipelineStepStateExecution extends AbstractStepExecution {
 
     try {
       preApproveCheck();
-      reason = null; // Null the reason now, not after API - API call may take a bit
       CloudManagerBuildAction buildData = getRun().getAction(CloudManagerBuildAction.class);
       getApi().advanceExecution(buildData.getProgramId(), buildData.getPipelineId(), buildData.getExecutionId());
       doFinish();
@@ -315,19 +317,23 @@ public class PipelineStepStateExecution extends AbstractStepExecution {
 
   // Clean up this when done. Regardless of result.
   private void doFinish() {
-    try {
-      getAction().remove(this);
-    } catch (IOException | InterruptedException | TimeoutException e) {
-      LOGGER.warn(Messages.PipelineStepStateExecution_warn_actionRemoval());
-    } finally {
+    if (reason != null) {
       try {
-        FlowNode node = getContext().get(FlowNode.class);
-        if (node != null) {
-          PauseAction.endCurrentPause(node);
+        getAction().remove(this);
+        getRun().removeAction(getAction());
+      } catch (IOException | InterruptedException | TimeoutException e) {
+        LOGGER.warn(Messages.PipelineStepStateExecution_warn_actionRemoval());
+      } finally {
+        try {
+          FlowNode node = getContext().get(FlowNode.class);
+          if (node != null) {
+            PauseAction.endCurrentPause(node);
+          }
+        } catch (IOException | InterruptedException e) {
+          LOGGER.warn(Messages.PipelineStepStateExecution_warn_endPause());
         }
-      } catch (IOException | InterruptedException e) {
-        LOGGER.warn(Messages.PipelineStepStateExecution_warn_endPause());
       }
+      reason = null;
     }
   }
 }

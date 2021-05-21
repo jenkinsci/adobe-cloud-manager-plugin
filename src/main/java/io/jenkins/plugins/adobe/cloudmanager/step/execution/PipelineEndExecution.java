@@ -12,10 +12,10 @@ package io.jenkins.plugins.adobe.cloudmanager.step.execution;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
@@ -42,15 +43,13 @@ import org.jenkinsci.plugins.workflow.steps.BodyExecutionCallback;
 import org.jenkinsci.plugins.workflow.steps.FlowInterruptedException;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.jenkinsci.plugins.workflow.steps.StepExecution;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.jenkinsci.plugins.workflow.steps.StepExecutionIterator;
 import static io.adobe.cloudmanager.PipelineExecution.Status.*;
 
 /**
  * Execution for a {@link io.jenkins.plugins.adobe.cloudmanager.step.PipelineEndStep}. Handles the any associated events.
  */
 public class PipelineEndExecution extends AbstractStepExecution {
-  private static final Logger LOGGER = LoggerFactory.getLogger(PipelineEndExecution.class);
 
   private final Boolean mirror;
   // Event status' which are associated with a remote pipeline failure.
@@ -131,25 +130,27 @@ public class PipelineEndExecution extends AbstractStepExecution {
   /**
    * Processes the execution event, will quietly terminate any internal running {@link PipelineStepStateExecution} instances.
    * <p>
-   *  If any unknown body steps are waiting, they'll block this event processing from early termination of this step.
+   * If any unknown body steps are waiting, they'll block this event processing from early termination of this step.
    * </p>
    */
   public void occurred(@Nonnull PipelineExecution pe) throws IOException, InterruptedException {
     status = pe.getStatusState();
+    getContext().saveState();
     TaskListener listener = getTaskListener();
-    try {
-      StepExecution.applyAll(PipelineStepStateExecution.class, (execution) -> {
+    StepExecutionIterator.all().stream().map((sei) -> {
+      sei.apply((se) -> {
         try {
-          execution.doEndQuietly();
+          if (se instanceof PipelineStepStateExecution && ((PipelineStepStateExecution) se).getRun() == getRun()) {
+            ((PipelineStepStateExecution) se).doEndQuietly();
+          }
         } catch (IOException | InterruptedException e) {
           getContext().onFailure(e);
         }
         return null;
-      }).get();
-    } catch (ExecutionException e) {
-      getContext().onFailure(e);
-    }
-    listener.getLogger().println(Messages.PipelineEndExecution_occurred(pe.getId(), pe.getStatusState()));
+      });
+      return sei;
+    }).collect(Collectors.toList());
+    getTaskListener().getLogger().println(Messages.PipelineEndExecution_occurred(pe.getId(), pe.getStatusState()));
   }
 
   /**

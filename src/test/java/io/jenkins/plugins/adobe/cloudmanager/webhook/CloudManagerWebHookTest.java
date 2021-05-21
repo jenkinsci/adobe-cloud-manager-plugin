@@ -59,7 +59,7 @@ public class CloudManagerWebHookTest {
   @Rule
   public JenkinsRule rule = new JenkinsRule();
 
-  private static final String sign(String toSign) throws Exception {
+  private static String sign(String toSign) throws Exception {
     Mac mac = Mac.getInstance("HmacSHA256");
     mac.init(new SecretKeySpec(CLIENT_SECRET.getBytes(StandardCharsets.UTF_8), "HmacSHA256"));
     return Base64.getEncoder().encodeToString(mac.doFinal(toSign.getBytes(StandardCharsets.UTF_8)));

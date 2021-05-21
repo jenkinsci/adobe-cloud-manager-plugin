@@ -57,8 +57,7 @@ public class CloudManagerBuilderTest {
 
   private static final String PROGRAM_ID = "2";
   private static final String PIPELINE_ID = "4";
-  private static final List<Program> programs = new ArrayList<>();
-  private static final List<Pipeline> pipelines = new ArrayList<>();
+
   @Injectable
   private final String aioProject = AIO_PROJECT_NAME;
   @Injectable
@@ -70,12 +69,6 @@ public class CloudManagerBuilderTest {
   @Mocked
   private CloudManagerApi api;
 
-  @BeforeClass
-  public static void beforeClass() {
-    programs.add(new DescriptorHelperTest.ProgramImpl("1", "Another Program"));
-    programs.add(new DescriptorHelperTest.ProgramImpl(PROGRAM_ID, "Program Name"));
-    pipelines.add(new DescriptorHelperTest.PipelineImpl(PIPELINE_ID, "Pipeline Name"));
-  }
 
   @Before
   public void before() {
@@ -102,31 +95,26 @@ public class CloudManagerBuilderTest {
 
   @Test
   public void missingProgram() throws Exception {
-    new Expectations() {{
-      api.listPrograms();
-      result = Collections.emptyList();
-    }};
-
+    new MockUp<CloudManagerApiUtil>() {
+      @Mock
+      public Optional<String> getProgramId(final CloudManagerApi api, final String programName) throws AbortException {
+        return Optional.empty();
+      }
+    };
     AbortException exception = assertThrows(AbortException.class, () -> builder.getProgramId(api));
     assertEquals(Messages.CloudManagerBuilder_error_missingProgram(program), exception.getLocalizedMessage());
   }
 
-  @Test
-  public void programApiError() throws Exception {
-    new Expectations() {{
-      api.listPrograms();
-      result = new CloudManagerApiException(CloudManagerApiException.ErrorType.FIND_PROGRAM, program);
-    }};
-    AbortException exception = assertThrows(AbortException.class, () -> builder.getProgramId(api));
-    assertTrue(StringUtils.contains(exception.getLocalizedMessage(), "An API exception occurred"));
-  }
 
   @Test
   public void getProgramIdFromName() throws Exception {
-    new Expectations() {{
-      api.listPrograms();
-      result = programs;
-    }};
+    new MockUp<CloudManagerApiUtil>() {
+      @Mock
+      public Optional<String> getProgramId(final CloudManagerApi api, final String programName) throws AbortException {
+        return Optional.of(PROGRAM_ID);
+      }
+    };
+
     assertEquals(PROGRAM_ID, builder.getProgramId(api));
   }
 
@@ -138,31 +126,25 @@ public class CloudManagerBuilderTest {
 
   @Test
   public void missingPipeline() throws Exception {
-    new Expectations() {{
-      api.listPipelines(PROGRAM_ID, withNotNull());
-      result = Collections.emptyList();
-    }};
+    new MockUp<CloudManagerApiUtil>() {
+      @Mock
+      public Optional<String> getPipelineId(final CloudManagerApi api, final String programId, final String pipelineName) throws AbortException {
+        return Optional.empty();
+      }
+    };
+
     AbortException exception = assertThrows(AbortException.class, () -> builder.getPipelineId(api, PROGRAM_ID));
     assertEquals(Messages.CloudManagerBuilder_error_missingPipeline(pipeline), exception.getLocalizedMessage());
   }
 
   @Test
-  public void pipelineApiError() throws Exception {
-    new Expectations() {{
-      api.listPipelines(PROGRAM_ID, withNotNull());
-      result = new CloudManagerApiException(CloudManagerApiException.ErrorType.FIND_PIPELINE, pipeline, PROGRAM_ID);
-    }};
-
-    AbortException exception = assertThrows(AbortException.class, () -> builder.getPipelineId(api, PROGRAM_ID));
-    assertTrue(StringUtils.contains(exception.getLocalizedMessage(), "An API exception occurred"));
-  }
-
-  @Test
   public void getPipelineIdFromName() throws Exception {
-    new Expectations() {{
-      api.listPipelines(PROGRAM_ID, withNotNull());
-      result = pipelines;
-    }};
+    new MockUp<CloudManagerApiUtil>() {
+      @Mock
+      public Optional<String> getPipelineId(final CloudManagerApi api, final String programId, final String pipelineName) throws AbortException {
+        return Optional.of(PIPELINE_ID);
+      }
+    };
 
     assertEquals(PIPELINE_ID, builder.getPipelineId(api, PROGRAM_ID));
   }

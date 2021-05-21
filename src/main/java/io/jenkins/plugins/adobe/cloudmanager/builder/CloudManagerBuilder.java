@@ -107,17 +107,8 @@ public abstract class CloudManagerBuilder extends Builder implements SimpleBuild
     try {
       return String.valueOf(Integer.parseInt(program));
     } catch (NumberFormatException e) {
-      try {
-        LOGGER.debug(Messages.CloudManagerBuilder_debug_lookupProgramId(program));
-        return api.listPrograms()
-            .stream()
-            .filter(p -> program.equals(p.getName()))
-            .findFirst()
-            .orElseThrow(() -> new AbortException(Messages.CloudManagerBuilder_error_missingProgram(program)))
-            .getId();
-      } catch (CloudManagerApiException ex) {
-        throw new AbortException(Messages.CloudManagerBuilder_error_CloudManagerApiException(ex.getLocalizedMessage()));
-      }
+      LOGGER.debug(Messages.CloudManagerBuilder_debug_lookupProgramId(program));
+      return CloudManagerApiUtil.getProgramId(api, program).orElseThrow(() -> new AbortException(Messages.CloudManagerBuilder_error_missingProgram(program)));
     }
   }
 
@@ -129,16 +120,8 @@ public abstract class CloudManagerBuilder extends Builder implements SimpleBuild
     try {
       return String.valueOf(Integer.parseInt(pipeline));
     } catch (NumberFormatException e) {
-      try {
-        LOGGER.debug(Messages.CloudManagerBuilder_debug_lookupPipelineId(program));
-        return api.listPipelines(programId, new Pipeline.NamePredicate(pipeline))
-            .stream()
-            .findFirst()
-            .orElseThrow(() -> new AbortException(Messages.CloudManagerBuilder_error_missingPipeline(pipeline)))
-            .getId();
-      } catch (CloudManagerApiException ex) {
-        throw new AbortException(Messages.CloudManagerBuilder_error_CloudManagerApiException(ex.getLocalizedMessage()));
-      }
+      LOGGER.debug(Messages.CloudManagerBuilder_debug_lookupPipelineId(program));
+      return CloudManagerApiUtil.getPipelineId(api, programId, pipeline).orElseThrow(() -> new AbortException(Messages.CloudManagerBuilder_error_missingPipeline(pipeline)));
     }
   }
 

@@ -82,13 +82,15 @@ public class PipelineStepStateExecution extends AbstractStepExecution {
       Collections.unmodifiableSet(new HashSet<>(Arrays.asList(ERROR, FINISHED, FAILED, ROLLED_BACK, CANCELLED)));
 
   private final Set<StepAction> actions;
+  private boolean autoApprove;
 
   // Used as the reason for a waiting action. If its set - then we're waiting for user input.
   private StepAction reason;
 
-  public PipelineStepStateExecution(StepContext context, Set<StepAction> actions) {
+  public PipelineStepStateExecution(StepContext context, Set<StepAction> actions, boolean autoApprove) {
     super(context);
     this.actions = actions;
+    this.autoApprove = autoApprove;
   }
 
   @CheckForNull
@@ -161,14 +163,20 @@ public class PipelineStepStateExecution extends AbstractStepExecution {
   public void waiting(@Nonnull PipelineExecution pe, @Nonnull PipelineExecutionStepState state) throws IOException, InterruptedException, TimeoutException {
     try {
       reason = logStepAction(pe, state);
-      ;
       if (WAITING_ACTIONS.contains(reason)) {
-        startWaiting();
+        if (autoApprove) {
+          getTaskListener().getLogger().println(Messages.PipelineStepStateExecution_autoApprove());
+          advanceStep();
+        } else {
+          startWaiting();
+        }
       } else {
         getTaskListener().getLogger().println(Messages.PipelineStepStateExecution_unknownWaitingAction(reason));
       }
     } catch (IllegalArgumentException e) {
       getTaskListener().getLogger().println(Messages.PipelineStepStateExecution_unknownStepAction(state.getAction()));
+    } catch (CloudManagerApiException e) {
+      getContext().onFailure(e);
     }
   }
 
@@ -184,10 +192,12 @@ public class PipelineStepStateExecution extends AbstractStepExecution {
   private boolean isHasLogs(@Nonnull PipelineExecutionStepState state, PipelineExecutionStepState.Status status) {
     if (!state.hasLogs()) {
         return false;
-    } else if (ENDED_STATUS.contains(status)) {
-      return true;
     } else {
-      return status == WAITING && StepAction.codeQuality == StepAction.valueOf(state.getAction());
+      if (ENDED_STATUS.contains(status)) {
+        return true;
+      } else {
+        return status == WAITING && StepAction.codeQuality == StepAction.valueOf(state.getAction());
+      }
     }
   }
 
@@ -264,10 +274,7 @@ public class PipelineStepStateExecution extends AbstractStepExecution {
 
     try {
       preApproveCheck();
-      CloudManagerPipelineExecution cmExecution = getRun().getAction(CloudManagerBuildAction.class).getCmExecution();
-      getApi().advanceExecution(cmExecution.getProgramId(), cmExecution.getPipelineId(), cmExecution.getExecutionId());
-      doFinish();
-      getContext().onSuccess(null);
+      advanceStep();
     } catch (AbortException | CloudManagerApiException e) {
       doFinish();
       getContext().onFailure(e);
@@ -324,6 +331,14 @@ public class PipelineStepStateExecution extends AbstractStepExecution {
     getTaskListener().getLogger().println(HyperlinkNote.encodeTo(url, Messages.PipelineStepStateExecution_waitingApproval()));
     FlowNode node = Objects.requireNonNull(getContext().get(FlowNode.class));
     node.addAction(new PauseAction("Pipeline Execution Step State"));
+  }
+
+  // Advance the step.
+  private void advanceStep() throws IOException, InterruptedException, CloudManagerApiException {
+    CloudManagerPipelineExecution cmExecution = getRun().getAction(CloudManagerBuildAction.class).getCmExecution();
+    getApi().advanceExecution(cmExecution.getProgramId(), cmExecution.getPipelineId(), cmExecution.getExecutionId());
+    doFinish();
+    getContext().onSuccess(null);
   }
 
   // Clean up this when done. Regardless of result.

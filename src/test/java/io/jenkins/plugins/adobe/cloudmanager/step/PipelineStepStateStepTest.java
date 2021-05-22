@@ -257,6 +257,53 @@ public class PipelineStepStateStepTest {
   }
 
   @Test
+  public void waitingAutoApprove() {
+    final String test = "waitingCodeQualityProceed";
+    story.then(rule -> {
+      new Expectations() {{
+        pipelineExecution.getId();
+        result = "ExecutionId";
+        stepState.getAction();
+        result = StepAction.codeQuality.name();
+        stepState.getStatusState();
+        result = PipelineExecutionStepState.Status.WAITING;
+        projectConfig.authenticate();
+        result = Secret.fromString(ACCESS_TOKEN);
+        api.advanceExecution("1", "1", "1");
+      }};
+
+      WorkflowJob job = rule.jenkins.createProject(WorkflowJob.class, test);
+      CpsFlowDefinition flow = new CpsFlowDefinition(
+          "node('master') {\n" +
+              "    semaphore 'before'\n" +
+              "    acmPipelineStepState(autoApprove: true)\n" +
+              "}",
+          true);
+      job.setDefinition(flow);
+      WorkflowRun run = job.scheduleBuild2(0).waitForStart();
+      SemaphoreStep.waitForStart("before/1", run);
+      run.addAction(new CloudManagerBuildAction(AIO_PROJECT_NAME, new CloudManagerPipelineExecution("1", "1", "1")));
+      SemaphoreStep.success("before/1", true);
+      rule.waitForMessage(Messages.PipelineStepStateExecution_waiting(), run);
+
+      PipelineStepStateExecution execution = (PipelineStepStateExecution) run.getExecution().getCurrentExecutions(false).get().stream().filter(e -> e instanceof PipelineStepStateExecution).findFirst().orElse(null);
+      execution.waiting(pipelineExecution, stepState);
+      rule.waitForMessage(Messages.PipelineStepStateExecution_autoApprove(), run);
+      rule.waitForCompletion(run);
+      List<PauseAction> pauses = new ArrayList<>();
+      for (FlowNode n : new FlowGraphWalker(run.getExecution())) {
+        pauses.addAll(PauseAction.getPauseActions(n));
+      }
+      assertEquals(0, pauses.size());
+      assertFalse(run.getLog().contains(Messages.PipelineStepStateExecution_warn_endPause()));
+      assertFalse(run.getLog().contains(Messages.PipelineStepStateExecution_warn_actionRemoval()));
+      String xml = FileUtils.readFileToString(new File(run.getRootDir(), "build.xml"), Charset.defaultCharset());
+      assertFalse(xml.contains(PipelineStepStateExecution.class.getName()));
+      rule.assertBuildStatusSuccess(run);
+    });
+  }
+
+  @Test
   public void waitingCodeQualityProceed() {
     final String test = "waitingCodeQualityProceed";
     story.then(rule -> {

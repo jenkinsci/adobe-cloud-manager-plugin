@@ -63,8 +63,7 @@ import org.kohsuke.stapler.DataBoundSetter;
 public class PipelineStepStateStep extends Step {
 
   private List<StepAction> actions;
-  private boolean showLogs = true;
-  private boolean autoAdvance = false;
+  private boolean autoApprove = false;
 
   @DataBoundConstructor
   public PipelineStepStateStep() {
@@ -88,27 +87,15 @@ public class PipelineStepStateStep extends Step {
   }
 
   /**
-   * Flag to indicate if this step should store the pipeline logs on the {@link io.jenkins.plugins.adobe.cloudmanager.action.CloudManagerBuildAction} for later reference.
-   */
-  public boolean isShowLogs() {
-    return showLogs;
-  }
-
-  @DataBoundSetter
-  public void setShowLogs(boolean showLogs) {
-    this.showLogs = showLogs;
-  }
-
-  /**
    * Flag to indicate if this step should auto-advance if it receives a {@code waiting} event.
    */
-  public boolean isAutoAdvance() {
-    return autoAdvance;
+  public boolean isAutoApprove() {
+    return autoApprove;
   }
 
   @DataBoundSetter
-  public void setAutoAdvance(boolean autoAdvance) {
-    this.autoAdvance = autoAdvance;
+  public void setAutoApprove(boolean autoApprove) {
+    this.autoApprove = autoApprove;
   }
 
   /**
@@ -121,7 +108,7 @@ public class PipelineStepStateStep extends Step {
 
   @Override
   public StepExecution start(StepContext context) throws Exception {
-    return new PipelineStepStateExecution(context, new HashSet<>(getActions()));
+    return new PipelineStepStateExecution(context, new HashSet<>(getActions()), autoApprove);
   }
 
   @Extension

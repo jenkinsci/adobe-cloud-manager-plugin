@@ -7,7 +7,11 @@ import java.util.function.Function;
 import hudson.Util;
 import hudson.model.Result;
 import io.adobe.cloudmanager.CloudManagerApi;
+import io.adobe.cloudmanager.Pipeline;
+import io.adobe.cloudmanager.Program;
+import io.jenkins.plugins.adobe.cloudmanager.action.CloudManagerBuildAction;
 import io.jenkins.plugins.adobe.cloudmanager.util.CloudManagerApiUtil;
+import mockit.Expectations;
 import mockit.Mock;
 import mockit.MockUp;
 import mockit.Mocked;
@@ -37,6 +41,12 @@ public class PipelineStartTriggerTest {
 
   @Mocked
   private CloudManagerApi api;
+
+  @Mocked
+  private Program program;
+
+  @Mocked
+  private Pipeline pipeline;
 
   @Before
   public void before() {
@@ -92,8 +102,65 @@ public class PipelineStartTriggerTest {
     rule.waitForMessage("PipelineStartTrigger worked.", run);
     rule.waitForCompletion(run);
     rule.assertBuildStatus(Result.SUCCESS, run);
-
+    CloudManagerBuildAction action = run.getAction(CloudManagerBuildAction.class);
+    assertNotNull(action);
+    assertEquals("1", action.getProgramId());
+    assertEquals("2", action.getPipelineId());
+    assertEquals("3", action.getExecutionId());
   }
+
+  @Test
+  public void startsJobUsingNames() throws Exception {
+
+    new MockUp<CloudManagerApiUtil>() {
+      @Mock
+      public Optional<String> getProgramId(CloudManagerApi api, String programName) {
+        return Optional.of("1");
+      }
+      @Mock
+      public Optional<String> getPipelineId(CloudManagerApi api, String programId, String pipelineName) {
+        return Optional.of("2");
+      }
+    };
+
+    PipelineStartEvent event = new PipelineStartEvent(EVENT_ID, AIO_PROJECT_NAME, "1", "2", "3", OffsetDateTime.now());
+
+    WorkflowJob job = rule.jenkins.createProject(WorkflowJob.class, "test");
+    CpsFlowDefinition flow = new CpsFlowDefinition(
+        "pipeline {\n" +
+            "  agent any\n" +
+            "  triggers { acmPipelineStart(aioProject: '" + AIO_PROJECT_NAME + "', program: '" + PROGRAM_NAME + "', pipeline: '" + PIPELINE_NAME + "') }\n" +
+            "  stages {\n" +
+            "    stage('Started') {\n" +
+            "      steps {\n" +
+            "        echo 'PipelineStartTrigger worked.'\n" +
+            "      }\n" +
+            "    }\n" +
+            "  }\n" +
+            "}",
+        true);
+    job.setDefinition(flow);
+    WorkflowRun run = job.scheduleBuild2(0).waitForStart();
+
+    rule.waitForCompletion(run);
+    rule.assertBuildStatus(Result.SUCCESS, run);
+
+    for (PipelineStartTrigger t : Util.filter(job.getTriggers().values(), PipelineStartTrigger.class)) {
+      t.onEvent(event);
+    }
+    while ((run = rule.jenkins.getItemByFullName("test", WorkflowJob.class).getBuildByNumber(2)) == null) {
+      Thread.sleep(1000);
+    }
+    rule.waitForMessage("PipelineStartTrigger worked.", run);
+    rule.waitForCompletion(run);
+    rule.assertBuildStatus(Result.SUCCESS, run);
+    CloudManagerBuildAction action = run.getAction(CloudManagerBuildAction.class);
+    assertNotNull(action);
+    assertEquals("1", action.getProgramId());
+    assertEquals("2", action.getPipelineId());
+    assertEquals("3", action.getExecutionId());
+  }
+
 
   @Test
   public void apiCreateFails() throws Exception {

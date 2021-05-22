@@ -13,10 +13,8 @@ import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.HttpMethod;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.http.client.methods.HttpGet;
 import org.apache.http.entity.ContentType;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import hudson.model.Result;
 import io.adobe.cloudmanager.CloudManagerApi;
 import io.adobe.cloudmanager.PipelineExecution;
@@ -24,9 +22,11 @@ import io.adobe.cloudmanager.PipelineExecutionStepState;
 import io.adobe.cloudmanager.StepAction;
 import io.adobe.cloudmanager.event.CloudManagerEvent;
 import io.adobe.cloudmanager.event.PipelineExecutionEndEvent;
+import io.adobe.cloudmanager.event.PipelineExecutionStartEvent;
 import io.adobe.cloudmanager.event.PipelineExecutionStepEndEvent;
 import io.adobe.cloudmanager.event.PipelineExecutionStepStartEvent;
 import io.adobe.cloudmanager.event.PipelineExecutionStepWaitingEvent;
+import io.jenkins.plugins.adobe.cloudmanager.action.CloudManagerBuildAction;
 import io.jenkins.plugins.adobe.cloudmanager.action.PipelineWaitingAction;
 import io.jenkins.plugins.adobe.cloudmanager.step.execution.Messages;
 import io.jenkins.plugins.adobe.cloudmanager.step.execution.PipelineStepStateExecution;
@@ -50,25 +50,21 @@ import static io.adobe.cloudmanager.PipelineExecutionStepState.Status.*;
 import static io.jenkins.plugins.adobe.cloudmanager.test.TestHelper.*;
 import static org.junit.Assert.*;
 
-import com.google.gson.Gson;
-
 /**
  * Full webhook test with a running pipeline.
  */
 public class FullWebhookIntegrationTest {
 
+  private static final String PROGRAM_ID = "1";
+  private static final String PIPELINE_ID = "2";
+  private static final String EXECUTION_ID = "3";
+  @ClassRule
+  public static BuildWatcher buildWatcher = new BuildWatcher();
+  private static String PIPELINE_STARTED;
   private static String STEP_STARTED;
   private static String STEP_WAITING;
   private static String STEP_ENDED;
   private static String PIPELINE_ENDED;
-
-  private static final String PROGRAM_ID = "1";
-  private static final String PIPELINE_ID = "2";
-  private static final String EXECUTION_ID = "3";
-
-  @ClassRule
-  public static BuildWatcher buildWatcher = new BuildWatcher();
-
   @Rule
   public JenkinsRule rule = new JenkinsRule();
 
@@ -83,10 +79,101 @@ public class FullWebhookIntegrationTest {
 
   @BeforeClass
   public static void beforeClass() throws Exception {
+    PIPELINE_STARTED = IOUtils.resourceToString("events/pipeline-started.json", StandardCharsets.UTF_8, FullWebhookIntegrationTest.class.getClassLoader());
     STEP_STARTED = IOUtils.resourceToString("events/step-started.json", StandardCharsets.UTF_8, FullWebhookIntegrationTest.class.getClassLoader());
     STEP_WAITING = IOUtils.resourceToString("events/step-waiting.json", StandardCharsets.UTF_8, FullWebhookIntegrationTest.class.getClassLoader());
     STEP_ENDED = IOUtils.resourceToString("events/step-ended.json", StandardCharsets.UTF_8, FullWebhookIntegrationTest.class.getClassLoader());
     PIPELINE_ENDED = IOUtils.resourceToString("events/pipeline-ended.json", StandardCharsets.UTF_8, FullWebhookIntegrationTest.class.getClassLoader());
+  }
+
+  private static void sendEvent(JenkinsRule rule, String payload) throws Exception {
+
+    String url = String.format("%s%s/", rule.getURL().toString(), CloudManagerWebHook.URL_NAME);
+    HttpURLConnection con = (HttpURLConnection) new URL(url).openConnection();
+    con.setRequestMethod(HttpMethod.POST);
+    con.setRequestProperty(CloudManagerEvent.SIGNATURE_HEADER, sign(payload));
+    con.setRequestProperty("Content-Type", ContentType.APPLICATION_JSON.getMimeType());
+    con.setDoOutput(true);
+    IOUtils.write(payload, con.getOutputStream(), Charset.defaultCharset());
+    assertEquals(HttpServletResponse.SC_OK, con.getResponseCode());
+  }
+
+  private static String sign(String toSign) throws Exception {
+    Mac mac = Mac.getInstance("HmacSHA256");
+    mac.init(new SecretKeySpec(CLIENT_SECRET.getBytes(StandardCharsets.UTF_8), "HmacSHA256"));
+    return Base64.getEncoder().encodeToString(mac.doFinal(toSign.getBytes(StandardCharsets.UTF_8)));
+  }
+
+  private static void advanceWaiting(JenkinsRule rule, WorkflowRun run, Boolean approve) throws Exception {
+
+    PipelineStepStateExecution execution = (PipelineStepStateExecution) run.getExecution().getCurrentExecutions(false).get().stream().filter(e -> e instanceof PipelineStepStateExecution).findFirst().orElse(null);
+    PipelineWaitingAction action = run.getAction(PipelineWaitingAction.class);
+    String operation = approve ? "proceed" : "cancel";
+    String url = String.format("%s%s%s/%s/%s", rule.getURL(), run.getUrl(), action.getUrlName(), execution.getId(), operation);
+    HttpURLConnection con = (HttpURLConnection) new URL(url).openConnection();
+    con.setRequestMethod(HttpMethod.POST);
+    con.setRequestProperty("Jenkins-Crumb", "test");
+    con.connect();
+    assertEquals(HttpURLConnection.HTTP_OK, con.getResponseCode());
+  }
+
+  @Test
+  public void testStartTrigger() throws Exception {
+
+    setupAdobeIOConfigs(rule.jenkins);
+    setupCredentials(rule.jenkins);
+    new MockUp<CloudManagerApiUtil>() {
+      @Mock
+      public Function<String, Optional<CloudManagerApi>> createApi() {
+        return (name) -> Optional.of(api);
+      }
+    };
+
+    new Expectations() {{
+      pipelineExecution.getProgramId();
+      result = PROGRAM_ID;
+      minTimes = 1;
+      pipelineExecution.getPipelineId();
+      result = PIPELINE_ID;
+      minTimes = 1;
+      pipelineExecution.getId();
+      result = EXECUTION_ID;
+      api.getExecution(withInstanceOf(PipelineExecutionStartEvent.class));
+      result = pipelineExecution;
+    }};
+
+    WorkflowJob job = rule.createProject(WorkflowJob.class, "full");
+    CpsFlowDefinition flow = new CpsFlowDefinition(
+        "pipeline {\n" +
+            "  agent any\n" +
+            "  triggers { acmPipelineStart(aioProject: '" + AIO_PROJECT_NAME + "', program: '1', pipeline: '2') }\n" +
+            "  stages {\n" +
+            "    stage('Started') {\n" +
+            "      steps {\n" +
+            "        echo 'PipelineStartTrigger worked.'\n" +
+            "      }\n" +
+            "    }\n" +
+            "  }\n" +
+            "}",
+        true);
+    job.setDefinition(flow);
+    WorkflowRun run = job.scheduleBuild2(0).waitForStart();
+    rule.waitForCompletion(run);
+    rule.assertBuildStatusSuccess(run);
+
+    sendEvent(rule, PIPELINE_STARTED);
+    while ((run = rule.jenkins.getItemByFullName("full", WorkflowJob.class).getBuildByNumber(2)) == null) {
+      Thread.sleep(1000);
+    }
+    rule.waitForMessage("PipelineStartTrigger worked.", run);
+    rule.waitForCompletion(run);
+    rule.assertBuildStatusSuccess(run);
+    CloudManagerBuildAction action = run.getAction(CloudManagerBuildAction.class);
+    assertNotNull(action);
+    assertEquals(PROGRAM_ID, action.getProgramId());
+    assertEquals(PIPELINE_ID, action.getPipelineId());
+    assertEquals(EXECUTION_ID, action.getExecutionId());
+
   }
 
   @Test
@@ -248,38 +335,6 @@ public class FullWebhookIntegrationTest {
 
     rule.waitForCompletion(run);
     rule.assertBuildStatus(Result.FAILURE, run);
-  }
-
-
-  private static void sendEvent(JenkinsRule rule, String payload) throws Exception {
-
-    String url = String.format("%s%s/", rule.getURL().toString(), CloudManagerWebHook.URL_NAME);
-    HttpURLConnection con = (HttpURLConnection) new URL(url).openConnection();
-    con.setRequestMethod(HttpMethod.POST);
-    con.setRequestProperty(CloudManagerEvent.SIGNATURE_HEADER, sign(payload));
-    con.setRequestProperty("Content-Type", ContentType.APPLICATION_JSON.getMimeType());
-    con.setDoOutput(true);
-    IOUtils.write(payload, con.getOutputStream(), Charset.defaultCharset());
-    assertEquals(HttpServletResponse.SC_OK, con.getResponseCode());
-  }
-
-  private static String sign(String toSign) throws Exception {
-    Mac mac = Mac.getInstance("HmacSHA256");
-    mac.init(new SecretKeySpec(CLIENT_SECRET.getBytes(StandardCharsets.UTF_8), "HmacSHA256"));
-    return Base64.getEncoder().encodeToString(mac.doFinal(toSign.getBytes(StandardCharsets.UTF_8)));
-  }
-
-  private static void advanceWaiting(JenkinsRule rule, WorkflowRun run, Boolean approve) throws Exception {
-
-    PipelineStepStateExecution execution = (PipelineStepStateExecution) run.getExecution().getCurrentExecutions(false).get().stream().filter(e -> e instanceof PipelineStepStateExecution).findFirst().orElse(null);
-    PipelineWaitingAction action = run.getAction(PipelineWaitingAction.class);
-    String operation = approve ? "proceed" : "cancel";
-    String url = String.format("%s%s%s/%s/%s", rule.getURL(), run.getUrl(), action.getUrlName(), execution.getId(), operation);
-    HttpURLConnection con = (HttpURLConnection) new URL(url).openConnection();
-    con.setRequestMethod(HttpMethod.POST);
-    con.setRequestProperty("Jenkins-Crumb", "test");
-    con.connect();
-    assertEquals(HttpURLConnection.HTTP_OK, con.getResponseCode());
   }
 }
 

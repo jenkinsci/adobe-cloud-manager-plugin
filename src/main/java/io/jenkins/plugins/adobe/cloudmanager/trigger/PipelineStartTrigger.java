@@ -8,12 +8,14 @@ import org.apache.commons.lang3.StringUtils;
 
 import hudson.AbortException;
 import hudson.Extension;
+import hudson.model.CauseAction;
 import hudson.model.Item;
 import hudson.model.Job;
 import hudson.triggers.Trigger;
 import hudson.triggers.TriggerDescriptor;
 import hudson.util.ListBoxModel;
 import io.adobe.cloudmanager.CloudManagerApi;
+import io.jenkins.plugins.adobe.cloudmanager.action.CloudManagerBuildAction;
 import io.jenkins.plugins.adobe.cloudmanager.util.CloudManagerApiUtil;
 import io.jenkins.plugins.adobe.cloudmanager.util.DescriptorHelper;
 import jenkins.model.ParameterizedJobMixIn;
@@ -37,7 +39,7 @@ public class PipelineStartTrigger extends Trigger<Job<?, ?>> {
     CloudManagerApi api = createApi(aioProject);
     this.aioProject = aioProject;
     this.programId = getProgramId(api, program);
-    this.pipelineId = getPipelineId(api, program, pipeline);
+    this.pipelineId = getPipelineId(api, programId, pipeline);
   }
 
   /**
@@ -61,7 +63,7 @@ public class PipelineStartTrigger extends Trigger<Job<?, ?>> {
     try {
       return String.valueOf(Integer.parseInt(program));
     } catch (NumberFormatException e) {
-      LOGGER.debug(io.jenkins.plugins.adobe.cloudmanager.builder.Messages.CloudManagerBuilder_debug_lookupProgramId(program));
+      LOGGER.debug(Messages.PipelineStartTrigger_debug_lookupProgramId(program));
       return CloudManagerApiUtil.getProgramId(api, program).orElseThrow(() -> new AbortException(Messages.PipelineStartTrigger_error_missingProgram(program)));
     }
   }
@@ -71,7 +73,7 @@ public class PipelineStartTrigger extends Trigger<Job<?, ?>> {
     try {
       return String.valueOf(Integer.parseInt(pipeline));
     } catch (NumberFormatException e) {
-      LOGGER.debug(io.jenkins.plugins.adobe.cloudmanager.builder.Messages.CloudManagerBuilder_debug_lookupPipelineId(programId));
+      LOGGER.debug(Messages.PipelineStartTrigger_debug_lookupPipelineId(programId));
       return CloudManagerApiUtil.getPipelineId(api, programId, pipeline).orElseThrow(() -> new AbortException(Messages.PipelineStartTrigger_error_missingPipeline(pipeline)));
     }
   }
@@ -98,7 +100,9 @@ public class PipelineStartTrigger extends Trigger<Job<?, ?>> {
     }
 
     LOGGER.debug(Messages.PipelineStartTrigger_debug_startJob(event.getAioEventId()));
-    ((ParameterizedJobMixIn.ParameterizedJob) job).scheduleBuild(0, new CMPipelineStartCause(event.getAioEventId()));
+    CauseAction ca = new CauseAction(new CMPipelineStartCause(event.getAioEventId()));
+    CloudManagerBuildAction buildAction = new CloudManagerBuildAction(event.getAioProject(), event.getProgramId(), event.getPipelineId(), event.getExecutionId());
+    ((ParameterizedJobMixIn.ParameterizedJob) job).scheduleBuild2(0, ca, buildAction);
   }
 
   @Extension

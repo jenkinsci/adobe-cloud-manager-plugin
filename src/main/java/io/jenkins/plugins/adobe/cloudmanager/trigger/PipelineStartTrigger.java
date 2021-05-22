@@ -44,7 +44,8 @@ public class PipelineStartTrigger extends Trigger<Job<?, ?>> {
    * Predicate for stream processing.
    */
   public static Predicate<PipelineStartTrigger> interestedIn(PipelineStartEvent event) {
-    return (trigger) -> StringUtils.equals(trigger.getAioProject(), event.getAioProject()) &&
+    return (trigger) ->
+        StringUtils.equals(trigger.getAioProject(), event.getAioProject()) &&
         StringUtils.equals(trigger.getProgramId(), event.getProgramId()) &&
         StringUtils.equals(trigger.getPipelineId(), event.getPipelineId());
   }

@@ -4,7 +4,7 @@
     "@id": "1",
     "@type": "https://ns.adobe.com/experience/cloudmanager/event/started",
     "xdmEventEnvelope:objectType": "https://ns.adobe.com/experience/cloudmanager/pipeline-execution",
-    "activitystreams:published": "",
+    "activitystreams:published": "2021-05-20T22:45:21.090Z",
     "activitystreams:to": {
       "xdmImsOrg:id": "1234567890@AdobeOrg",
       "@type": "xdmImsOrg"

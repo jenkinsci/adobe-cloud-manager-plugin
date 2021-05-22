@@ -29,15 +29,11 @@ package io.jenkins.plugins.adobe.cloudmanager.step.execution;
 import java.io.IOException;
 import java.util.Objects;
 import java.util.UUID;
-import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
-
-import org.apache.commons.lang.StringUtils;
 
 import hudson.AbortException;
 import hudson.model.Run;
 import hudson.model.TaskListener;
-import hudson.util.Secret;
 import io.adobe.cloudmanager.CloudManagerApi;
 import io.jenkins.plugins.adobe.cloudmanager.action.CloudManagerBuildAction;
 import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOConfig;
@@ -97,11 +93,7 @@ public abstract class AbstractStepExecution extends StepExecution {
    */
   protected void validateData() throws IOException, InterruptedException {
     getAioProject();
-    CloudManagerBuildAction data = getBuildData();
-    // Make sure Build Data is populated - when resuming.
-    if (StringUtils.isBlank(data.getProgramId()) ||
-        StringUtils.isBlank(data.getPipelineId()) ||
-        StringUtils.isBlank(data.getExecutionId())) {
+    if (getBuildData().getCmExecution() == null) {
       throw new AbortException(Messages.AbstractStepExecution_error_missingBuildData());
     }
   }

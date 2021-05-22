@@ -11,7 +11,6 @@ import io.adobe.cloudmanager.Pipeline;
 import io.adobe.cloudmanager.Program;
 import io.jenkins.plugins.adobe.cloudmanager.action.CloudManagerBuildAction;
 import io.jenkins.plugins.adobe.cloudmanager.util.CloudManagerApiUtil;
-import mockit.Expectations;
 import mockit.Mock;
 import mockit.MockUp;
 import mockit.Mocked;
@@ -104,9 +103,9 @@ public class PipelineStartTriggerTest {
     rule.assertBuildStatus(Result.SUCCESS, run);
     CloudManagerBuildAction action = run.getAction(CloudManagerBuildAction.class);
     assertNotNull(action);
-    assertEquals("1", action.getProgramId());
-    assertEquals("2", action.getPipelineId());
-    assertEquals("3", action.getExecutionId());
+    assertEquals("1", action.getCmExecution().getProgramId());
+    assertEquals("2", action.getCmExecution().getPipelineId());
+    assertEquals("3", action.getCmExecution().getExecutionId());
   }
 
   @Test
@@ -156,9 +155,9 @@ public class PipelineStartTriggerTest {
     rule.assertBuildStatus(Result.SUCCESS, run);
     CloudManagerBuildAction action = run.getAction(CloudManagerBuildAction.class);
     assertNotNull(action);
-    assertEquals("1", action.getProgramId());
-    assertEquals("2", action.getPipelineId());
-    assertEquals("3", action.getExecutionId());
+    assertEquals("1", action.getCmExecution().getProgramId());
+    assertEquals("2", action.getCmExecution().getPipelineId());
+    assertEquals("3", action.getCmExecution().getExecutionId());
   }
 
 

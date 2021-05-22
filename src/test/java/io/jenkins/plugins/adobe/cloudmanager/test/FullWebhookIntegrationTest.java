@@ -170,9 +170,9 @@ public class FullWebhookIntegrationTest {
     rule.assertBuildStatusSuccess(run);
     CloudManagerBuildAction action = run.getAction(CloudManagerBuildAction.class);
     assertNotNull(action);
-    assertEquals(PROGRAM_ID, action.getProgramId());
-    assertEquals(PIPELINE_ID, action.getPipelineId());
-    assertEquals(EXECUTION_ID, action.getExecutionId());
+    assertEquals(PROGRAM_ID, action.getCmExecution().getProgramId());
+    assertEquals(PIPELINE_ID, action.getCmExecution().getPipelineId());
+    assertEquals(EXECUTION_ID, action.getCmExecution().getExecutionId());
 
   }
 

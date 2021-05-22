@@ -37,6 +37,7 @@ import io.adobe.cloudmanager.CloudManagerApiException;
 import io.adobe.cloudmanager.Pipeline;
 import io.adobe.cloudmanager.PipelineExecution;
 import io.adobe.cloudmanager.Program;
+import io.jenkins.plugins.adobe.cloudmanager.CloudManagerPipelineExecution;
 import io.jenkins.plugins.adobe.cloudmanager.action.CloudManagerBuildAction;
 import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOProjectConfig;
 import io.jenkins.plugins.adobe.cloudmanager.util.DescriptorHelperTest;
@@ -196,6 +197,6 @@ public class StartPipelineBuilderTest {
     assertTrue(run.getLog().contains(Messages.StartPipelineBuilder_started(executionId, pipelineId)));
     CloudManagerBuildAction action = run.getAction(CloudManagerBuildAction.class);
     assertNotNull(action);
-    assertEquals(new CloudManagerBuildAction(AIO_PROJECT_NAME, programId, pipelineId, executionId), action);
+    assertEquals(new CloudManagerBuildAction(AIO_PROJECT_NAME, new CloudManagerPipelineExecution(programId, pipelineId, executionId)), action);
   }
 }

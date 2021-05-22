@@ -34,7 +34,6 @@ import java.util.Set;
 import java.util.function.Function;
 
 import hudson.util.ListBoxModel;
-import hudson.util.Secret;
 import io.adobe.cloudmanager.CloudManagerApi;
 import io.adobe.cloudmanager.CloudManagerApiException;
 import io.adobe.cloudmanager.Pipeline;
@@ -44,7 +43,6 @@ import io.adobe.cloudmanager.Program;
 import io.adobe.cloudmanager.Variable;
 import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOConfig;
 import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOProjectConfig;
-import io.jenkins.plugins.adobe.cloudmanager.test.TestHelper;
 import mockit.Expectations;
 import mockit.Injectable;
 import mockit.Mock;

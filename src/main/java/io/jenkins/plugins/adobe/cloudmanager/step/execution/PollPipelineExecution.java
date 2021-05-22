@@ -29,14 +29,13 @@ package io.jenkins.plugins.adobe.cloudmanager.step.execution;
 import java.io.IOException;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-import javax.annotation.Nonnull;
 
 import hudson.AbortException;
 import hudson.Util;
 import hudson.model.TaskListener;
-import hudson.util.Secret;
 import io.adobe.cloudmanager.CloudManagerApi;
 import io.adobe.cloudmanager.CloudManagerApiException;
+import io.jenkins.plugins.adobe.cloudmanager.CloudManagerPipelineExecution;
 import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOProjectConfig;
 import io.jenkins.plugins.adobe.cloudmanager.util.CloudManagerApiUtil;
 import jenkins.util.Timer;
@@ -96,7 +95,8 @@ public class PollPipelineExecution extends AbstractStepExecution {
   private boolean checkExecution(String aioProjectName) throws AbortException {
     try {
       CloudManagerApi api = CloudManagerApiUtil.createApi().apply(aioProjectName).orElseThrow(() -> new AbortException(Messages.AbstractStepExecution_error_missingBuildData()));
-      if (api.isExecutionRunning(getBuildData().getProgramId(), getBuildData().getPipelineId(), getBuildData().getExecutionId())) {
+      CloudManagerPipelineExecution execution = getBuildData().getCmExecution();
+      if (api.isExecutionRunning(execution.getProgramId(), execution.getPipelineId(), execution.getExecutionId())) {
         if (!quiet) {
           getContext().get(TaskListener.class).getLogger().println(Messages.PollPipelineExecution_waiting(Util.getTimeSpanString(recurrencePeriod)));
         }

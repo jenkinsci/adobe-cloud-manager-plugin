@@ -28,21 +28,17 @@ package io.jenkins.plugins.adobe.cloudmanager.builder;
 
 import java.io.IOException;
 import java.io.PrintStream;
-import java.util.Collection;
-import java.util.Collections;
 import javax.annotation.Nonnull;
 
-import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.AbortException;
 import hudson.EnvVars;
 import hudson.Extension;
-import hudson.model.AbstractProject;
-import hudson.model.Action;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import io.adobe.cloudmanager.CloudManagerApi;
 import io.adobe.cloudmanager.CloudManagerApiException;
 import io.adobe.cloudmanager.PipelineExecution;
+import io.jenkins.plugins.adobe.cloudmanager.CloudManagerPipelineExecution;
 import io.jenkins.plugins.adobe.cloudmanager.action.CloudManagerBuildAction;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -69,18 +65,12 @@ public class StartPipelineBuilder extends CloudManagerBuilder {
     try {
       PrintStream log = listener.getLogger();
       PipelineExecution execution = api.startExecution(programId, pipelineId);
-      CloudManagerBuildAction data = new CloudManagerBuildAction(getAioProject(), execution.getProgramId(), execution.getPipelineId(), execution.getId());
+      CloudManagerBuildAction data = new CloudManagerBuildAction(getAioProject(), new CloudManagerPipelineExecution(execution.getProgramId(), execution.getPipelineId(), execution.getId()));
       run.addAction(data);
       log.println(Messages.StartPipelineBuilder_started(execution.getId(), pipeline));
     } catch (CloudManagerApiException e) {
       throw new AbortException(Messages.CloudManagerBuilder_error_CloudManagerApiException(e.getLocalizedMessage()));
     }
-  }
-
-  @Override
-  @NonNull
-  public Collection<? extends Action> getProjectActions(AbstractProject<?, ?> project) {
-    return Collections.singletonList(new CloudManagerBuildAction());
   }
 
   // No workspace is necessary to start remote pipeline.

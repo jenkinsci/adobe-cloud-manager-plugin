@@ -29,14 +29,11 @@ package io.jenkins.plugins.adobe.cloudmanager.util;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Optional;
-
-import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
 import org.apache.commons.lang3.StringUtils;
 
 import hudson.util.ListBoxModel;
-import hudson.util.Secret;
 import io.adobe.cloudmanager.CloudManagerApi;
 import io.adobe.cloudmanager.CloudManagerApiException;
 import io.adobe.cloudmanager.Pipeline;
@@ -52,7 +49,6 @@ import org.slf4j.LoggerFactory;
 public class DescriptorHelper {
 
   public static final Logger LOGGER = LoggerFactory.getLogger(DescriptorHelper.class);
-
 
   @Nonnull
   public static ListBoxModel fillAioProjectItems() {

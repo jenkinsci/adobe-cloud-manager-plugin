@@ -1,6 +1,5 @@
 package io.jenkins.plugins.adobe.cloudmanager.trigger;
 
-import java.nio.channels.Pipe;
 import java.util.function.Predicate;
 import javax.annotation.Nonnull;
 
@@ -15,6 +14,7 @@ import hudson.triggers.Trigger;
 import hudson.triggers.TriggerDescriptor;
 import hudson.util.ListBoxModel;
 import io.adobe.cloudmanager.CloudManagerApi;
+import io.jenkins.plugins.adobe.cloudmanager.CloudManagerPipelineExecution;
 import io.jenkins.plugins.adobe.cloudmanager.action.CloudManagerBuildAction;
 import io.jenkins.plugins.adobe.cloudmanager.util.CloudManagerApiUtil;
 import io.jenkins.plugins.adobe.cloudmanager.util.DescriptorHelper;
@@ -101,7 +101,7 @@ public class PipelineStartTrigger extends Trigger<Job<?, ?>> {
 
     LOGGER.debug(Messages.PipelineStartTrigger_debug_startJob(event.getAioEventId()));
     CauseAction ca = new CauseAction(new CMPipelineStartCause(event.getAioEventId()));
-    CloudManagerBuildAction buildAction = new CloudManagerBuildAction(event.getAioProject(), event.getProgramId(), event.getPipelineId(), event.getExecutionId());
+    CloudManagerBuildAction buildAction = new CloudManagerBuildAction(event.getAioProject(), new CloudManagerPipelineExecution(event.getProgramId(), event.getPipelineId(), event.getExecutionId()));
     ((ParameterizedJobMixIn.ParameterizedJob) job).scheduleBuild2(0, ca, buildAction);
   }
 

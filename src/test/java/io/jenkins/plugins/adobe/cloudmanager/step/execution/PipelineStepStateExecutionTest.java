@@ -28,13 +28,13 @@ package io.jenkins.plugins.adobe.cloudmanager.step.execution;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
-import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 
 import hudson.model.TaskListener;
 import io.adobe.cloudmanager.PipelineExecution;
 import io.adobe.cloudmanager.PipelineExecutionStepState;
 import io.adobe.cloudmanager.StepAction;
+import io.jenkins.plugins.adobe.cloudmanager.CloudManagerPipelineExecution;
 import io.jenkins.plugins.adobe.cloudmanager.action.CloudManagerBuildAction;
 import mockit.Expectations;
 import mockit.Injectable;
@@ -44,16 +44,16 @@ import mockit.Mocked;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.junit.Before;
 import org.junit.Test;
+import static io.jenkins.plugins.adobe.cloudmanager.test.TestHelper.*;
 import static org.junit.Assert.*;
 
 public class PipelineStepStateExecutionTest {
 
-  private static final String wrong = "Wrong";
   private static final String right = "Right";
 
   private HashSet<StepAction> actions = new HashSet<>();
 
-  private CloudManagerBuildAction data = new CloudManagerBuildAction();
+  private CloudManagerBuildAction data;
 
   @Injectable
   private StepContext context;
@@ -75,11 +75,7 @@ public class PipelineStepStateExecutionTest {
         return data;
       }
     };
-
-    data.setProgramId(right);
-    data.setPipelineId(right);
-    data.setExecutionId(right);
-
+    data = new CloudManagerBuildAction(AIO_PROJECT_NAME, new CloudManagerPipelineExecution(right, right, right));
     actions.add(StepAction.build);
     actions.add(StepAction.deploy);
     actions.add(StepAction.codeQuality);

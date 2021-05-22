@@ -35,8 +35,6 @@ import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import hudson.util.ListBoxModel;
 import io.adobe.cloudmanager.CloudManagerApi;
-import io.adobe.cloudmanager.CloudManagerApiException;
-import io.adobe.cloudmanager.Pipeline;
 import io.jenkins.plugins.adobe.cloudmanager.util.CloudManagerApiUtil;
 import io.jenkins.plugins.adobe.cloudmanager.util.DescriptorHelper;
 import jenkins.tasks.SimpleBuildStep;

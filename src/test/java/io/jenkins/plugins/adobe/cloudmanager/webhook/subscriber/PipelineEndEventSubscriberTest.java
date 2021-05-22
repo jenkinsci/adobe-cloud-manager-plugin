@@ -43,6 +43,7 @@ import io.adobe.cloudmanager.CloudManagerApi;
 import io.adobe.cloudmanager.PipelineExecution;
 import io.adobe.cloudmanager.event.CloudManagerEvent;
 import io.adobe.cloudmanager.event.PipelineExecutionEndEvent;
+import io.jenkins.plugins.adobe.cloudmanager.CloudManagerPipelineExecution;
 import io.jenkins.plugins.adobe.cloudmanager.action.CloudManagerBuildAction;
 import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOConfig;
 import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOProjectConfig;
@@ -126,7 +127,7 @@ public class PipelineEndEventSubscriberTest {
     job.setDefinition(flow);
     WorkflowRun run = job.scheduleBuild2(0).waitForStart();
     SemaphoreStep.waitForStart("before/1", run);
-    CloudManagerBuildAction action = new CloudManagerBuildAction(AIO_PROJECT_NAME, "1", "1", "1");
+    CloudManagerBuildAction action = new CloudManagerBuildAction(AIO_PROJECT_NAME, new CloudManagerPipelineExecution("1", "1", "1"));
     run.addAction(action);
     SemaphoreStep.success("before/1", true);
     rule.waitForMessage(MESSAGE, run);

@@ -28,8 +28,8 @@ package io.jenkins.plugins.adobe.cloudmanager.step.execution;
 
 import hudson.AbortException;
 import hudson.model.Run;
-import hudson.util.Secret;
 import io.adobe.cloudmanager.CloudManagerApi;
+import io.jenkins.plugins.adobe.cloudmanager.CloudManagerPipelineExecution;
 import io.jenkins.plugins.adobe.cloudmanager.action.CloudManagerBuildAction;
 import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOConfig;
 import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOProjectConfig;
@@ -59,6 +59,9 @@ public class AbstractStepExecutionTest {
 
   @Mocked
   private CloudManagerBuildAction data;
+
+  @Mocked
+  private CloudManagerPipelineExecution cmExecution;
 
   @Mocked
   private CloudManagerApi api;
@@ -94,34 +97,12 @@ public class AbstractStepExecutionTest {
   }
 
   @Test
-  public void validateMissingProgramId() throws Exception {
+  public void validateMissingCMExecution() throws Exception {
     new Expectations() {{
       data.getAioProjectName();
       result = found;
-    }};
-    assertThrows(AbortException.class, () -> tested.validateData());
-  }
-
-  @Test
-  public void validateMissingPipelineId() throws Exception {
-    new Expectations() {{
-      data.getAioProjectName();
-      result = found;
-      data.getProgramId();
-      result = "Program Id";
-    }};
-    assertThrows(AbortException.class, () -> tested.validateData());
-  }
-
-  @Test
-  public void validateMissingExecutionId() throws Exception {
-    new Expectations() {{
-      data.getAioProjectName();
-      result = found;
-      data.getProgramId();
-      result = "Program Id";
-      data.getPipelineId();
-      result = "Pipeline Id";
+      data.getCmExecution();
+      result = null;
     }};
     assertThrows(AbortException.class, () -> tested.validateData());
   }
@@ -131,12 +112,8 @@ public class AbstractStepExecutionTest {
     new Expectations() {{
       data.getAioProjectName();
       result = found;
-      data.getProgramId();
-      result = "Program Id";
-      data.getPipelineId();
-      result = "Pipeline Id";
-      data.getExecutionId();
-      result = "Execution Id";
+      data.getCmExecution();
+      result = cmExecution;
     }};
     tested.validateData();
   }

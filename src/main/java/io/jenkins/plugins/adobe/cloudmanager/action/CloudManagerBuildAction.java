@@ -26,7 +26,6 @@ package io.jenkins.plugins.adobe.cloudmanager.action;
  * #L%
  */
 
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,7 +33,6 @@ import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang3.math.NumberUtils;
@@ -43,15 +41,17 @@ import org.apache.http.entity.ContentType;
 import hudson.model.Run;
 import io.adobe.cloudmanager.CloudManagerApi;
 import io.adobe.cloudmanager.CloudManagerApiException;
+import io.adobe.cloudmanager.PipelineExecutionStepState;
+import io.adobe.cloudmanager.StepAction;
+import io.jenkins.plugins.adobe.cloudmanager.CloudManagerPipelineExecution;
 import io.jenkins.plugins.adobe.cloudmanager.util.CloudManagerApiUtil;
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Value;
 import org.jenkinsci.plugins.workflow.actions.PersistentAction;
 import org.kohsuke.stapler.HttpResponse;
 import org.kohsuke.stapler.HttpResponses;
-import org.kohsuke.stapler.InjectedParameter;
 import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.export.ExportedBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,7 +59,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Cloud Manager build data used for taking actions.
  */
-@Data
+@Value
 @ExportedBean(defaultVisibility = 1500)
 public class CloudManagerBuildAction implements PersistentAction, Serializable {
 
@@ -68,22 +68,11 @@ public class CloudManagerBuildAction implements PersistentAction, Serializable {
 
   private static final String STEP_PARAM = "step";
 
-  private String aioProjectName;
-  private String programId;
-  private String pipelineId;
-  private String executionId;
+  String aioProjectName;
+  CloudManagerPipelineExecution cmExecution;
 
-  private List<PipelineStep> steps = new CopyOnWriteArrayList<>();
-
-  public CloudManagerBuildAction() {
-  }
-
-  public CloudManagerBuildAction(String aioProjectName, String programId, String pipelineId, String executionId) {
-    this.aioProjectName = aioProjectName;
-    this.programId = programId;
-    this.pipelineId = pipelineId;
-    this.executionId = executionId;
-  }
+  @EqualsAndHashCode.Exclude
+  List<PipelineStep> steps = new CopyOnWriteArrayList<>();
 
   @Override
   public String getDisplayName() {
@@ -97,7 +86,7 @@ public class CloudManagerBuildAction implements PersistentAction, Serializable {
 
   @Override
   public String getUrlName() {
-    return String.format("adobe-cloud-manager-%s-%s-%s", programId, pipelineId, executionId);
+    return String.format("adobe-cloud-manager-%s-%s-%s", cmExecution.getProgramId(), cmExecution.getPipelineId(), cmExecution.getExecutionId());
   }
 
   @CheckForNull
@@ -135,7 +124,7 @@ public class CloudManagerBuildAction implements PersistentAction, Serializable {
       return (request, response, node) -> {
         response.setContentType(ContentType.APPLICATION_OCTET_STREAM.getMimeType());
         try {
-          api.get().downloadExecutionStepLog(programId, pipelineId, executionId, step.getAction().name(), response.getOutputStream());
+          api.get().downloadExecutionStepLog(cmExecution.getProgramId(), cmExecution.getPipelineId(), cmExecution.getExecutionId(), step.getAction().name(), response.getOutputStream());
         } catch (CloudManagerApiException e) {
           LOGGER.error(Messages.CloudManagerBuildAction_error_downloadLogs(e.getLocalizedMessage()));
         }
@@ -143,5 +132,20 @@ public class CloudManagerBuildAction implements PersistentAction, Serializable {
     } else {
       return HttpResponses.error(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, Messages.CloudManagerBuildAction_error_downloadLogs_creatApi());
     }
+  }
+
+  /**
+   * Represents a step which a Cloud Manager Pipeline execution reached.
+   *
+   * Used in {@link CloudManagerBuildAction} for tracking state and linking logs.
+   */
+  @Value
+  public static class PipelineStep implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
+    StepAction action;
+    PipelineExecutionStepState.Status status;
+    boolean hasLogs;
   }
 }

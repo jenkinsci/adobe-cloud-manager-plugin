@@ -29,16 +29,11 @@ package io.jenkins.plugins.adobe.cloudmanager.webhook.subscriber;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
 import hudson.ExtensionList;
 import hudson.ExtensionPoint;
-import hudson.util.Secret;
-import io.adobe.cloudmanager.CloudManagerApi;
 import io.adobe.cloudmanager.event.CloudManagerEvent;
-import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOConfig;
-import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOProjectConfig;
 import jenkins.model.Jenkins;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,8 +42,6 @@ import org.slf4j.LoggerFactory;
  * Abstract subscriber for Cloud Manager events. Provides standard logic for looking up concrete extensions.
  */
 public abstract class CloudManagerEventSubscriber implements ExtensionPoint {
-
-  private static final Logger LOGGER = LoggerFactory.getLogger(CloudManagerEventSubscriber.class);
 
   /**
    * Lists of all Cloud Manager Event Subscribers
@@ -74,8 +67,6 @@ public abstract class CloudManagerEventSubscriber implements ExtensionPoint {
       return null;
     };
   }
-
-
 
   /**
    * List of event types that this subscriber can process.

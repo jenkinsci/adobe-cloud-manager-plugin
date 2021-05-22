@@ -1,7 +1,6 @@
 package io.jenkins.plugins.adobe.cloudmanager.util;
 
 import java.util.Collections;
-import java.util.function.Predicate;
 
 import hudson.util.Secret;
 import io.adobe.cloudmanager.CloudManagerApi;

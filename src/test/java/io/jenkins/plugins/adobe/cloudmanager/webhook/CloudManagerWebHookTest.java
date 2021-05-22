@@ -54,7 +54,6 @@ import static io.jenkins.plugins.adobe.cloudmanager.test.TestHelper.*;
 import static org.junit.Assert.*;
 
 public class CloudManagerWebHookTest {
-  public static final String PAYLOAD = "Payload";
 
   @Rule
   public JenkinsRule rule = new JenkinsRule();

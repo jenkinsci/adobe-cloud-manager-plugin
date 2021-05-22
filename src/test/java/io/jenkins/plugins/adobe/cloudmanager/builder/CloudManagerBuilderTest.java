@@ -26,29 +26,18 @@ package io.jenkins.plugins.adobe.cloudmanager.builder;
  * #L%
  */
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
-import org.apache.commons.lang.StringUtils;
-
 import hudson.AbortException;
 import io.adobe.cloudmanager.CloudManagerApi;
-import io.adobe.cloudmanager.CloudManagerApiException;
-import io.adobe.cloudmanager.Pipeline;
-import io.adobe.cloudmanager.Program;
 import io.jenkins.plugins.adobe.cloudmanager.util.CloudManagerApiUtil;
-import io.jenkins.plugins.adobe.cloudmanager.util.DescriptorHelperTest;
-import mockit.Expectations;
 import mockit.Injectable;
 import mockit.Mock;
 import mockit.MockUp;
 import mockit.Mocked;
 import mockit.Tested;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import static io.jenkins.plugins.adobe.cloudmanager.test.TestHelper.*;
 import static org.junit.Assert.*;

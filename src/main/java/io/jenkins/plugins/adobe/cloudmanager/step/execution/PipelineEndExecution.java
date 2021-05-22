@@ -29,12 +29,9 @@ package io.jenkins.plugins.adobe.cloudmanager.step.execution;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
-
-import org.apache.commons.lang3.StringUtils;
 
 import hudson.model.Result;
 import hudson.model.TaskListener;
@@ -120,9 +117,7 @@ public class PipelineEndExecution extends AbstractStepExecution {
    * indicates if this executions is associated with the remote Cloud Manager pipeline.
    */
   public boolean isApplicable(PipelineExecution pe) throws IOException, InterruptedException {
-    return StringUtils.equals(getBuildData().getProgramId(), pe.getProgramId()) &&
-        StringUtils.equals(getBuildData().getPipelineId(), pe.getPipelineId()) &&
-        StringUtils.equals(getBuildData().getExecutionId(), pe.getId());
+    return getBuildData().getCmExecution().equalTo(pe);
   }
 
   // Event handling

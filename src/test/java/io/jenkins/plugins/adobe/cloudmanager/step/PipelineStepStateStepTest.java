@@ -42,8 +42,8 @@ import io.adobe.cloudmanager.CloudManagerApiException;
 import io.adobe.cloudmanager.PipelineExecution;
 import io.adobe.cloudmanager.PipelineExecutionStepState;
 import io.adobe.cloudmanager.StepAction;
+import io.jenkins.plugins.adobe.cloudmanager.CloudManagerPipelineExecution;
 import io.jenkins.plugins.adobe.cloudmanager.action.CloudManagerBuildAction;
-import io.jenkins.plugins.adobe.cloudmanager.action.PipelineStep;
 import io.jenkins.plugins.adobe.cloudmanager.action.PipelineWaitingAction;
 import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOConfig;
 import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOProjectConfig;
@@ -113,7 +113,7 @@ public class PipelineStepStateStepTest {
     job.setDefinition(flow);
     WorkflowRun run = job.scheduleBuild2(0).waitForStart();
     SemaphoreStep.waitForStart("before/1", run);
-    run.addAction(new CloudManagerBuildAction(AIO_PROJECT_NAME, "1", "1", "1"));
+    run.addAction(new CloudManagerBuildAction(AIO_PROJECT_NAME, new CloudManagerPipelineExecution("1", "1", "1")));
     SemaphoreStep.success("before/1", true);
     rule.waitForMessage(Messages.PipelineStepStateExecution_waiting(), run);
     return run;
@@ -160,7 +160,7 @@ public class PipelineStepStateStepTest {
       assertTrue(run.getLog().contains(Messages.PipelineStepStateExecution_occurred("ExecutionId", "build", "RUNNING")));
       CloudManagerBuildAction data = run.getAction(CloudManagerBuildAction.class);
       assertEquals(1, data.getSteps().size());
-      PipelineStep expected = new PipelineStep(StepAction.valueOf("build"), PipelineExecutionStepState.Status.valueOf("RUNNING"), false);
+      CloudManagerBuildAction.PipelineStep expected = new CloudManagerBuildAction.PipelineStep(StepAction.valueOf("build"), PipelineExecutionStepState.Status.valueOf("RUNNING"), false);
       assertEquals(expected, data.getSteps().get(0));
       assertFalse(data.getSteps().get(0).isHasLogs());
     });
@@ -190,7 +190,7 @@ public class PipelineStepStateStepTest {
       assertTrue(run.getLog().contains(Messages.PipelineStepStateExecution_occurred("ExecutionId", "build", "FINISHED")));
       CloudManagerBuildAction data = run.getAction(CloudManagerBuildAction.class);
       assertEquals(1, data.getSteps().size());
-      PipelineStep expected = new PipelineStep(StepAction.valueOf("build"), PipelineExecutionStepState.Status.valueOf("FINISHED"), true);
+      CloudManagerBuildAction.PipelineStep expected = new CloudManagerBuildAction.PipelineStep(StepAction.valueOf("build"), PipelineExecutionStepState.Status.valueOf("FINISHED"), true);
       assertEquals(expected, data.getSteps().get(0));
       assertTrue(data.getSteps().get(0).isHasLogs());
     });
@@ -239,7 +239,7 @@ public class PipelineStepStateStepTest {
       job.setDefinition(flow);
       WorkflowRun run = job.scheduleBuild2(0).waitForStart();
       SemaphoreStep.waitForStart("before/1", run);
-      CloudManagerBuildAction action = new CloudManagerBuildAction(AIO_PROJECT_NAME, "1", "1", "1");
+      CloudManagerBuildAction action = new CloudManagerBuildAction(AIO_PROJECT_NAME, new CloudManagerPipelineExecution("1", "1", "1"));
       run.addAction(action);
       SemaphoreStep.success("before/1", true);
       rule.waitForMessage(Messages.PipelineStepStateExecution_waiting(), run);
@@ -705,7 +705,7 @@ public class PipelineStepStateStepTest {
       job.setDefinition(flow);
       WorkflowRun run = job.scheduleBuild2(0).waitForStart();
       SemaphoreStep.waitForStart("before/1", run);
-      CloudManagerBuildAction action = new CloudManagerBuildAction(AIO_PROJECT_NAME, "1", "1", "1");
+      CloudManagerBuildAction action = new CloudManagerBuildAction(AIO_PROJECT_NAME, new CloudManagerPipelineExecution("1", "1", "1"));
       run.addAction(action);
       SemaphoreStep.success("before/1", true);
       rule.waitForMessage(Messages.PipelineStepStateExecution_waiting(), run);
@@ -765,7 +765,7 @@ public class PipelineStepStateStepTest {
       job.setDefinition(flow);
       WorkflowRun run = job.scheduleBuild2(0).waitForStart();
       SemaphoreStep.waitForStart("before/1", run);
-      run.addAction(new CloudManagerBuildAction(AIO_PROJECT_NAME, "1", "1", "1"));
+      run.addAction(new CloudManagerBuildAction(AIO_PROJECT_NAME, new CloudManagerPipelineExecution("1", "1", "1")));
       SemaphoreStep.success("before/1", true);
       rule.waitForMessage(Messages.PipelineStepStateExecution_waiting(), run);
       PipelineStepStateExecution execution = (PipelineStepStateExecution) run.getExecution().getCurrentExecutions(false).get().stream().filter(e -> e instanceof PipelineStepStateExecution).findFirst().orElse(null);

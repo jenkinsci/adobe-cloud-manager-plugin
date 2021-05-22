@@ -37,8 +37,6 @@ import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import javax.servlet.ServletException;
 
-import org.apache.commons.lang3.StringUtils;
-
 import hudson.AbortException;
 import hudson.console.HyperlinkNote;
 import hudson.console.ModelHyperlinkNote;
@@ -52,8 +50,8 @@ import io.adobe.cloudmanager.CloudManagerApiException;
 import io.adobe.cloudmanager.PipelineExecution;
 import io.adobe.cloudmanager.PipelineExecutionStepState;
 import io.adobe.cloudmanager.StepAction;
+import io.jenkins.plugins.adobe.cloudmanager.CloudManagerPipelineExecution;
 import io.jenkins.plugins.adobe.cloudmanager.action.CloudManagerBuildAction;
-import io.jenkins.plugins.adobe.cloudmanager.action.PipelineStep;
 import io.jenkins.plugins.adobe.cloudmanager.action.PipelineStepDecisionAction;
 import io.jenkins.plugins.adobe.cloudmanager.action.PipelineWaitingAction;
 import org.jenkinsci.plugins.workflow.graph.FlowNode;
@@ -68,7 +66,6 @@ import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import static io.adobe.cloudmanager.PipelineExecutionStepState.Status.*;
 
 /**
@@ -140,9 +137,7 @@ public class PipelineStepStateExecution extends AbstractStepExecution {
    * Determines if this execution will process the remote Pipeline Execution.
    */
   public boolean isApplicable(PipelineExecution pe) throws IOException, InterruptedException {
-    return StringUtils.equals(getBuildData().getProgramId(), pe.getProgramId()) &&
-        StringUtils.equals(getBuildData().getPipelineId(), pe.getPipelineId()) &&
-        StringUtils.equals(getBuildData().getExecutionId(), pe.getId());
+    return getBuildData().getCmExecution().equalTo(pe);
   }
 
   // Event handling
@@ -153,7 +148,7 @@ public class PipelineStepStateExecution extends AbstractStepExecution {
   public void occurred(@Nonnull PipelineExecution pe, @Nonnull PipelineExecutionStepState state) throws IOException, InterruptedException {
     StepAction action = StepAction.valueOf(state.getAction());
     PipelineExecutionStepState.Status status = state.getStatusState();
-    getBuildData().addStep(new PipelineStep(action, status, state.hasLogs() && ENDED_STATUS.contains(status)));
+    getBuildData().addStep(new CloudManagerBuildAction.PipelineStep(action, status, state.hasLogs() && ENDED_STATUS.contains(status)));
     getTaskListener().getLogger().println(Messages.PipelineStepStateExecution_occurred(pe.getId(), action, status));
     doFinish();
     getContext().onSuccess(null);
@@ -215,8 +210,8 @@ public class PipelineStepStateExecution extends AbstractStepExecution {
   public HttpResponse doCancel() throws IOException, InterruptedException {
     try {
       preCancelCheck();
-      CloudManagerBuildAction buildData = getRun().getAction(CloudManagerBuildAction.class);
-      getApi().cancelExecution(buildData.getProgramId(), buildData.getPipelineId(), buildData.getExecutionId());
+      CloudManagerPipelineExecution cmExecution = getRun().getAction(CloudManagerBuildAction.class).getCmExecution();
+      getApi().cancelExecution(cmExecution.getProgramId(), cmExecution.getPipelineId(), cmExecution.getExecutionId());
       FlowInterruptedException e = new FlowInterruptedException(Result.ABORTED, new Cancellation(User.current()));
       doFinish();
       getContext().onFailure(e);
@@ -253,8 +248,8 @@ public class PipelineStepStateExecution extends AbstractStepExecution {
 
     try {
       preApproveCheck();
-      CloudManagerBuildAction buildData = getRun().getAction(CloudManagerBuildAction.class);
-      getApi().advanceExecution(buildData.getProgramId(), buildData.getPipelineId(), buildData.getExecutionId());
+      CloudManagerPipelineExecution cmExecution = getRun().getAction(CloudManagerBuildAction.class).getCmExecution();
+      getApi().advanceExecution(cmExecution.getProgramId(), cmExecution.getPipelineId(), cmExecution.getExecutionId());
       doFinish();
       getContext().onSuccess(null);
     } catch (AbortException | CloudManagerApiException e) {

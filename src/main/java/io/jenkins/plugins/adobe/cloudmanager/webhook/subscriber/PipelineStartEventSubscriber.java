@@ -152,5 +152,4 @@ public class PipelineStartEventSubscriber extends CloudManagerEventSubscriber {
         startEvent.getEvent().getActivitystreamspublished()
     );
   }
-
 }

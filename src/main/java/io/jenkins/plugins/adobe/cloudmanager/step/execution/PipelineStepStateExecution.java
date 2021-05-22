@@ -12,10 +12,10 @@ package io.jenkins.plugins.adobe.cloudmanager.step.execution;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -125,7 +125,7 @@ public class PipelineStepStateExecution extends AbstractStepExecution {
       return actions.contains(action);
     } catch (IllegalArgumentException e) {
       try {
-          getTaskListener().getLogger().println(Messages.PipelineStepStateExecution_unknownStepAction(stepState.getAction()));
+        getTaskListener().getLogger().println(Messages.PipelineStepStateExecution_unknownStepAction(stepState.getAction()));
       } catch (IOException | InterruptedException ex) {
         // Nothing we can do, can't even log it.
       }
@@ -146,33 +146,48 @@ public class PipelineStepStateExecution extends AbstractStepExecution {
    * Process an <i>occurred</i> event. Essentially, an event that does not require user input, but that should generate some informational message.
    */
   public void occurred(@Nonnull PipelineExecution pe, @Nonnull PipelineExecutionStepState state) throws IOException, InterruptedException {
-    StepAction action = StepAction.valueOf(state.getAction());
-    PipelineExecutionStepState.Status status = state.getStatusState();
-    getBuildData().addStep(new CloudManagerBuildAction.PipelineStep(action, status, state.hasLogs() && ENDED_STATUS.contains(status)));
-    getTaskListener().getLogger().println(Messages.PipelineStepStateExecution_occurred(pe.getId(), action, status));
-    doFinish();
-    getContext().onSuccess(null);
+    try {
+      logStepAction(pe, state);
+      doFinish();
+      getContext().onSuccess(null);
+    } catch (IllegalArgumentException e) {
+      getTaskListener().getLogger().println(Messages.PipelineStepStateExecution_unknownStepAction(state.getAction()));
+    }
   }
 
   /**
    * Process an <i>waiting</i> event. Waiting events pause this step/pipeline/run until a user action is taken.
    */
   public void waiting(@Nonnull PipelineExecution pe, @Nonnull PipelineExecutionStepState state) throws IOException, InterruptedException, TimeoutException {
-    String action = state.getAction();
-    getTaskListener().getLogger().println(Messages.PipelineStepStateExecution_occurred(pe.getId(), action, state.getStatusState()));
     try {
-      reason = StepAction.valueOf(action);
+      reason = logStepAction(pe, state);
+      ;
       if (WAITING_ACTIONS.contains(reason)) {
         startWaiting();
       } else {
-        getTaskListener().getLogger().println(Messages.PipelineStepStateExecution_unknownWaitingAction(action));
-        doFinish();
-        getContext().onFailure(new IllegalArgumentException(Messages.PipelineStepStateExecution_unknownWaitingAction(action)));
+        getTaskListener().getLogger().println(Messages.PipelineStepStateExecution_unknownWaitingAction(reason));
       }
     } catch (IllegalArgumentException e) {
-      getTaskListener().getLogger().println(Messages.PipelineStepStateExecution_unknownStepAction(action));
-      doFinish();
-      getContext().onFailure(e);
+      getTaskListener().getLogger().println(Messages.PipelineStepStateExecution_unknownStepAction(state.getAction()));
+    }
+  }
+
+  @Nonnull
+  private StepAction logStepAction(@Nonnull PipelineExecution pe, @Nonnull PipelineExecutionStepState state) throws IOException, InterruptedException, IllegalArgumentException {
+    StepAction action = StepAction.valueOf(state.getAction());
+    PipelineExecutionStepState.Status status = state.getStatusState();
+    getBuildData().addStep(new CloudManagerBuildAction.PipelineStep(action, status, isHasLogs(state, status)));
+    getTaskListener().getLogger().println(Messages.PipelineStepStateExecution_occurred(pe.getId(), action, state.getStatusState()));
+    return action;
+  }
+
+  private boolean isHasLogs(@Nonnull PipelineExecutionStepState state, PipelineExecutionStepState.Status status) {
+    if (!state.hasLogs()) {
+        return false;
+    } else if (ENDED_STATUS.contains(status)) {
+      return true;
+    } else {
+      return status == WAITING && StepAction.codeQuality == StepAction.valueOf(state.getAction());
     }
   }
 
@@ -184,6 +199,7 @@ public class PipelineStepStateExecution extends AbstractStepExecution {
   }
 
   // User/UI/REST Interaction
+
   /**
    * Form Submission
    */
@@ -205,7 +221,7 @@ public class PipelineStepStateExecution extends AbstractStepExecution {
 
   /**
    * REST Submission
-  */
+   */
   @RequirePOST
   public HttpResponse doCancel() throws IOException, InterruptedException {
     try {
@@ -225,7 +241,7 @@ public class PipelineStepStateExecution extends AbstractStepExecution {
   /**
    * Used by wrapping block steps to quietly end this step without changing the build status.
    * <p>
-   *   Primarily intended to be used by {@link io.jenkins.plugins.adobe.cloudmanager.step.PipelineEndStep}.
+   * Primarily intended to be used by {@link io.jenkins.plugins.adobe.cloudmanager.step.PipelineEndStep}.
    * </p>
    */
   @Restricted(NoExternalUse.class)

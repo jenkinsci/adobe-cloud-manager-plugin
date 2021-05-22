@@ -460,52 +460,62 @@ public class PipelineStepStateStepTest {
   }
 
   @Test
-  public void waitingFailsOnUnknownStepAction() {
+  public void waitingIgnoresUnknownStepAction() {
     final String test = "failsWaitingOnUnknownStepAction";
     story.then(rule -> {
       new Expectations() {{
         pipelineExecution.getId();
         result = "ExecutionId";
+        times = 2;
         stepState.getAction();
-        result = "Unknown";
+        returns("Unknown", "Unknown", StepAction.deploy.name());
         stepState.getStatusState();
-        result = PipelineExecutionStepState.Status.WAITING;
+        returns(PipelineExecutionStepState.Status.WAITING, PipelineExecutionStepState.Status.RUNNING);
       }};
 
       WorkflowRun run = setupRun(rule, test);
       PipelineStepStateExecution execution = (PipelineStepStateExecution) run.getExecution().getCurrentExecutions(false).get().stream().filter(e -> e instanceof PipelineStepStateExecution).findFirst().orElse(null);
       execution.waiting(pipelineExecution, stepState);
+      rule.waitForMessage(Messages.PipelineStepStateExecution_unknownStepAction("Unknown"), run);
+
+      execution.occurred(pipelineExecution, stepState);
       rule.waitForCompletion(run);
       List<PauseAction> pauses = new ArrayList<>();
       for (FlowNode n : new FlowGraphWalker(run.getExecution())) {
         pauses.addAll(PauseAction.getPauseActions(n));
       }
       assertEquals(0, pauses.size());
+      assertTrue(run.getLog().contains(Messages.PipelineStepStateExecution_waiting()));
       assertFalse(run.getLog().contains(Messages.PipelineStepStateExecution_warn_endPause()));
       assertFalse(run.getLog().contains(Messages.PipelineStepStateExecution_warn_actionRemoval()));
       String xml = FileUtils.readFileToString(new File(run.getRootDir(), "build.xml"), Charset.defaultCharset());
       assertFalse(xml.contains(PipelineStepStateExecution.class.getName()));
-      rule.assertBuildStatus(Result.FAILURE, run);
-      assertTrue(run.getLog().contains(Messages.PipelineStepStateExecution_unknownStepAction("Unknown")));
+      rule.assertBuildStatusSuccess(run);
     });
   }
 
   @Test
-  public void waitingFailsOnNotWaitingStepAction() {
+  public void waitingIgnoresNotWaitingStepAction() {
     final String test = "failsWaitingOnNotWaitingStepAction";
     story.then(rule -> {
       new Expectations() {{
         pipelineExecution.getId();
         result = "ExecutionId";
+        times = 2;
         stepState.getAction();
-        result = StepAction.build.name();
+        returns(StepAction.build.name(), StepAction.deploy.name());
         stepState.getStatusState();
-        result = PipelineExecutionStepState.Status.WAITING;
+        returns(PipelineExecutionStepState.Status.WAITING, PipelineExecutionStepState.Status.RUNNING);
       }};
 
       WorkflowRun run = setupRun(rule, test);
       PipelineStepStateExecution execution = (PipelineStepStateExecution) run.getExecution().getCurrentExecutions(false).get().stream().filter(e -> e instanceof PipelineStepStateExecution).findFirst().orElse(null);
       execution.waiting(pipelineExecution, stepState);
+
+      rule.waitForMessage(Messages.PipelineStepStateExecution_unknownWaitingAction("build"), run);
+
+      execution.occurred(pipelineExecution, stepState);
+
       rule.waitForCompletion(run);
       List<PauseAction> pauses = new ArrayList<>();
       for (FlowNode n : new FlowGraphWalker(run.getExecution())) {
@@ -516,8 +526,8 @@ public class PipelineStepStateStepTest {
       assertFalse(run.getLog().contains(Messages.PipelineStepStateExecution_warn_actionRemoval()));
       String xml = FileUtils.readFileToString(new File(run.getRootDir(), "build.xml"), Charset.defaultCharset());
       assertFalse(xml.contains(PipelineStepStateExecution.class.getName()));
-      rule.assertBuildStatus(Result.FAILURE, run);
-      assertTrue(run.getLog().contains(Messages.PipelineStepStateExecution_unknownWaitingAction("build")));
+      rule.assertBuildStatusSuccess(run);
+
     });
   }
 
@@ -529,7 +539,6 @@ public class PipelineStepStateStepTest {
         pipelineExecution.getId();
         result = "ExecutionId";
         times = 2;
-
         stepState.getAction();
         returns(StepAction.codeQuality.name(), StepAction.deploy.name());
         stepState.getStatusState();

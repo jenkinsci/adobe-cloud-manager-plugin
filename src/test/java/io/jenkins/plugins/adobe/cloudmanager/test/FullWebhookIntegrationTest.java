@@ -212,8 +212,7 @@ public class FullWebhookIntegrationTest {
       pipelineExecutionStepState.getAction();
       returns("codeQuality", "codeQuality", "codeQuality");
       pipelineExecutionStepState.getStatusState();
-      returns(RUNNING, WAITING, FINISHED);
-
+      returns(RUNNING, RUNNING, WAITING, WAITING, FINISHED, FINISHED);
     }};
 
     WorkflowJob job = rule.createProject(WorkflowJob.class, "full");
@@ -294,8 +293,7 @@ public class FullWebhookIntegrationTest {
       pipelineExecutionStepState.getAction();
       returns("codeQuality", "codeQuality", "codeQuality");
       pipelineExecutionStepState.getStatusState();
-      returns(RUNNING, WAITING, FINISHED);
-
+      returns(RUNNING, RUNNING, WAITING, WAITING, FINISHED, FINISHED);
     }};
 
     WorkflowJob job = rule.createProject(WorkflowJob.class, "full");

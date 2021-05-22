@@ -19,6 +19,7 @@ import io.jenkins.plugins.adobe.cloudmanager.action.CloudManagerBuildAction;
 import io.jenkins.plugins.adobe.cloudmanager.util.CloudManagerApiUtil;
 import io.jenkins.plugins.adobe.cloudmanager.util.DescriptorHelper;
 import jenkins.model.ParameterizedJobMixIn;
+import lombok.Getter;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
@@ -29,17 +30,20 @@ public class PipelineStartTrigger extends Trigger<Job<?, ?>> {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(PipelineStartTrigger.class);
 
+  @Getter
   private final String aioProject;
-  private final String programId;
-  private final String pipelineId;
+  @Getter
+  private final String program;
+  @Getter
+  private final String pipeline;
 
   @DataBoundConstructor
   public PipelineStartTrigger(String aioProject, String program, String pipeline) throws AbortException {
 
     CloudManagerApi api = createApi(aioProject);
     this.aioProject = aioProject;
-    this.programId = getProgramId(api, program);
-    this.pipelineId = getPipelineId(api, programId, pipeline);
+    this.program = getProgramId(api, program);
+    this.pipeline = getPipelineId(api, this.program, pipeline);
   }
 
   /**
@@ -83,11 +87,11 @@ public class PipelineStartTrigger extends Trigger<Job<?, ?>> {
   }
 
   public String getProgramId() {
-    return programId;
+    return program;
   }
 
   public String getPipelineId() {
-    return pipelineId;
+    return pipeline;
   }
 
   public void onEvent(PipelineStartEvent event) {

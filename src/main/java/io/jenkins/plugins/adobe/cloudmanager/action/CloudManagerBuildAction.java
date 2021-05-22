@@ -38,6 +38,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.http.entity.ContentType;
 
+import hudson.model.Job;
 import hudson.model.Run;
 import io.adobe.cloudmanager.CloudManagerApi;
 import io.adobe.cloudmanager.CloudManagerApiException;
@@ -45,9 +46,11 @@ import io.adobe.cloudmanager.PipelineExecutionStepState;
 import io.adobe.cloudmanager.StepAction;
 import io.jenkins.plugins.adobe.cloudmanager.CloudManagerPipelineExecution;
 import io.jenkins.plugins.adobe.cloudmanager.util.CloudManagerApiUtil;
+import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import org.jenkinsci.plugins.workflow.actions.PersistentAction;
+import org.kohsuke.stapler.HttpRedirect;
 import org.kohsuke.stapler.HttpResponse;
 import org.kohsuke.stapler.HttpResponses;
 import org.kohsuke.stapler.Stapler;
@@ -55,6 +58,7 @@ import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.export.ExportedBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import static io.adobe.cloudmanager.PipelineExecutionStepState.Status.*;
 
 /**
  * Cloud Manager build data used for taking actions.
@@ -65,7 +69,7 @@ public class CloudManagerBuildAction implements PersistentAction, Serializable {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(CloudManagerBuildAction.class);
   private static final long serialVersionUID = 1L;
-
+  private static final String SONAR_LOG = "sonarLogFile";
   private static final String STEP_PARAM = "step";
 
   String aioProjectName;
@@ -86,7 +90,7 @@ public class CloudManagerBuildAction implements PersistentAction, Serializable {
 
   @Override
   public String getUrlName() {
-    return String.format("adobe-cloud-manager-%s-%s-%s", cmExecution.getProgramId(), cmExecution.getPipelineId(), cmExecution.getExecutionId());
+    return String.format("adobe-cloud-manager-p%s-p%s-e%s", cmExecution.getProgramId(), cmExecution.getPipelineId(), cmExecution.getExecutionId());
   }
 
   @CheckForNull
@@ -102,29 +106,47 @@ public class CloudManagerBuildAction implements PersistentAction, Serializable {
     return new ArrayList<>(this.steps);
   }
 
+  public PipelineStep getStep(@Nonnull String id) {
+    int i = NumberUtils.toInt(id, -1);
+    if (i >= 0 && i < getSteps().size()) {
+      return getSteps().get(i);
+    } else {
+      return null;
+    }
+  }
+
   public void addStep(@Nonnull PipelineStep step) {
     steps.add(step);
+  }
+
+  private boolean canDownload() {
+    return getOwningRun().getParent().hasPermission(Job.READ);
   }
 
   public HttpResponse doGetLog() {
 
     int stepId = NumberUtils.toInt(Stapler.getCurrentRequest().getParameter(STEP_PARAM), -1);
-    if (stepId < 0 || stepId > (getSteps().size() -1)) {
-      LOGGER.warn(Messages.CloudManagerBuildAction_warn_unknownStep());
-      return HttpResponses.redirectTo("../..");
-    }
+    HttpRedirect redirectTo = getHttpRedirect(stepId);
+    if (redirectTo != null) return redirectTo;
+
     final PipelineStep step = getSteps().get(stepId);
     if (!step.isHasLogs()) {
       LOGGER.warn(Messages.CloudManagerBuildAction_warn_unknownStep());
       return HttpResponses.redirectTo("../..");
     }
 
-    Optional<CloudManagerApi> api = CloudManagerApiUtil.createApi().apply(aioProjectName);
+    Optional<CloudManagerApi> api = CloudManagerApiUtil.createApi().apply(getAioProjectName());
     if (api.isPresent()) {
+      final CloudManagerPipelineExecution cmExecution = getCmExecution();
       return (request, response, node) -> {
         response.setContentType(ContentType.APPLICATION_OCTET_STREAM.getMimeType());
         try {
-          api.get().downloadExecutionStepLog(cmExecution.getProgramId(), cmExecution.getPipelineId(), cmExecution.getExecutionId(), step.getAction().name(), response.getOutputStream());
+          StepAction action = step.getAction();
+          if (action == StepAction.codeQuality) {
+            api.get().downloadExecutionStepLog(cmExecution.getProgramId(), cmExecution.getPipelineId(), cmExecution.getExecutionId(), action.name(), SONAR_LOG, response.getOutputStream());
+          } else {
+            api.get().downloadExecutionStepLog(cmExecution.getProgramId(), cmExecution.getPipelineId(), cmExecution.getExecutionId(), action.name(), response.getOutputStream());
+          }
         } catch (CloudManagerApiException e) {
           LOGGER.error(Messages.CloudManagerBuildAction_error_downloadLogs(e.getLocalizedMessage()));
         }
@@ -134,18 +156,74 @@ public class CloudManagerBuildAction implements PersistentAction, Serializable {
     }
   }
 
+  public HttpResponse doGetQualityData() {
+    int stepId = NumberUtils.toInt(Stapler.getCurrentRequest().getParameter(STEP_PARAM), -1);
+    HttpRedirect redirectTo = getHttpRedirect(stepId);
+    if (redirectTo != null) return redirectTo;
+
+    final PipelineStep step = getSteps().get(stepId);
+    if (!step.isHasQualityData()) {
+      LOGGER.warn(Messages.CloudManagerBuildAction_warn_unknownStep());
+      return HttpResponses.redirectTo("../..");
+    }
+    Optional<CloudManagerApi> api = CloudManagerApiUtil.createApi().apply(getAioProjectName());
+    if (api.isPresent()) {
+      final CloudManagerPipelineExecution cmExecution = getCmExecution();
+      return (request, response, node) -> {
+        response.setContentType(ContentType.APPLICATION_OCTET_STREAM.getMimeType());
+        try {
+          api.get().downloadExecutionStepLog(cmExecution.getProgramId(), cmExecution.getPipelineId(), cmExecution.getExecutionId(), step.action.name(), response.getOutputStream());
+        } catch (CloudManagerApiException e) {
+          LOGGER.error(Messages.CloudManagerBuildAction_error_downloadLogs(e.getLocalizedMessage()));
+        }
+      };
+    } else {
+      return HttpResponses.error(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, Messages.CloudManagerBuildAction_error_downloadLogs_creatApi());
+    }
+  }
+
+  @CheckForNull
+  private HttpRedirect getHttpRedirect(int stepId) {
+    if (stepId < 0 || stepId > (getSteps().size() - 1)) {
+      LOGGER.warn(Messages.CloudManagerBuildAction_warn_unknownStep());
+      return HttpResponses.redirectTo("../..");
+    }
+    if (!canDownload()) {
+      return HttpResponses.redirectTo("../..");
+    }
+    return null;
+  }
+
   /**
    * Represents a step which a Cloud Manager Pipeline execution reached.
-   *
+   * <p>
    * Used in {@link CloudManagerBuildAction} for tracking state and linking logs.
    */
-  @Value
+  @Data
   public static class PipelineStep implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    StepAction action;
-    PipelineExecutionStepState.Status status;
-    boolean hasLogs;
+    private final StepAction action;
+    private final PipelineExecutionStepState.Status status;
+    private final boolean hasLogs;
+
+    public String getStatus() {
+      return Messages.CloudManagerBuildAction_PipelineStep_status(action, status);
+    }
+
+    public String getLogName() {
+      CloudManagerBuildAction buildData = Stapler.getCurrentRequest().findAncestorObject(CloudManagerBuildAction.class);
+      String format = "%s-%s";
+      if (buildData == null) {
+        format = "%s";
+      }
+      return String.format(format, buildData.getUrlName(), action);
+    }
+
+    public boolean isHasQualityData() {
+      return action == StepAction.codeQuality &&
+          (status == FINISHED || status == WAITING || status == ERROR);
+    }
   }
 }

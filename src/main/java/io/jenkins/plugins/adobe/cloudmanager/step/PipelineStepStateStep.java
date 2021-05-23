@@ -64,6 +64,7 @@ public class PipelineStepStateStep extends Step {
 
   private List<StepAction> actions;
   private boolean autoApprove = false;
+  private boolean advance = true;
 
   @DataBoundConstructor
   public PipelineStepStateStep() {
@@ -87,7 +88,7 @@ public class PipelineStepStateStep extends Step {
   }
 
   /**
-   * Flag to indicate if this step should auto-advance if it receives a {@code waiting} event.
+   * Flag to indicate if this step should auto-approve if it receives a {@code waiting} event.
    */
   public boolean isAutoApprove() {
     return autoApprove;
@@ -96,6 +97,18 @@ public class PipelineStepStateStep extends Step {
   @DataBoundSetter
   public void setAutoApprove(boolean autoApprove) {
     this.autoApprove = autoApprove;
+  }
+
+  /**
+   * Flag to indicate if this step should auto-advance when it receives a {@code finished} event.
+   */
+  public boolean isAdvance() {
+    return advance;
+  }
+
+  @DataBoundSetter
+  public void setAdvance(boolean advance) {
+    this.advance = advance;
   }
 
   /**
@@ -108,7 +121,7 @@ public class PipelineStepStateStep extends Step {
 
   @Override
   public StepExecution start(StepContext context) throws Exception {
-    return new PipelineStepStateExecution(context, new HashSet<>(getActions()), autoApprove);
+    return new PipelineStepStateExecution(context, new HashSet<>(getActions()), autoApprove, advance);
   }
 
   @Extension

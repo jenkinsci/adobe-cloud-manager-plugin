@@ -29,16 +29,16 @@ package io.jenkins.plugins.adobe.cloudmanager.step.execution;
 import jenkins.model.CauseOfInterruption;
 
 /**
- * An interruption which occurs due to a Cancellation of the Cloud Manager pipeline.
+ * An interruption which occurs due to a Failure of the Cloud Manager pipeline.
  */
-public class Cancellation extends CauseOfInterruption {
+public class Failure extends CauseOfInterruption {
   private static final long serialVersionUID = 1;
 
-  public Cancellation() {
+  public Failure() {
   }
 
   @Override
   public String getShortDescription() {
-    return Messages.Cancellation_description();
+    return Messages.Failure_description();
   }
 }

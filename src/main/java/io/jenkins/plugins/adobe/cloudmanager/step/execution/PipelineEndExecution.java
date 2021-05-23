@@ -131,7 +131,6 @@ public class PipelineEndExecution extends AbstractStepExecution {
   public void occurred(@Nonnull PipelineExecution pe) throws IOException, InterruptedException {
     status = pe.getStatusState();
     getContext().saveState();
-    TaskListener listener = getTaskListener();
     StepExecutionIterator.all().stream().map((sei) -> {
       sei.apply((se) -> {
         try {

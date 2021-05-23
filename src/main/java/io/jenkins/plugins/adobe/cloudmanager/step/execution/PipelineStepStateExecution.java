@@ -82,15 +82,17 @@ public class PipelineStepStateExecution extends AbstractStepExecution {
       Collections.unmodifiableSet(new HashSet<>(Arrays.asList(ERROR, FINISHED, FAILED, ROLLED_BACK, CANCELLED)));
 
   private final Set<StepAction> actions;
-  private boolean autoApprove;
+  private final boolean autoApprove;
+  private final boolean advance;
 
   // Used as the reason for a waiting action. If its set - then we're waiting for user input.
   private StepAction reason;
 
-  public PipelineStepStateExecution(StepContext context, Set<StepAction> actions, boolean autoApprove) {
+  public PipelineStepStateExecution(StepContext context, Set<StepAction> actions, boolean autoApprove, boolean advance) {
     super(context);
     this.actions = actions;
     this.autoApprove = autoApprove;
+    this.advance = advance;
   }
 
   @CheckForNull
@@ -149,9 +151,19 @@ public class PipelineStepStateExecution extends AbstractStepExecution {
    */
   public void occurred(@Nonnull PipelineExecution pe, @Nonnull PipelineExecutionStepState state) throws IOException, InterruptedException {
     try {
-      logStepAction(pe, state);
+      PipelineExecutionStepState.Status status = logStepAction(pe, state);
       doFinish();
-      getContext().onSuccess(null);
+      if (advance && ENDED_STATUS.contains(status)) {
+        if (status == FINISHED || status == ROLLED_BACK) {
+          getContext().onSuccess(null);
+        } else if (status == CANCELLED) {
+          FlowInterruptedException e = new FlowInterruptedException(Result.ABORTED, new Cancellation());
+          getContext().onFailure(e);
+        } else {
+          FlowInterruptedException e = new FlowInterruptedException(Result.FAILURE, new io.jenkins.plugins.adobe.cloudmanager.step.execution.Failure());
+          getContext().onFailure(e);
+        }
+      }
     } catch (IllegalArgumentException e) {
       getTaskListener().getLogger().println(Messages.PipelineStepStateExecution_unknownStepAction(state.getAction()));
     }
@@ -162,11 +174,13 @@ public class PipelineStepStateExecution extends AbstractStepExecution {
    */
   public void waiting(@Nonnull PipelineExecution pe, @Nonnull PipelineExecutionStepState state) throws IOException, InterruptedException, TimeoutException {
     try {
-      reason = logStepAction(pe, state);
+      reason = StepAction.valueOf(state.getAction());
+      logStepAction(pe, state);
       if (WAITING_ACTIONS.contains(reason)) {
         if (autoApprove) {
+          approveStep();
           getTaskListener().getLogger().println(Messages.PipelineStepStateExecution_autoApprove());
-          advanceStep();
+          doFinish();
         } else {
           startWaiting();
         }
@@ -180,13 +194,12 @@ public class PipelineStepStateExecution extends AbstractStepExecution {
     }
   }
 
-  @Nonnull
-  private StepAction logStepAction(@Nonnull PipelineExecution pe, @Nonnull PipelineExecutionStepState state) throws IOException, InterruptedException, IllegalArgumentException {
+  private PipelineExecutionStepState.Status logStepAction(@Nonnull PipelineExecution pe, @Nonnull PipelineExecutionStepState state) throws IOException, InterruptedException {
     StepAction action = StepAction.valueOf(state.getAction());
     PipelineExecutionStepState.Status status = state.getStatusState();
+    getTaskListener().getLogger().println(Messages.PipelineStepStateExecution_occurred(pe.getId(), action, status));
     getBuildData().addStep(new CloudManagerBuildAction.PipelineStep(action, status, isHasLogs(state, status)));
-    getTaskListener().getLogger().println(Messages.PipelineStepStateExecution_occurred(pe.getId(), action, state.getStatusState()));
-    return action;
+    return status;
   }
 
   private boolean isHasLogs(@Nonnull PipelineExecutionStepState state, PipelineExecutionStepState.Status status) {
@@ -238,9 +251,7 @@ public class PipelineStepStateExecution extends AbstractStepExecution {
       preCancelCheck();
       CloudManagerPipelineExecution cmExecution = getRun().getAction(CloudManagerBuildAction.class).getCmExecution();
       getApi().cancelExecution(cmExecution.getProgramId(), cmExecution.getPipelineId(), cmExecution.getExecutionId());
-      FlowInterruptedException e = new FlowInterruptedException(Result.ABORTED, new Cancellation(User.current()));
       doFinish();
-      getContext().onFailure(e);
     } catch (CloudManagerApiException e) {
       doFinish();
       getContext().onFailure(e);
@@ -264,17 +275,16 @@ public class PipelineStepStateExecution extends AbstractStepExecution {
 
   // Process the request to complete the wait event as "successful."
   private HttpResponse proceed() throws IOException, InterruptedException {
-    User user = User.current();
+    String userId = User.current() != null ? User.current().getId() : "anonymous";
     Run<?, ?> run = getRun();
     TaskListener listener = getTaskListener();
-    if (user != null) {
-      run.addAction(new PipelineStepDecisionAction(user.getId(), reason, PipelineStepDecisionAction.Decision.APPROVED));
-      listener.getLogger().println(Messages.PipelineStepStateExecution_approvedBy(ModelHyperlinkNote.encodeTo(user)));
-    }
 
     try {
       preApproveCheck();
-      advanceStep();
+      approveStep();
+      run.addAction(new PipelineStepDecisionAction(userId, reason, PipelineStepDecisionAction.Decision.APPROVED));
+      listener.getLogger().println(Messages.PipelineStepStateExecution_approvedBy(userId));
+      doFinish();
     } catch (AbortException | CloudManagerApiException e) {
       doFinish();
       getContext().onFailure(e);
@@ -334,11 +344,9 @@ public class PipelineStepStateExecution extends AbstractStepExecution {
   }
 
   // Advance the step.
-  private void advanceStep() throws IOException, InterruptedException, CloudManagerApiException {
+  private void approveStep() throws IOException, InterruptedException, CloudManagerApiException {
     CloudManagerPipelineExecution cmExecution = getRun().getAction(CloudManagerBuildAction.class).getCmExecution();
     getApi().advanceExecution(cmExecution.getProgramId(), cmExecution.getPipelineId(), cmExecution.getExecutionId());
-    doFinish();
-    getContext().onSuccess(null);
   }
 
   // Clean up this when done. Regardless of result.

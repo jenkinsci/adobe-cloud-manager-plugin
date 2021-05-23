@@ -212,7 +212,7 @@ public class FullWebhookIntegrationTest {
       pipelineExecutionStepState.getAction();
       returns("codeQuality", "codeQuality", "codeQuality");
       pipelineExecutionStepState.getStatusState();
-      returns(RUNNING, RUNNING, WAITING, WAITING, FINISHED, FINISHED);
+      returns(RUNNING, WAITING, FINISHED);
     }};
 
     WorkflowJob job = rule.createProject(WorkflowJob.class, "full");
@@ -238,22 +238,17 @@ public class FullWebhookIntegrationTest {
     SemaphoreStep.waitForStart("waiter/1", run);
     sendEvent(rule, STEP_STARTED);
     rule.waitForMessage(Messages.PipelineStepStateExecution_occurred("3", StepAction.codeQuality, RUNNING), run);
-    SemaphoreStep.success("waiter/1", true);
-
-    SemaphoreStep.waitForStart("waiter/2", run);
     sendEvent(rule, STEP_WAITING);
     rule.waitForMessage(Messages.PipelineStepStateExecution_occurred("3", StepAction.codeQuality, WAITING), run);
     advanceWaiting(rule, run, true);
-    SemaphoreStep.success("waiter/2", true);
-
-    SemaphoreStep.waitForStart("waiter/3", run);
+    rule.waitForMessage(Messages.PipelineStepStateExecution_approvedBy("anonymous"), run);
     sendEvent(rule, STEP_ENDED);
     rule.waitForMessage(Messages.PipelineStepStateExecution_occurred("3", StepAction.codeQuality, FINISHED), run);
-    SemaphoreStep.success("waiter/3", true);
+    SemaphoreStep.success("waiter/1", true);
 
-    SemaphoreStep.waitForStart("waiter/4", run);
+    SemaphoreStep.waitForStart("waiter/2", run);
     sendEvent(rule, PIPELINE_ENDED);
-    SemaphoreStep.success("waiter/4", true);
+    SemaphoreStep.success("waiter/2", true);
 
     rule.waitForCompletion(run);
     rule.assertBuildStatusSuccess(run);
@@ -293,7 +288,7 @@ public class FullWebhookIntegrationTest {
       pipelineExecutionStepState.getAction();
       returns("codeQuality", "codeQuality", "codeQuality");
       pipelineExecutionStepState.getStatusState();
-      returns(RUNNING, RUNNING, WAITING, WAITING, FINISHED, FINISHED);
+      returns(RUNNING, WAITING, FINISHED);
     }};
 
     WorkflowJob job = rule.createProject(WorkflowJob.class, "full");
@@ -319,17 +314,17 @@ public class FullWebhookIntegrationTest {
     SemaphoreStep.waitForStart("waiter/1", run);
     sendEvent(rule, STEP_STARTED);
     rule.waitForMessage(Messages.PipelineStepStateExecution_occurred("3", StepAction.codeQuality, RUNNING), run);
-    SemaphoreStep.success("waiter/1", true);
-
-    SemaphoreStep.waitForStart("waiter/2", run);
     sendEvent(rule, STEP_WAITING);
     rule.waitForMessage(Messages.PipelineStepStateExecution_occurred("3", StepAction.codeQuality, WAITING), run);
     advanceWaiting(rule, run, true);
-    SemaphoreStep.success("waiter/2", true);
+    rule.waitForMessage(Messages.PipelineStepStateExecution_approvedBy("anonymous"), run);
+    sendEvent(rule, STEP_ENDED);
+    rule.waitForMessage(Messages.PipelineStepStateExecution_occurred("3", StepAction.codeQuality, FINISHED), run);
+    SemaphoreStep.success("waiter/1", true);
 
-    SemaphoreStep.waitForStart("waiter/3", run);
+    SemaphoreStep.waitForStart("waiter/2", run);
     sendEvent(rule, PIPELINE_ENDED);
-    SemaphoreStep.success("waiter/3", true);
+    SemaphoreStep.success("waiter/2", true);
 
     rule.waitForCompletion(run);
     rule.assertBuildStatus(Result.FAILURE, run);

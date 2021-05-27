@@ -22,10 +22,10 @@
                             <j:if test="${step.hasLogs || step.hasQualityData}">
                                 <ul>
                                 <j:if test="${step.hasLogs}">
-                                    <li><f:link href="getLog/${step.logName}.log?step=${idx}" post="true">${%logs.text}</f:link></li>
+                                    <li><f:link href="getLog?step=${idx}" post="true">${%logs.text}</f:link></li>
                                 </j:if>
                                 <j:if test="${step.hasQualityData}">
-                                    <li><f:link href="getQualityData/${step.logName}-quality.csv?step=${idx}" post="true">${%qualityResults.text}</f:link></li>
+                                    <li><f:link href="getQualityData?step=${idx}" post="true">${%qualityResults.text}</f:link></li>
                                 </j:if>
                                 </ul>
                             </j:if>

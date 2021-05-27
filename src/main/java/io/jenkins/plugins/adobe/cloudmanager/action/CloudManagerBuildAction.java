@@ -36,7 +36,6 @@ import javax.annotation.Nonnull;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang3.math.NumberUtils;
-import org.apache.http.entity.ContentType;
 
 import hudson.model.Job;
 import hudson.model.Run;
@@ -50,7 +49,6 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import org.jenkinsci.plugins.workflow.actions.PersistentAction;
-import org.kohsuke.stapler.HttpRedirect;
 import org.kohsuke.stapler.HttpResponse;
 import org.kohsuke.stapler.HttpResponses;
 import org.kohsuke.stapler.Stapler;
@@ -125,73 +123,57 @@ public class CloudManagerBuildAction implements PersistentAction, Serializable {
 
   public HttpResponse doGetLog() {
 
-    int stepId = NumberUtils.toInt(Stapler.getCurrentRequest().getParameter(STEP_PARAM), -1);
-    HttpRedirect redirectTo = getHttpRedirect(stepId);
-    if (redirectTo != null) return redirectTo;
-
-    final PipelineStep step = getSteps().get(stepId);
-    if (!step.isHasLogs()) {
-      LOGGER.warn(Messages.CloudManagerBuildAction_warn_unknownStep());
+    final PipelineStep step = getPipelineStep();
+    if (step == null) {
       return HttpResponses.redirectTo("../..");
     }
-
-    Optional<CloudManagerApi> api = CloudManagerApiUtil.createApi().apply(getAioProjectName());
-    if (api.isPresent()) {
-      final CloudManagerPipelineExecution cmExecution = getCmExecution();
-      return (request, response, node) -> {
-        response.setContentType(ContentType.APPLICATION_OCTET_STREAM.getMimeType());
-        try {
-          StepAction action = step.getAction();
-          if (action == StepAction.codeQuality) {
-            api.get().downloadExecutionStepLog(cmExecution.getProgramId(), cmExecution.getPipelineId(), cmExecution.getExecutionId(), action.name(), SONAR_LOG, response.getOutputStream());
-          } else {
-            api.get().downloadExecutionStepLog(cmExecution.getProgramId(), cmExecution.getPipelineId(), cmExecution.getExecutionId(), action.name(), response.getOutputStream());
-          }
-        } catch (CloudManagerApiException e) {
-          LOGGER.error(Messages.CloudManagerBuildAction_error_downloadLogs(e.getLocalizedMessage()));
-        }
-      };
+    if (step.getAction() == StepAction.codeQuality) {
+      return getLogRedirect(step, SONAR_LOG);
     } else {
-      return HttpResponses.error(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, Messages.CloudManagerBuildAction_error_downloadLogs_creatApi());
+      return getLogRedirect(step, null);
     }
   }
 
   public HttpResponse doGetQualityData() {
-    int stepId = NumberUtils.toInt(Stapler.getCurrentRequest().getParameter(STEP_PARAM), -1);
-    HttpRedirect redirectTo = getHttpRedirect(stepId);
-    if (redirectTo != null) return redirectTo;
-
-    final PipelineStep step = getSteps().get(stepId);
-    if (!step.isHasQualityData()) {
-      LOGGER.warn(Messages.CloudManagerBuildAction_warn_unknownStep());
+    final PipelineStep step = getPipelineStep();
+    if (step == null) {
       return HttpResponses.redirectTo("../..");
     }
-    Optional<CloudManagerApi> api = CloudManagerApiUtil.createApi().apply(getAioProjectName());
-    if (api.isPresent()) {
-      final CloudManagerPipelineExecution cmExecution = getCmExecution();
-      return (request, response, node) -> {
-        response.setContentType(ContentType.APPLICATION_OCTET_STREAM.getMimeType());
-        try {
-          api.get().downloadExecutionStepLog(cmExecution.getProgramId(), cmExecution.getPipelineId(), cmExecution.getExecutionId(), step.action.name(), response.getOutputStream());
-        } catch (CloudManagerApiException e) {
-          LOGGER.error(Messages.CloudManagerBuildAction_error_downloadLogs(e.getLocalizedMessage()));
-        }
-      };
-    } else {
-      return HttpResponses.error(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, Messages.CloudManagerBuildAction_error_downloadLogs_creatApi());
-    }
+    return getLogRedirect(step, null);
   }
 
   @CheckForNull
-  private HttpRedirect getHttpRedirect(int stepId) {
+  private PipelineStep getPipelineStep() {
+    int stepId = NumberUtils.toInt(Stapler.getCurrentRequest().getParameter(STEP_PARAM), -1);
     if (stepId < 0 || stepId > (getSteps().size() - 1)) {
       LOGGER.warn(Messages.CloudManagerBuildAction_warn_unknownStep());
-      return HttpResponses.redirectTo("../..");
+      return null;
     }
     if (!canDownload()) {
-      return HttpResponses.redirectTo("../..");
+      return null;
     }
-    return null;
+    final PipelineStep step = getSteps().get(stepId);
+    if (!step.isHasLogs()) {
+      LOGGER.warn(Messages.CloudManagerBuildAction_warn_unknownStep());
+      return null;
+    }
+    return step;
+  }
+
+  @Nonnull
+  private HttpResponse getLogRedirect(PipelineStep step, String fileName) {
+    Optional<CloudManagerApi> api = CloudManagerApiUtil.createApi().apply(getAioProjectName());
+    if (api.isPresent()) {
+      try {
+        final CloudManagerPipelineExecution cmExecution = getCmExecution();
+        String url = api.get().getExecutionStepLogDownloadUrl(cmExecution.getProgramId(), cmExecution.getPipelineId(), cmExecution.getExecutionId(), step.getAction().name(), fileName);
+        return HttpResponses.redirectTo(url);
+      } catch (CloudManagerApiException e) {
+        return HttpResponses.error(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, Messages.CloudManagerBuildAction_error_downloadLogs(e.getLocalizedMessage()));
+      }
+    } else {
+      return HttpResponses.error(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, Messages.CloudManagerBuildAction_error_downloadLogs_creatApi());
+    }
   }
 
   /**
@@ -222,8 +204,7 @@ public class CloudManagerBuildAction implements PersistentAction, Serializable {
     }
 
     public boolean isHasQualityData() {
-      return action == StepAction.codeQuality &&
-          (status == FINISHED || status == WAITING || status == ERROR);
+      return action == StepAction.codeQuality && (status == FINISHED || status == WAITING || status == ERROR);
     }
   }
 }

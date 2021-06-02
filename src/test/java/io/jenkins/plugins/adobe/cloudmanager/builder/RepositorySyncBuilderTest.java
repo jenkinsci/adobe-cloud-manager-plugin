@@ -38,7 +38,6 @@ import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Label;
 import hudson.model.Result;
-import hudson.model.queue.QueueTaskFuture;
 import hudson.plugins.git.GitSCM;
 import hudson.scm.SCM;
 import hudson.tasks.Builder;
@@ -63,6 +62,8 @@ import org.jvnet.hudson.test.JenkinsRule;
 import static org.junit.Assert.*;
 
 public class RepositorySyncBuilderTest {
+
+  private static final String defaultBranch = "customDefaultBranch";
 
   @ClassRule
   public static BuildWatcher watcher = new BuildWatcher();
@@ -90,6 +91,11 @@ public class RepositorySyncBuilderTest {
 
   @Before
   public void before() throws Exception {
+    srcRepo.init();
+    srcRepo.git("checkout", "-b", defaultBranch);
+    bareDestRepo.git("--bare", "init");
+    bareDestRepo.git("symbolic-ref", "HEAD", "refs/heads/" + defaultBranch);
+
     CredentialsStore store = CredentialsProvider.lookupStores(rule.jenkins).iterator().next();
     Credentials credentials = new UsernamePasswordCredentialsImpl(CredentialsScope.SYSTEM, "credentials", "", "username", "test-password");
     store.addCredentials(Domain.global(), credentials);
@@ -115,21 +121,21 @@ public class RepositorySyncBuilderTest {
         true);
     job.setDefinition(flow);
 
-    QueueTaskFuture<WorkflowRun> run = job.scheduleBuild2(0);
+    WorkflowRun run = job.scheduleBuild2(0).waitForStart();
+    rule.waitForCompletion(run);
     rule.assertBuildStatus(Result.FAILURE, run);
     assertNotNull(run);
-    assertTrue(StringUtils.contains(run.get().getLog(), Messages.RepositorySyncBuilder_error_missingGitRepository()));
+    assertTrue(StringUtils.contains(run.getLog(), Messages.RepositorySyncBuilder_error_missingGitRepository()));
   }
 
   @Test
   public void noLocalGitRepo() throws Exception {
-    srcRepo.init();
     WorkflowJob job = rule.jenkins.createProject(WorkflowJob.class, "test");
     rule.createOnlineSlave(Label.get("runner"));
     CpsFlowDefinition flow = new CpsFlowDefinition(
         "node('runner') {\n" +
             "  ws {\n" +
-            "    git($/" + srcRepo + "/$)\n" +
+            "    git(url: $/" + srcRepo + "/$, branch: '" + defaultBranch + "')\n" +
             "    dir('subdir') {\n" +
             "      acmRepoSync(url: '" + destRepo + "', credentialsId: 'credentials')\n" +
             "    }\n" +
@@ -138,18 +144,18 @@ public class RepositorySyncBuilderTest {
         true);
     job.setDefinition(flow);
 
-    QueueTaskFuture<WorkflowRun> run = job.scheduleBuild2(0);
+    WorkflowRun run = job.scheduleBuild2(0).waitForStart();
+    rule.waitForCompletion(run);
     rule.assertBuildStatus(Result.FAILURE, run);
-    assertTrue(StringUtils.contains(run.get().getLog(), Messages.RepositorySyncBuilder_error_missingGitRepository()));
+    assertTrue(StringUtils.contains(run.getLog(), Messages.RepositorySyncBuilder_error_missingGitRepository()));
   }
 
   @Test
   public void conflictNoForce() throws Exception {
-    srcRepo.init();
     srcRepo.write("newfile", "filecontents");
     srcRepo.git("add", "newfile");
     srcRepo.git("commit", "--message=file");
-    bareDestRepo.git("--bare", "init");
+
     destRepo.git("clone", bareDestRepo.toString(), ".");
     destRepo.git("config", "user.name", "Git SampleRepoRule");
     destRepo.git("config", "user.email", "gits@mplereporule");
@@ -162,25 +168,25 @@ public class RepositorySyncBuilderTest {
     CpsFlowDefinition flow = new CpsFlowDefinition(
         "node('runner') {\n" +
             "  ws {\n" +
-            "    git(url: $/" + srcRepo + "/$,)\n" +
+            "    git(url: $/" + srcRepo + "/$, branch: '" + defaultBranch + "')\n" +
             "    acmRepoSync(url: '" + bareDestRepo + "', credentialsId: 'credentials')\n" +
             "  }\n" +
             "}",
         true);
     job.setDefinition(flow);
 
-    QueueTaskFuture<WorkflowRun> run = job.scheduleBuild2(0);
+    WorkflowRun run = job.scheduleBuild2(0).waitForStart();
+    rule.waitForCompletion(run);
     rule.assertBuildStatus(Result.FAILURE, run);
-    assertTrue(StringUtils.contains(run.get().getLog(), "Push to Cloud Manager remote failed"));
+    assertTrue(StringUtils.contains(run.getLog(), "Push to Cloud Manager remote failed"));
   }
 
   @Test
   public void conflictWithForce() throws Exception {
-    srcRepo.init();
     srcRepo.write("newfile", "filecontents");
     srcRepo.git("add", "newfile");
     srcRepo.git("commit", "--message=file");
-    bareDestRepo.git("--bare", "init");
+
     destRepo.git("clone", bareDestRepo.toString(), ".");
     destRepo.git("config", "user.name", "Git SampleRepoRule");
     destRepo.git("config", "user.email", "gits@mplereporule");
@@ -193,14 +199,15 @@ public class RepositorySyncBuilderTest {
     CpsFlowDefinition flow = new CpsFlowDefinition(
         "node('runner') {\n" +
             "  ws {\n" +
-            "    git(url: $/" + srcRepo + "/$,)\n" +
+            "    git(url: $/" + srcRepo + "/$, branch: '" + defaultBranch + "')\n" +
             "    acmRepoSync(url: '" + bareDestRepo + "', credentialsId: 'credentials', force: true)\n" +
             "  }\n" +
             "}",
         true);
     job.setDefinition(flow);
 
-    QueueTaskFuture<WorkflowRun> run = job.scheduleBuild2(0);
+    WorkflowRun run = job.scheduleBuild2(0).waitForStart();
+    rule.waitForCompletion(run);
     rule.assertBuildStatus(Result.SUCCESS, run);
     updatedDestRepo.git("clone", bareDestRepo.toString(), ".");
     assertEquals(srcRepo.head(), updatedDestRepo.head());
@@ -209,12 +216,11 @@ public class RepositorySyncBuilderTest {
 
   @Test
   public void missingTargetBranch() throws Exception {
-    srcRepo.init();
     srcRepo.git("checkout", "-b", "notdefault");
     srcRepo.write("newfile", "filecontents");
     srcRepo.git("add", "newfile");
     srcRepo.git("commit", "--message=file");
-    bareDestRepo.git("--bare", "init");
+
     destRepo.git("clone", bareDestRepo.toString(), ".");
     destRepo.git("config", "user.name", "Git SampleRepoRule");
     destRepo.git("config", "user.email", "gits@mplereporule");
@@ -234,7 +240,8 @@ public class RepositorySyncBuilderTest {
         true);
     job.setDefinition(flow);
 
-    QueueTaskFuture<WorkflowRun> run = job.scheduleBuild2(0);
+    WorkflowRun run = job.scheduleBuild2(0).waitForStart();
+    rule.waitForCompletion(run);
     rule.assertBuildStatus(Result.SUCCESS, run);
     destRepo.git("fetch");
     destRepo.git("checkout", "notdefault");
@@ -243,45 +250,44 @@ public class RepositorySyncBuilderTest {
 
   @Test
   public void multipleScmsWarning() throws Exception {
-    srcRepo.init();
     destRepo.init();
-    bareDestRepo.git("--bare", "init");
+
     WorkflowJob job = rule.jenkins.createProject(WorkflowJob.class, "test");
     rule.createOnlineSlave(Label.get("runner"));
     CpsFlowDefinition flow = new CpsFlowDefinition(
         "node('runner') {\n" +
             "  ws {\n" +
-            "    git($/" + srcRepo + "/$)\n" +
-            "    git($/" + destRepo + "/$)\n" +
+            "    git(url: $/" + srcRepo + "/$, branch: '" + defaultBranch + "')\n" +
+            "    git(url: $/" + destRepo + "/$, branch: '" + defaultBranch + "')\n" +
             "    acmRepoSync(url: '" + bareDestRepo + "', credentialsId: 'credentials')\n" +
             "  }\n" +
             "}",
         true);
     job.setDefinition(flow);
 
-    QueueTaskFuture<WorkflowRun> run = job.scheduleBuild2(0);
+    WorkflowRun run = job.scheduleBuild2(0).waitForStart();
+    rule.waitForCompletion(run);
     rule.assertBuildStatus(Result.SUCCESS, run);
-    String log = run.get().getLog();
+    String log = run.getLog();
     assertTrue(StringUtils.contains(log, Messages.RepositorySyncBuilder_warning_multipleScms(srcRepo.toString())));
   }
 
   @Test
   public void scriptSuccess() throws Exception {
-    srcRepo.init();
-    bareDestRepo.git("--bare", "init");
     WorkflowJob job = rule.jenkins.createProject(WorkflowJob.class, "test");
     rule.createOnlineSlave(Label.get("runner"));
     CpsFlowDefinition flow = new CpsFlowDefinition(
         "node('runner') {\n" +
             "  ws {\n" +
-            "    git($/" + srcRepo + "/$)\n" +
+            "    git(url: $/" + srcRepo + "/$, branch: '" + defaultBranch + "')\n" +
             "    acmRepoSync(url: '" + bareDestRepo + "', credentialsId: 'credentials')\n" +
             "  }\n" +
             "}",
         true);
     job.setDefinition(flow);
 
-    QueueTaskFuture<WorkflowRun> run = job.scheduleBuild2(0);
+    WorkflowRun run = job.scheduleBuild2(0).waitForStart();
+    rule.waitForCompletion(run);
     rule.assertBuildStatus(Result.SUCCESS, run);
     destRepo.git("clone", bareDestRepo.toString(), ".");
     assertEquals(srcRepo.head(), destRepo.head());
@@ -301,12 +307,9 @@ public class RepositorySyncBuilderTest {
         "        }\n" +
         "    }\n" +
         "}\n";
-    srcRepo.init();
     srcRepo.write("Jenkinsfile", pipeline);
     srcRepo.git("add", "Jenkinsfile");
     srcRepo.git("commit", "--message=Jenkinsfile");
-
-    bareDestRepo.git("--bare", "init");
 
     WorkflowJob job = rule.jenkins.createProject(WorkflowJob.class, "test");
     rule.createOnlineSlave(Label.get("runner"));
@@ -314,14 +317,15 @@ public class RepositorySyncBuilderTest {
     CpsScmFlowDefinition flow = new CpsScmFlowDefinition(scm, "Jenkinsfile");
     job.setDefinition(flow);
 
-    QueueTaskFuture<WorkflowRun> run = job.scheduleBuild2(0);
+    WorkflowRun run = job.scheduleBuild2(0).waitForStart();
+    rule.waitForCompletion(run);
     rule.assertBuildStatus(Result.SUCCESS, run);
     destRepo.git("clone", bareDestRepo.toString(), ".");
     assertEquals(srcRepo.head(), destRepo.head());
   }
 
   @Test
-  public void pipelineCredentialedSuccess() throws Exception {
+  public void pipelineCredentialed() throws Exception {
     Server server = new Server();
     ServerConnector connector = new ServerConnector(server);
     server.addConnector(connector);
@@ -346,7 +350,6 @@ public class RepositorySyncBuilderTest {
         "        }\n" +
         "    }\n" +
         "}\n";
-    srcRepo.init();
     srcRepo.write("Jenkinsfile", pipeline);
     srcRepo.git("add", "Jenkinsfile");
     srcRepo.git("commit", "--message=Jenkinsfile");
@@ -357,16 +360,14 @@ public class RepositorySyncBuilderTest {
     CpsScmFlowDefinition flow = new CpsScmFlowDefinition(scm, "Jenkinsfile");
     job.setDefinition(flow);
 
-    QueueTaskFuture<WorkflowRun> future = job.scheduleBuild2(0);
-    WorkflowRun run = rule.assertBuildStatus(Result.FAILURE, future);
-    rule.waitForMessage("using GIT_ASKPASS to set credentials ", run);
+    WorkflowRun run = job.scheduleBuild2(0).waitForStart();
+    rule.waitForCompletion(run);
+    rule.assertBuildStatus(Result.FAILURE, run);
     assertTrue(StringUtils.contains(run.getLog(), "using GIT_ASKPASS to set credentials "));
   }
 
   @Test
   public void asBuildStep() throws Exception {
-    srcRepo.init();
-    bareDestRepo.git("--bare", "init");
 
     FreeStyleProject project = rule.createProject(FreeStyleProject.class, "test");
     Builder builder = new RepositorySyncBuilder(bareDestRepo.toString(), "credentials");
@@ -374,7 +375,8 @@ public class RepositorySyncBuilderTest {
 
     project.setScm(new GitSCM(srcRepo.toString()));
 
-    QueueTaskFuture<FreeStyleBuild> run = project.scheduleBuild2(0);
+    FreeStyleBuild run = project.scheduleBuild2(0).waitForStart();
+    rule.waitForCompletion(run);
     rule.assertBuildStatus(Result.SUCCESS, run);
     destRepo.git("clone", bareDestRepo.toString(), ".");
     assertEquals(srcRepo.head(), destRepo.head());

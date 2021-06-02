@@ -74,7 +74,7 @@ public class PipelineEndEventSubscriber extends CloudManagerEventSubscriber {
       final PipelineExecution pe = api.get().getExecution(CloudManagerEvent.parseEvent(event.getPayload(), PipelineExecutionEndEvent.class));
       StepExecution.applyAll(PipelineEndExecution.class, (execution) -> {
         try {
-          if (execution.isApplicable(pe)) {
+          if (execution.isApplicable(pe) && !execution.isFinished()) {
             execution.occurred(pe);
           }
         } catch (IOException | InterruptedException ex) {

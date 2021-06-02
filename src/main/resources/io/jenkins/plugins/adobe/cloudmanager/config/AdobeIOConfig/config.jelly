@@ -27,6 +27,16 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core"
          xmlns:f="/lib/form">
+    <style>
+        /*
+            A VERY ugly, but works, solution to hide the `add` button next to credential fields.
+            this is necessary to prevent users from using that button and instead add the credentials
+            in the documented way (under a specific jenkins credentials domain).
+        */
+        [descriptorid="io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOProjectConfig"] .credentials-add-menu {
+            display: none;
+        }
+    </style>
     <f:section title="${%displayName}">
         <f:entry title="${%title}">
             <f:entry title="${%webhook.title}" field="webhookEnabled">

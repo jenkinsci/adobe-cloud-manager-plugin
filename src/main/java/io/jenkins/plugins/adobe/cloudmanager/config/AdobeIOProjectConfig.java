@@ -30,6 +30,8 @@ import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.spec.InvalidKeySpecException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import javax.annotation.CheckForNull;
@@ -316,14 +318,20 @@ public class AdobeIOProjectConfig extends AbstractDescribableImpl<AdobeIOProject
      */
     @SuppressWarnings("unused")
     public FormValidation doCheckClientSecretCredentialsId(@QueryParameter String clientSecretCredentialsId) {
+      List<FormValidation> validations = new ArrayList<>();
+      FormValidation addButtonWarning = FormValidation.warning(Messages.AdobeIOProjectConfig_DescriptorImpl_warn_doNotUseAddCredentialButton());
+      validations.add(addButtonWarning);
       if (StringUtils.isBlank(clientSecretCredentialsId)) {
-        return FormValidation.error(Messages.AdobeIOProjectConfig_DescriptorImpl_error_missingClientSecret());
+        validations.add(FormValidation.error(Messages.AdobeIOProjectConfig_DescriptorImpl_error_missingClientSecret()));
+        return FormValidation.aggregate(validations);
       }
       Optional<Secret> clientSecret = CredentialsUtil.clientSecretFor(clientSecretCredentialsId);
       if (!clientSecret.isPresent()) {
-        return FormValidation.error(Messages.AdobeIOProjectConfig_DescriptorImpl_error_unresolvableClientSecret(clientSecretCredentialsId));
+        validations.add(FormValidation.error(Messages.AdobeIOProjectConfig_DescriptorImpl_error_unresolvableClientSecret(clientSecretCredentialsId)));
+        return FormValidation.aggregate(validations);
       }
-      return FormValidation.ok();
+      validations.add(FormValidation.ok());
+      return FormValidation.aggregate(validations);
     }
 
     /**
@@ -331,14 +339,21 @@ public class AdobeIOProjectConfig extends AbstractDescribableImpl<AdobeIOProject
      */
     @SuppressWarnings("unused")
     public FormValidation doCheckPrivateKeyCredentialsId(@QueryParameter String privateKeyCredentialsId) {
+      List<FormValidation> validations = new ArrayList<>();
+      FormValidation addButtonWarning = FormValidation.warning(Messages.AdobeIOProjectConfig_DescriptorImpl_warn_doNotUseAddCredentialButton());
+      validations.add(addButtonWarning);
+
       if (StringUtils.isBlank(privateKeyCredentialsId)) {
-        return FormValidation.error(Messages.AdobeIOProjectConfig_DescriptorImpl_error_missingPrivateKey());
+        validations.add(FormValidation.error(Messages.AdobeIOProjectConfig_DescriptorImpl_error_missingPrivateKey()));
+        return FormValidation.aggregate(validations);
       }
       Optional<Secret> privateKey = CredentialsUtil.privateKeyFor(privateKeyCredentialsId);
       if (!privateKey.isPresent()) {
-        return FormValidation.error(Messages.AdobeIOProjectConfig_DescriptorImpl_error_unresolvablePrivateKey(privateKeyCredentialsId));
+        validations.add(FormValidation.error(Messages.AdobeIOProjectConfig_DescriptorImpl_error_unresolvablePrivateKey(privateKeyCredentialsId)));
+        return FormValidation.aggregate(validations);
       }
-      return FormValidation.ok();
+      validations.add(FormValidation.ok());
+      return FormValidation.aggregate(validations);
     }
 
     /**

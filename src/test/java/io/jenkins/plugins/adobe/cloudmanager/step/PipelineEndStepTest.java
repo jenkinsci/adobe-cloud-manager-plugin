@@ -326,7 +326,10 @@ public class PipelineEndStepTest {
     story.then(rule -> {
 
       WorkflowRun run = rule.jenkins.getItemByFullName("test", WorkflowJob.class).getBuildByNumber(1);
-      PipelineEndExecution execution = (PipelineEndExecution) run.getExecution().getCurrentExecutions(false).get().stream().filter(e -> e instanceof PipelineEndExecution).findFirst().orElse(null);
+      PipelineEndExecution execution;
+      while ((execution = (PipelineEndExecution) run.getExecution().getCurrentExecutions(false).get().stream().filter(e -> e instanceof PipelineEndExecution).findFirst().orElse(null)) == null) {
+        Thread.sleep(100);
+      }
       execution.occurred(pipelineExecution);
 
       rule.waitForCompletion(run);

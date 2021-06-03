@@ -137,7 +137,7 @@ public class RepositorySyncBuilderTest {
             "  ws {\n" +
             "    git(url: $/" + srcRepo + "/$, branch: '" + defaultBranch + "')\n" +
             "    dir('subdir') {\n" +
-            "      acmRepoSync(url: '" + destRepo + "', credentialsId: 'credentials')\n" +
+            "      acmRepoSync(url: $/" + destRepo + "/$, credentialsId: 'credentials')\n" +
             "    }\n" +
             "  }\n" +
             "}",
@@ -157,6 +157,7 @@ public class RepositorySyncBuilderTest {
     srcRepo.git("commit", "--message=file");
 
     destRepo.git("clone", bareDestRepo.toString(), ".");
+    destRepo.git("checkout", "-b", defaultBranch);
     destRepo.git("config", "user.name", "Git SampleRepoRule");
     destRepo.git("config", "user.email", "gits@mplereporule");
     destRepo.write("testfile", "testfilecontents");
@@ -169,7 +170,7 @@ public class RepositorySyncBuilderTest {
         "node('runner') {\n" +
             "  ws {\n" +
             "    git(url: $/" + srcRepo + "/$, branch: '" + defaultBranch + "')\n" +
-            "    acmRepoSync(url: '" + bareDestRepo + "', credentialsId: 'credentials')\n" +
+            "    acmRepoSync(url: $/" + bareDestRepo + "/$, credentialsId: 'credentials')\n" +
             "  }\n" +
             "}",
         true);
@@ -200,7 +201,7 @@ public class RepositorySyncBuilderTest {
         "node('runner') {\n" +
             "  ws {\n" +
             "    git(url: $/" + srcRepo + "/$, branch: '" + defaultBranch + "')\n" +
-            "    acmRepoSync(url: '" + bareDestRepo + "', credentialsId: 'credentials', force: true)\n" +
+            "    acmRepoSync(url: $/" + bareDestRepo + "/$, credentialsId: 'credentials', force: true)\n" +
             "  }\n" +
             "}",
         true);
@@ -234,7 +235,7 @@ public class RepositorySyncBuilderTest {
         "node('runner') {\n" +
             "  ws {\n" +
             "    git(url: $/" + srcRepo + "/$, branch: 'notdefault')\n" +
-            "    acmRepoSync(url: '" + bareDestRepo + "', credentialsId: 'credentials')\n" +
+            "    acmRepoSync(url: $/" + bareDestRepo + "/$, credentialsId: 'credentials')\n" +
             "  }\n" +
             "}",
         true);
@@ -259,7 +260,7 @@ public class RepositorySyncBuilderTest {
             "  ws {\n" +
             "    git(url: $/" + srcRepo + "/$, branch: '" + defaultBranch + "')\n" +
             "    git(url: $/" + destRepo + "/$, branch: '" + defaultBranch + "')\n" +
-            "    acmRepoSync(url: '" + bareDestRepo + "', credentialsId: 'credentials')\n" +
+            "    acmRepoSync(url: $/" + bareDestRepo + "/$, credentialsId: 'credentials')\n" +
             "  }\n" +
             "}",
         true);
@@ -280,7 +281,7 @@ public class RepositorySyncBuilderTest {
         "node('runner') {\n" +
             "  ws {\n" +
             "    git(url: $/" + srcRepo + "/$, branch: '" + defaultBranch + "')\n" +
-            "    acmRepoSync(url: '" + bareDestRepo + "', credentialsId: 'credentials')\n" +
+            "    acmRepoSync(url: $/" + bareDestRepo + "/$, credentialsId: 'credentials')\n" +
             "  }\n" +
             "}",
         true);
@@ -302,7 +303,7 @@ public class RepositorySyncBuilderTest {
         "    stages {\n" +
         "        stage('sync') {\n" +
         "            steps {\n" +
-        "                acmRepoSync(url: '" + bareDestRepo + "', credentialsId: 'credentials')\n" +
+        "                acmRepoSync(url: $/" + bareDestRepo + "/$, credentialsId: 'credentials')\n" +
         "            }\n" +
         "        }\n" +
         "    }\n" +

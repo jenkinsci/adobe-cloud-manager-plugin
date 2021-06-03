@@ -95,7 +95,7 @@ public class PollPipelineStepTest {
     story.then(rule -> {
       WorkflowJob job = rule.jenkins.createProject(WorkflowJob.class, "test");
       CpsFlowDefinition flow = new CpsFlowDefinition(
-          "node('master') {\n" +
+          "node {\n" +
               "    acmPollPipeline()\n" +
               "}",
           true);
@@ -117,7 +117,7 @@ public class PollPipelineStepTest {
       };
       WorkflowJob job = rule.jenkins.createProject(WorkflowJob.class, "test");
       CpsFlowDefinition flow = new CpsFlowDefinition(
-          "node('master') {\n" +
+          "node {\n" +
               "    semaphore 'before'\n" +
               "    acmPollPipeline()\n" +
               "}",
@@ -151,7 +151,7 @@ public class PollPipelineStepTest {
 
       WorkflowJob job = rule.jenkins.createProject(WorkflowJob.class, "test");
       CpsFlowDefinition flow = new CpsFlowDefinition(
-          "node('master') {\n" +
+          "node {\n" +
               "    semaphore 'before'\n" +
               "    acmPollPipeline()\n" +
               "}",
@@ -186,7 +186,7 @@ public class PollPipelineStepTest {
 
       WorkflowJob job = rule.jenkins.createProject(WorkflowJob.class, "test");
       CpsFlowDefinition flow = new CpsFlowDefinition(
-          "node('master') {\n" +
+          "node {\n" +
               "    semaphore 'before'\n" +
               "    acmPollPipeline()\n" +
               "}",
@@ -221,7 +221,7 @@ public class PollPipelineStepTest {
 
       WorkflowJob job = rule.jenkins.createProject(WorkflowJob.class, "test");
       CpsFlowDefinition flow = new CpsFlowDefinition(
-          "node('master') {\n" +
+          "node {\n" +
               "    semaphore 'before'\n" +
               "    acmPollPipeline()\n" +
               "}",
@@ -256,7 +256,7 @@ public class PollPipelineStepTest {
 
       WorkflowJob job = rule.jenkins.createProject(WorkflowJob.class, "test");
       CpsFlowDefinition flow = new CpsFlowDefinition(
-          "node('master') {\n" +
+          "node {\n" +
               "    semaphore 'before'\n" +
               "    acmPollPipeline(recurrencePeriod: 10)\n" +
               "}",
@@ -292,7 +292,7 @@ public class PollPipelineStepTest {
 
       WorkflowJob job = rule.jenkins.createProject(WorkflowJob.class, "test");
       CpsFlowDefinition flow = new CpsFlowDefinition(
-          "node('master') {\n" +
+          "node {\n" +
               "    semaphore 'before'\n" +
               "    acmPollPipeline(recurrencePeriod: 30)\n" +
               "}",

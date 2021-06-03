@@ -132,7 +132,7 @@ public class PipelineStepEventSubscriberTest {
     }};
     WorkflowJob job = rule.jenkins.createProject(WorkflowJob.class, "test");
     CpsFlowDefinition flow = new CpsFlowDefinition(
-        "node('master') {\n" +
+        "node {\n" +
             "    semaphore 'before'\n" +
             "    testStateSubscriberStep()\n" +
             "}",
@@ -186,7 +186,7 @@ public class PipelineStepEventSubscriberTest {
     }};
     WorkflowJob job = rule.jenkins.createProject(WorkflowJob.class, "test");
     CpsFlowDefinition flow = new CpsFlowDefinition(
-        "node('master') {\n" +
+        "node {\n" +
             "    semaphore 'before'\n" +
             "    testStateSubscriberStep()\n" +
             "}",
@@ -240,7 +240,7 @@ public class PipelineStepEventSubscriberTest {
     }};
     WorkflowJob job = rule.jenkins.createProject(WorkflowJob.class, "test");
     CpsFlowDefinition flow = new CpsFlowDefinition(
-        "node('master') {\n" +
+        "node {\n" +
             "    semaphore 'before'\n" +
             "    testStateSubscriberStep()\n" +
             "}",

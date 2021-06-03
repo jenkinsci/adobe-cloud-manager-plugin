@@ -119,7 +119,7 @@ public class PipelineEndEventSubscriberTest {
     }};
     WorkflowJob job = rule.jenkins.createProject(WorkflowJob.class, "test");
     CpsFlowDefinition flow = new CpsFlowDefinition(
-        "node('master') {\n" +
+        "node {\n" +
             "    semaphore 'before'\n" +
             "    testEndSubscriberStep()\n" +
             "}",

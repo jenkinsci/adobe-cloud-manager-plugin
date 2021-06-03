@@ -100,7 +100,7 @@ public class PipelineEndStepTest {
     story.then(rule -> {
       WorkflowJob job = rule.jenkins.createProject(WorkflowJob.class, "test");
       CpsFlowDefinition flow = new CpsFlowDefinition(
-          "node('master') {\n" +
+          "node {\n" +
               "    acmPipelineStepState()\n" +
               "}",
           true);
@@ -122,7 +122,7 @@ public class PipelineEndStepTest {
       }};
       WorkflowJob job = rule.jenkins.createProject(WorkflowJob.class, "test");
       CpsFlowDefinition flow = new CpsFlowDefinition(
-          "node('master') {\n" +
+          "node {\n" +
               "    semaphore 'before'\n" +
               "    acmPipelineEnd {\n" +
               "        semaphore 'inside'\n" +
@@ -176,7 +176,7 @@ public class PipelineEndStepTest {
       }};
       WorkflowJob job = rule.jenkins.createProject(WorkflowJob.class, "test");
       CpsFlowDefinition flow = new CpsFlowDefinition(
-          "node('master') {\n" +
+          "node {\n" +
               "    semaphore 'before'\n" +
               "    acmPipelineEnd(mirror: false) {\n" +
               "        semaphore 'inside'\n" +
@@ -217,7 +217,7 @@ public class PipelineEndStepTest {
       }};
       WorkflowJob job = rule.jenkins.createProject(WorkflowJob.class, "test");
       CpsFlowDefinition flow = new CpsFlowDefinition(
-          "node('master') {\n" +
+          "node {\n" +
               "    semaphore 'before'\n" +
               "    acmPipelineEnd {\n" +
               "        acmPipelineStepState()\n " +
@@ -256,7 +256,7 @@ public class PipelineEndStepTest {
       }};
       WorkflowJob job = rule.jenkins.createProject(WorkflowJob.class, "test");
       CpsFlowDefinition flow = new CpsFlowDefinition(
-          "node('master') {\n" +
+          "node {\n" +
               "    semaphore 'before'\n" +
               "    acmPipelineEnd {\n" +
               "      parallel stopped: {\n" +
@@ -308,7 +308,7 @@ public class PipelineEndStepTest {
       }};
       WorkflowJob job = rule.jenkins.createProject(WorkflowJob.class, "test");
       CpsFlowDefinition flow = new CpsFlowDefinition(
-          "node('master') {\n" +
+          "node {\n" +
               "    semaphore 'before'\n" +
               "    acmPipelineEnd {\n" +
               "        acmPipelineStepState()\n " +

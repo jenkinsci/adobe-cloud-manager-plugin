@@ -105,7 +105,7 @@ public class PipelineStepStateStepTest {
   private WorkflowRun setupRun(JenkinsRule rule) throws Exception {
     WorkflowJob job = rule.jenkins.createProject(WorkflowJob.class, "test");
     CpsFlowDefinition flow = new CpsFlowDefinition(
-        "node('master') {\n" +
+        "node {\n" +
             "    semaphore 'before'\n" +
             "    acmPipelineStepState()\n" +
             "}",
@@ -124,7 +124,7 @@ public class PipelineStepStateStepTest {
     story.then(rule -> {
       WorkflowJob job = rule.jenkins.createProject(WorkflowJob.class, "noBuildData");
       CpsFlowDefinition flow = new CpsFlowDefinition(
-          "node('master') {\n" +
+          "node {\n" +
               "    acmPipelineStepState()\n" +
               "}",
           true);
@@ -219,7 +219,7 @@ public class PipelineStepStateStepTest {
 
       WorkflowJob job = rule.jenkins.createProject(WorkflowJob.class, "test");
       CpsFlowDefinition flow = new CpsFlowDefinition(
-          "node('master') {\n" +
+          "node {\n" +
               "    semaphore 'before'\n" +
               "    acmPipelineStepState(advance: false)\n" +
               "}",
@@ -273,7 +273,7 @@ public class PipelineStepStateStepTest {
     story.then(rule -> {
       WorkflowJob job = rule.jenkins.createProject(WorkflowJob.class, "test");
       CpsFlowDefinition flow = new CpsFlowDefinition(
-          "node('master') {\n" +
+          "node {\n" +
               "    semaphore 'before'\n" +
               "    acmPipelineStepState()\n" +
               "}",
@@ -343,7 +343,7 @@ public class PipelineStepStateStepTest {
 
       WorkflowJob job = rule.jenkins.createProject(WorkflowJob.class, "test");
       CpsFlowDefinition flow = new CpsFlowDefinition(
-          "node('master') {\n" +
+          "node {\n" +
               "    semaphore 'before'\n" +
               "    acmPipelineStepState(autoApprove: true)\n" +
               "}",
@@ -802,7 +802,7 @@ public class PipelineStepStateStepTest {
 
       WorkflowJob job = rule.jenkins.createProject(WorkflowJob.class, "test");
       CpsFlowDefinition flow = new CpsFlowDefinition(
-          "node('master') {\n" +
+          "node {\n" +
               "    semaphore 'before'\n" +
               "    acmPipelineStepState()\n" +
               "}",
@@ -861,7 +861,7 @@ public class PipelineStepStateStepTest {
 
       WorkflowJob job = rule.jenkins.createProject(WorkflowJob.class, "test");
       CpsFlowDefinition flow = new CpsFlowDefinition(
-          "node('master') {\n" +
+          "node {\n" +
               "    semaphore 'before'\n" +
               "    acmPipelineStepState(actions: ['codeQuality', 'build', 'approval'])\n" +
               "}",

@@ -217,7 +217,7 @@ public class FullWebhookIntegrationTest {
 
     WorkflowJob job = rule.createProject(WorkflowJob.class, "full");
     CpsFlowDefinition flow = new CpsFlowDefinition(
-        "node('master') {\n" +
+        "node {\n" +
             "  acmStartPipeline aioProject: '" + AIO_PROJECT_NAME + "', program: '" + PROGRAM_ID + "', pipeline: '" + PIPELINE_ID + "'\n" +
             "  acmPipelineEnd() {\n" +
             "    parallel acm: {\n" +
@@ -293,7 +293,7 @@ public class FullWebhookIntegrationTest {
 
     WorkflowJob job = rule.createProject(WorkflowJob.class, "full");
     CpsFlowDefinition flow = new CpsFlowDefinition(
-        "node('master') {\n" +
+        "node {\n" +
             "  acmStartPipeline aioProject: '" + AIO_PROJECT_NAME + "', program: '" + PROGRAM_ID + "', pipeline: '" + PIPELINE_ID + "'\n" +
             "  acmPipelineEnd() {\n" +
             "    parallel acm: {\n" +

@@ -93,7 +93,8 @@ public class RepositorySyncBuilderTest {
   public void before() throws Exception {
     srcRepo.init();
     srcRepo.git("checkout", "-b", defaultBranch);
-    bareDestRepo.git("init", "--bare", "--initial-branch=" + defaultBranch);
+    bareDestRepo.git("init", "--bare");
+    bareDestRepo.git("symbolic-ref", "HEAD", "refs/heads/" + defaultBranch);
 
     CredentialsStore store = CredentialsProvider.lookupStores(rule.jenkins).iterator().next();
     Credentials credentials = new UsernamePasswordCredentialsImpl(CredentialsScope.SYSTEM, "credentials", "", "username", "test-password");
@@ -156,6 +157,7 @@ public class RepositorySyncBuilderTest {
     srcRepo.git("commit", "--message=file");
 
     destRepo.git("clone", bareDestRepo.toString(), ".");
+    destRepo.git("checkout", "-b", defaultBranch);
     destRepo.git("config", "user.name", "Git SampleRepoRule");
     destRepo.git("config", "user.email", "gits@mplereporule");
     destRepo.write("testfile", "testfilecontents");
@@ -187,6 +189,7 @@ public class RepositorySyncBuilderTest {
     srcRepo.git("commit", "--message=file");
 
     destRepo.git("clone", bareDestRepo.toString(), ".");
+    destRepo.git("checkout", "-b", defaultBranch);
     destRepo.git("config", "user.name", "Git SampleRepoRule");
     destRepo.git("config", "user.email", "gits@mplereporule");
     destRepo.write("testfile", "testfilecontents");

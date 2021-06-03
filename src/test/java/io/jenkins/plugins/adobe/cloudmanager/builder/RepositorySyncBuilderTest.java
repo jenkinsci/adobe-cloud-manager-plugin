@@ -75,6 +75,9 @@ public class RepositorySyncBuilderTest {
   public GitSampleRepoRule srcRepo = new GitSampleRepoRule();
 
   @Rule
+  public GitSampleRepoRule destSetupRepo = new GitSampleRepoRule();
+
+  @Rule
   public GitSampleRepoRule bareDestRepo = new GitSampleRepoRule();
 
   @Rule
@@ -163,7 +166,7 @@ public class RepositorySyncBuilderTest {
     destRepo.write("testfile", "testfilecontents");
     destRepo.git("add", "testfile");
     destRepo.git("commit", "--message=testfile");
-    destRepo.git("push");
+    destRepo.git("push", "-u", "origin", defaultBranch);
     WorkflowJob job = rule.jenkins.createProject(WorkflowJob.class, "test");
     rule.createOnlineSlave(Label.get("runner"));
     CpsFlowDefinition flow = new CpsFlowDefinition(
@@ -196,6 +199,7 @@ public class RepositorySyncBuilderTest {
     destRepo.git("add", "testfile");
     destRepo.git("commit", "--message=testfile");
     destRepo.git("push");
+    destRepo.git("push", "-u", "origin", defaultBranch);
     WorkflowJob job = rule.jenkins.createProject(WorkflowJob.class, "test");
     rule.createOnlineSlave(Label.get("runner"));
     CpsFlowDefinition flow = new CpsFlowDefinition(
@@ -380,7 +384,7 @@ public class RepositorySyncBuilderTest {
     FreeStyleBuild run = project.scheduleBuild2(0).waitForStart();
     rule.waitForCompletion(run);
     rule.assertBuildStatus(Result.SUCCESS, run);
-    destRepo.git("clone", bareDestRepo.toString(), ".");
+    destRepo.git("clone", "-b", defaultBranch, bareDestRepo.toString(), ".");
     assertEquals(srcRepo.head(), destRepo.head());
   }
 }

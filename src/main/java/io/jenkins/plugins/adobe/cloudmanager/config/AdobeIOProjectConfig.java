@@ -369,8 +369,7 @@ public class AdobeIOProjectConfig extends AbstractDescribableImpl<AdobeIOProject
 
       return new StandardListBoxModel()
           .includeEmptyValue()
-          .includeMatchingAs(ACL.SYSTEM,
-              Jenkins.get(),
+          .includeMatching(Jenkins.get(),
               StringCredentials.class,
               URIRequirementBuilder.fromUri(ADOBE_IO_DOMAIN).build(),
               CredentialsMatchers.always());
@@ -389,7 +388,7 @@ public class AdobeIOProjectConfig extends AbstractDescribableImpl<AdobeIOProject
 
       return new StandardListBoxModel()
           .includeEmptyValue()
-          .includeMatchingAs(ACL.SYSTEM,
+          .includeMatching(
               Jenkins.get(),
               FileCredentials.class,
               URIRequirementBuilder.fromUri(ADOBE_IO_DOMAIN).build(),

@@ -98,7 +98,7 @@ public class PipelineStepStateExecutionTest {
 
     assertFalse(tested.isApplicable(stepState));
     ps.close();
-    assertEquals(baos.toString(), Messages.PipelineStepStateExecution_unknownStepAction("Unknown") + '\n');
+    assertTrue(baos.toString().contains(Messages.PipelineStepStateExecution_unknownStepAction("Unknown")));
   }
 
   @Test

@@ -49,6 +49,7 @@ import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOConfig;
 import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOProjectConfig;
 import io.jenkins.plugins.adobe.cloudmanager.step.execution.Messages;
 import io.jenkins.plugins.adobe.cloudmanager.step.execution.PipelineStepStateExecution;
+import io.jenkins.plugins.adobe.cloudmanager.test.RestartTest;
 import mockit.Expectations;
 import mockit.Mock;
 import mockit.MockUp;
@@ -65,10 +66,10 @@ import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.jvnet.hudson.test.BuildWatcher;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.RestartableJenkinsRule;
-import org.jvnet.hudson.test.recipes.WithTimeout;
 import static io.jenkins.plugins.adobe.cloudmanager.test.TestHelper.*;
 import static org.junit.Assert.*;
 
@@ -243,7 +244,7 @@ public class PipelineStepStateStepTest {
   }
 
   @Test
-  @WithTimeout(300)
+  @Category(RestartTest.class)
   public void notificationSurvivesRestart() {
 
     story.then(this::setupRun);
@@ -273,7 +274,7 @@ public class PipelineStepStateStepTest {
   }
 
   @Test
-  @WithTimeout(300)
+  @Category(RestartTest.class)
   public void notificationSurvivesRestartValidationFails() {
 
     story.then(rule -> {
@@ -711,7 +712,7 @@ public class PipelineStepStateStepTest {
   }
 
   @Test
-  @WithTimeout(300)
+  @Category(RestartTest.class)
   public void waitingSurvivesRestart() {
     story.then(rule -> {
 
@@ -799,7 +800,7 @@ public class PipelineStepStateStepTest {
   }
 
   @Test
-  @WithTimeout(300)
+  @Category(RestartTest.class)
   public void waitingSurvivesRestartValidationFails() {
     story.then(rule -> {
       new Expectations() {{

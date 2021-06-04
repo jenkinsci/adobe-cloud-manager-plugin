@@ -46,6 +46,7 @@ import io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOProjectConfig;
 import io.jenkins.plugins.adobe.cloudmanager.step.execution.Messages;
 import io.jenkins.plugins.adobe.cloudmanager.step.execution.PipelineEndExecution;
 import io.jenkins.plugins.adobe.cloudmanager.step.execution.PipelineStepStateExecution;
+import io.jenkins.plugins.adobe.cloudmanager.test.RestartTest;
 import mockit.Expectations;
 import mockit.Mock;
 import mockit.MockUp;
@@ -65,9 +66,9 @@ import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.jvnet.hudson.test.BuildWatcher;
 import org.jvnet.hudson.test.RestartableJenkinsRule;
-import org.jvnet.hudson.test.recipes.WithTimeout;
 import org.kohsuke.stapler.DataBoundConstructor;
 import static io.jenkins.plugins.adobe.cloudmanager.test.TestHelper.*;
 import static org.junit.Assert.*;
@@ -299,7 +300,7 @@ public class PipelineEndStepTest {
   }
 
   @Test
-  @WithTimeout(300)
+  @Category(RestartTest.class)
   public void handlesRestartDuringBlock() {
     story.then(rule -> {
       new Expectations() {{

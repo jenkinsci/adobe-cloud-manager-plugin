@@ -232,7 +232,7 @@ public class RepositorySyncBuilderTest {
     destRepo.write("testfile", "testfilecontents");
     destRepo.git("add", "testfile");
     destRepo.git("commit", "--message=testfile");
-    destRepo.git("push", "-u", "origin", defaultBranch);
+    destRepo.git("push");
     WorkflowJob job = rule.jenkins.createProject(WorkflowJob.class, "test");
     rule.createOnlineSlave(Label.get("runner"));
     CpsFlowDefinition flow = new CpsFlowDefinition(

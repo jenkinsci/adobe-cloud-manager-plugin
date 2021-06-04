@@ -67,6 +67,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.BuildWatcher;
 import org.jvnet.hudson.test.RestartableJenkinsRule;
+import org.jvnet.hudson.test.recipes.WithTimeout;
 import org.kohsuke.stapler.DataBoundConstructor;
 import static io.jenkins.plugins.adobe.cloudmanager.test.TestHelper.*;
 import static org.junit.Assert.*;
@@ -298,6 +299,7 @@ public class PipelineEndStepTest {
   }
 
   @Test
+  @WithTimeout(300)
   public void handlesRestartDuringBlock() {
     story.then(rule -> {
       new Expectations() {{

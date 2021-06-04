@@ -68,6 +68,7 @@ import org.junit.Test;
 import org.jvnet.hudson.test.BuildWatcher;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.RestartableJenkinsRule;
+import org.jvnet.hudson.test.recipes.WithTimeout;
 import static io.jenkins.plugins.adobe.cloudmanager.test.TestHelper.*;
 import static org.junit.Assert.*;
 
@@ -242,6 +243,7 @@ public class PipelineStepStateStepTest {
   }
 
   @Test
+  @WithTimeout(300)
   public void notificationSurvivesRestart() {
 
     story.then(this::setupRun);
@@ -271,6 +273,7 @@ public class PipelineStepStateStepTest {
   }
 
   @Test
+  @WithTimeout(300)
   public void notificationSurvivesRestartValidationFails() {
 
     story.then(rule -> {
@@ -708,6 +711,7 @@ public class PipelineStepStateStepTest {
   }
 
   @Test
+  @WithTimeout(300)
   public void waitingSurvivesRestart() {
     story.then(rule -> {
 
@@ -795,6 +799,7 @@ public class PipelineStepStateStepTest {
   }
 
   @Test
+  @WithTimeout(300)
   public void waitingSurvivesRestartValidationFails() {
     story.then(rule -> {
       new Expectations() {{

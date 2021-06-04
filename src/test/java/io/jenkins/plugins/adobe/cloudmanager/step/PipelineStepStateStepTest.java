@@ -257,7 +257,10 @@ public class PipelineStepStateStepTest {
       }};
 
       WorkflowRun run = rule.jenkins.getItemByFullName("test", WorkflowJob.class).getBuildByNumber(1);
-      PipelineStepStateExecution execution = (PipelineStepStateExecution) run.getExecution().getCurrentExecutions(false).get().stream().filter(e -> e instanceof PipelineStepStateExecution).findFirst().orElse(null);
+      PipelineStepStateExecution execution;
+      while ((execution = (PipelineStepStateExecution) run.getExecution().getCurrentExecutions(false).get().stream().filter(e -> e instanceof PipelineStepStateExecution).findFirst().orElse(null)) == null) {
+        Thread.sleep(100);
+      }
       execution.occurred(pipelineExecution, stepState);
       rule.waitForCompletion(run);
       rule.assertBuildStatus(Result.SUCCESS, run);
@@ -718,7 +721,10 @@ public class PipelineStepStateStepTest {
       }};
 
       WorkflowRun run = setupRun(rule);
-      PipelineStepStateExecution execution = (PipelineStepStateExecution) run.getExecution().getCurrentExecutions(false).get().stream().filter(e -> e instanceof PipelineStepStateExecution).findFirst().orElse(null);
+      PipelineStepStateExecution execution;
+      while ((execution = (PipelineStepStateExecution) run.getExecution().getCurrentExecutions(false).get().stream().filter(e -> e instanceof PipelineStepStateExecution).findFirst().orElse(null)) == null) {
+        Thread.sleep(100);
+      }
       execution.waiting(pipelineExecution, stepState);
       rule.waitForMessage(Messages.PipelineStepStateExecution_occurred("ExecutionId", "codeQuality", "WAITING"), run);
       assertFalse(execution.isProcessed());

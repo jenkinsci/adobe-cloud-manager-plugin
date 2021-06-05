@@ -25,7 +25,7 @@
         <spotbugs.effort>Max</spotbugs.effort>
         <spotbugs.failOnError>false</spotbugs.failOnError>
 
-        <jgit.version>5.11.0.202103091610-r</jgit.version>
+        <jgit.version>5.11.1.202105131744-r</jgit.version>
         <jmockit.version>1.49</jmockit.version>
 
         <jackson.version>2.12.1</jackson.version>

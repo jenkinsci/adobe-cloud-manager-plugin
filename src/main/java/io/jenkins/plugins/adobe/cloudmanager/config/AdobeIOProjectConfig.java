@@ -258,9 +258,10 @@ public class AdobeIOProjectConfig extends AbstractDescribableImpl<AdobeIOProject
 
   private String generateCredentialsId() {
 
+    String imsOrg = getImsOrganizationId();
     String hash = "";
-    if (getImsOrganizationId() != null) {
-      hash = Integer.toString(getImsOrganizationId().hashCode());
+    if (imsOrg != null) {
+      hash = Integer.toString(imsOrg.hashCode());
     }
     return StringUtils.join(new String[]{ getName(), hash }, "-").replaceAll("[^a-zA-Z0-9_.-]+", "");
   }

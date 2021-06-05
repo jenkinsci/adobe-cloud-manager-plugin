@@ -344,6 +344,40 @@ public class PipelineEndStepTest {
     });
   }
 
+  @Test
+  public void noBlock() {
+    story.then(rule -> {
+      new Expectations() {{
+        pipelineExecution.getId();
+        result = "ExecutionId";
+        pipelineExecution.getStatusState();
+        result = PipelineExecution.Status.FINISHED;
+      }};
+      WorkflowJob job = rule.jenkins.createProject(WorkflowJob.class, "test");
+      CpsFlowDefinition flow = new CpsFlowDefinition(
+          "node {\n" +
+              "    semaphore 'before'\n" +
+              "    acmPipelineEnd(empty: true) {\n" +
+              "    }\n" +
+              "}",
+          true);
+      job.setDefinition(flow);
+      WorkflowRun run = job.scheduleBuild2(0).waitForStart();
+      SemaphoreStep.waitForStart("before/1", run);
+      run.addAction(new CloudManagerBuildAction(AIO_PROJECT_NAME, new CloudManagerPipelineExecution("1", "1", "1")));
+      SemaphoreStep.success("before/1", true);
+
+      PipelineEndExecution execution = null;
+      while ((execution = (PipelineEndExecution) run.getExecution().getCurrentExecutions(false).get().stream().filter(e -> e instanceof PipelineEndExecution).findFirst().orElse(null)) == null) {
+        Thread.sleep(100);
+      }
+      execution.occurred(pipelineExecution);
+      rule.waitForCompletion(run);
+      rule.assertBuildStatus(Result.SUCCESS, run);
+      assertTrue(run.getLog().contains(Messages.PipelineEndExecution_occurred("ExecutionId", "FINISHED")));
+    });
+  }
+
   public static final class TestRecurrenceStep extends Step {
 
     public static boolean finished = false;

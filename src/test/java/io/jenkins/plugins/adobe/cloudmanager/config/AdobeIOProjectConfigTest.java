@@ -134,7 +134,8 @@ public class AdobeIOProjectConfigTest {
       imApi.authenticate(withEqual(creds));
       result = ACCESS_TOKEN;
     }};
-    String configId = AIO_PROJECT_NAME.replaceAll("[^a-zA-Z0-9_.-]+", "").concat(CLIENT_ID);
+    String hash = Integer.toString(IMS_ORG_ID.hashCode());
+    String configId = AIO_PROJECT_NAME.replaceAll("[^a-zA-Z0-9_.-]+", "").concat("-").concat(hash);
     Secret result = AdobeIOConfig.projectConfigFor(AIO_PROJECT_NAME).authenticate();
     assertNotNull(result);
     assertEquals(ACCESS_TOKEN, result.getPlainText());
@@ -159,7 +160,8 @@ public class AdobeIOProjectConfigTest {
       imApi.isValid(withEqual(creds), ACCESS_TOKEN);
       result = true;
     }};
-    String configId = AIO_PROJECT_NAME.replaceAll("[^a-zA-Z0-9_.-]+", "").concat(CLIENT_ID);
+    String hash = Integer.toString(IMS_ORG_ID.hashCode());
+    String configId = AIO_PROJECT_NAME.replaceAll("[^a-zA-Z0-9_.-]+", "").concat("-").concat(hash);
     CredentialsStore store = CredentialsProvider.lookupStores(rule.jenkins).iterator().next();
     store.addCredentials(aioDomain, new StringCredentialsImpl(CredentialsScope.SYSTEM, configId,"", Secret.fromString(ACCESS_TOKEN)));
     Secret result = AdobeIOConfig.projectConfigFor(AIO_PROJECT_NAME).authenticate();
@@ -183,7 +185,9 @@ public class AdobeIOProjectConfigTest {
       imApi.authenticate(withEqual(creds));
       result = new IdentityManagementApiException("Authentication Failed", null);
     }};
-    String configId = AIO_PROJECT_NAME.replaceAll("[^a-zA-Z0-9_.-]+", "").concat(CLIENT_ID);
+
+    String hash = Integer.toString(IMS_ORG_ID.hashCode());
+    String configId = AIO_PROJECT_NAME.replaceAll("[^a-zA-Z0-9_.-]+", "").concat("-").concat(hash);
 
     CredentialsStore store = CredentialsProvider.lookupStores(rule.jenkins).iterator().next();
     store.addCredentials(aioDomain, new StringCredentialsImpl(CredentialsScope.SYSTEM, configId,"", Secret.fromString(ACCESS_TOKEN)));
@@ -208,7 +212,8 @@ public class AdobeIOProjectConfigTest {
       imApi.authenticate(withEqual(creds));
       result = newAccessToken;
     }};
-    String configId = AIO_PROJECT_NAME.replaceAll("[^a-zA-Z0-9_.-]+", "").concat(CLIENT_ID);
+    String hash = Integer.toString(IMS_ORG_ID.hashCode());
+    String configId = AIO_PROJECT_NAME.replaceAll("[^a-zA-Z0-9_.-]+", "").concat("-").concat(hash);
     CredentialsStore store = CredentialsProvider.lookupStores(rule.jenkins).iterator().next();
     store.addCredentials(aioDomain, new StringCredentialsImpl(CredentialsScope.SYSTEM, configId,"", Secret.fromString(ACCESS_TOKEN)));
 

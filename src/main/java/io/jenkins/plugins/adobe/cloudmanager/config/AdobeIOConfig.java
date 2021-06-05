@@ -35,7 +35,9 @@ import javax.annotation.Nonnull;
 import org.apache.commons.lang3.StringUtils;
 
 import hudson.Extension;
+import io.jenkins.plugins.adobe.cloudmanager.webhook.CloudManagerWebHook;
 import jenkins.model.GlobalConfiguration;
+import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.StaplerRequest;
@@ -115,6 +117,10 @@ public class AdobeIOConfig extends GlobalConfiguration {
   @DataBoundSetter
   public void setWebhookEnabled(boolean webhookEnabled) {
     this.webhookEnabled = webhookEnabled;
+  }
+
+  public String getWebhookUrl() {
+    return String.format("%s/%s/", Jenkins.get().getRootUrl(), CloudManagerWebHook.URL_NAME);
   }
 
   /**

@@ -39,9 +39,12 @@
     </style>
     <f:section title="${%displayName}">
         <f:entry title="${%title}">
-            <f:entry title="${%webhook.title}" field="webhookEnabled">
-                <f:checkbox default="false" />
-            </f:entry>
+            <f:block>
+                <f:entry title="${%webhook.title}" field="webhookEnabled">
+                    <f:checkbox default="false" />
+                    (${descriptor.webhookUrl})
+                </f:entry>
+            </f:block>
             <f:block>
                 <f:repeatableHeteroProperty field="projectConfigs" hasHeader="true" addCaption="${%configs.caption}"/>
             </f:block>

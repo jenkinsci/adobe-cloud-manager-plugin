@@ -29,7 +29,7 @@
     <f:entry field="actions" title="${%actions.title}">
         <f:enumSet />
     </f:entry>
-    <f:entry field="showLogs" title="${%showLogs.title}">
+    <f:entry field="advance" title="${%advance.title}">
         <f:checkbox default="true" />
     </f:entry>
     <f:entry field="autoApprove" title="${%autoApprove.title}">

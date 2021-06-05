@@ -74,7 +74,7 @@ public @interface RequireCMEventPayload {
     // Helper for generating a standard response to caller.
     private static void isTrue(boolean condition, String message) throws InvocationTargetException {
       if (!condition) {
-        throw new InvocationTargetException(HttpResponses.errorWithoutStack(SC_BAD_REQUEST, message));
+        throw new InvocationTargetException(HttpResponses.error(SC_BAD_REQUEST, message));
       }
     }
 

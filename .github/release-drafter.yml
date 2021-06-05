@@ -1,2 +1,1 @@
 _extends: .github
-tag-template: adobe-cloud-manager-$NEXT_MINOR_VERSION

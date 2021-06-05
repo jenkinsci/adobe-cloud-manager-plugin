@@ -60,6 +60,7 @@ import org.kohsuke.stapler.DataBoundSetter;
 public class PipelineEndStep extends Step {
 
   private boolean mirror = true;
+  private boolean empty = false;
 
   @DataBoundConstructor
   public PipelineEndStep() {
@@ -78,9 +79,14 @@ public class PipelineEndStep extends Step {
     this.mirror = mirror;
   }
 
+  public boolean isEmpty() { return empty; }
+
+  @DataBoundSetter
+  public void setEmpty(boolean empty) { this.empty = empty; }
+
   @Override
   public StepExecution start(StepContext context) throws Exception {
-    return new PipelineEndExecution(context, mirror);
+    return new PipelineEndExecution(context, mirror, empty);
   }
 
   @Extension

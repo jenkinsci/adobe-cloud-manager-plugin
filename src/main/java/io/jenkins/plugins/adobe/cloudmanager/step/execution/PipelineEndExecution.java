@@ -48,15 +48,17 @@ import static io.adobe.cloudmanager.PipelineExecution.Status.*;
  */
 public class PipelineEndExecution extends AbstractStepExecution {
 
-  private final Boolean mirror;
+  private final boolean mirror;
+  private final boolean empty;
   // Event status' which are associated with a remote pipeline failure.
   private final List<PipelineExecution.Status> FAILURES = Arrays.asList(FAILED, ERROR, CANCELLED);
   // Final status indicating that this execution is complete.
   private PipelineExecution.Status status;
 
-  public PipelineEndExecution(StepContext context, boolean mirror) {
+  public PipelineEndExecution(StepContext context, boolean mirror, boolean empty) {
     super(context);
     this.mirror = mirror;
+    this.empty = empty;
   }
 
   public boolean isFinished() {
@@ -66,7 +68,7 @@ public class PipelineEndExecution extends AbstractStepExecution {
   @Override
   public void doStart() throws Exception {
     getTaskListener().getLogger().println(Messages.PipelineEndExecution_waiting());
-    if (getContext().hasBody()) {
+    if (!empty) {
       getContext().newBodyInvoker().withCallback(new Callback(getId())).start();
     }
   }
@@ -78,11 +80,6 @@ public class PipelineEndExecution extends AbstractStepExecution {
     } catch (IOException | InterruptedException e) {
       getContext().onFailure(e);
     }
-  }
-
-  @Override
-  public void doStop() throws Exception {
-
   }
 
   @CheckForNull
@@ -145,6 +142,9 @@ public class PipelineEndExecution extends AbstractStepExecution {
       return sei;
     }).collect(Collectors.toList());
     getTaskListener().getLogger().println(Messages.PipelineEndExecution_occurred(pe.getId(), pe.getStatusState()));
+    if (empty) {
+      end();
+    }
   }
 
   /**

@@ -157,7 +157,7 @@ public class PipelineEndEventSubscriberTest {
       public transient PipelineEndEventSubscriberTest.TestRecordEventStep step;
 
       public Execution(StepContext context, TestRecordEventStep step) {
-        super(context, true);
+        super(context, true, false);
         this.step = step;
       }
 

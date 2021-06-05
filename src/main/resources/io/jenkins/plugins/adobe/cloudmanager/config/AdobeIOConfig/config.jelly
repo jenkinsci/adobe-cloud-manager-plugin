@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+  MIT License
+
+  Copyright (c) 2020 Adobe Inc
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
+
+-->
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core"
+         xmlns:f="/lib/form">
+    <style>
+        /*
+            A VERY ugly, but works, solution to hide the `add` button next to credential fields.
+            this is necessary to prevent users from using that button and instead add the credentials
+            in the documented way (under a specific jenkins credentials domain).
+        */
+        [descriptorid="io.jenkins.plugins.adobe.cloudmanager.config.AdobeIOProjectConfig"] .credentials-add-menu {
+            display: none;
+        }
+    </style>
+    <f:section title="${%displayName}">
+        <f:entry title="${%title}">
+            <f:block>
+                <f:entry title="${%webhook.title}" field="webhookEnabled">
+                    <f:checkbox default="false" />
+                    (${descriptor.webhookUrl})
+                </f:entry>
+            </f:block>
+            <f:block>
+                <f:repeatableHeteroProperty field="projectConfigs" hasHeader="true" addCaption="${%configs.caption}"/>
+            </f:block>
+        </f:entry>
+    </f:section>
+</j:jelly>

@@ -1,0 +1,9 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler">
+    <strong>Pipeline Execution Event State</strong>: ${it.id}
+    <j:if test="${!it.processed}">
+        <p>
+            <st:include page="${it.reason}.jelly"/>
+        </p>
+    </j:if>
+</j:jelly>

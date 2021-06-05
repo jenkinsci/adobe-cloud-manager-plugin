@@ -1,1 +1,5 @@
-buildPlugin(configurations: buildPlugin.recommendedConfigurations())
+buildPlugin(
+    useAci: true,
+    failFast: false,
+    configurations: buildPlugin.recommendedConfigurations()
+)

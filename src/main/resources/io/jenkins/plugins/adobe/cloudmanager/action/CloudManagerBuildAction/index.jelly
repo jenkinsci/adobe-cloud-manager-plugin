@@ -1,0 +1,38 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout" xmlns:f="/lib/form">
+    <l:layout title="Adobe Cloud Manager">
+        <j:if test="${it.owningRun != null}">
+            <st:include page="sidepanel" it="${it.owningRun}" optional="true"/>
+        </j:if>
+        <l:main-panel>
+            <h1>${%page.title}</h1>
+            <br/>
+            <strong>Program</strong>: ${it.cmExecution.programId}
+            <br/>
+            <strong>Pipeline</strong>: ${it.cmExecution.pipelineId}
+            <br/>
+            <strong>Execution</strong>: ${it.cmExecution.executionId}
+            <br/>
+            <p>
+                <h3>${%steps.heading}</h3>
+                <ul>
+                    <j:forEach var="step" items="${it.steps}" indexVar="idx">
+                        <li>
+                            ${step.status}
+                            <j:if test="${step.hasLogs || step.hasQualityData}">
+                                <ul>
+                                <j:if test="${step.hasLogs}">
+                                    <li><f:link href="getLog?step=${idx}" post="true">${%logs.text}</f:link></li>
+                                </j:if>
+                                <j:if test="${step.hasQualityData}">
+                                    <li><f:link href="getQualityData?step=${idx}" post="true">${%qualityResults.text}</f:link></li>
+                                </j:if>
+                                </ul>
+                            </j:if>
+                        </li>
+                    </j:forEach>
+                </ul>
+            </p>
+        </l:main-panel>
+    </l:layout>
+</j:jelly>

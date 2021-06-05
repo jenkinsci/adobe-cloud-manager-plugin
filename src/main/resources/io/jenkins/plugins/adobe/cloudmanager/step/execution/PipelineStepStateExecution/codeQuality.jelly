@@ -1,0 +1,12 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:f="/lib/form">
+    <h1>${%prompt}</h1>
+    <j:if test="${!it.completed}">
+        <f:form method="post" action="${it.id}/submit" name="${it.id}">
+            <f:block>
+                <f:submit value="${%approve}" name="proceed"/>
+                <f:submit value="${%cancel}" name="cancel"/>
+            </f:block>
+        </f:form>
+    </j:if>
+</j:jelly>

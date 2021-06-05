@@ -1,0 +1,18 @@
+{
+  "event_id": "1",
+  "event": {
+    "@id": "1",
+    "@type": "https://ns.adobe.com/experience/cloudmanager/event/waiting",
+    "xdmEventEnvelope:objectType": "https://ns.adobe.com/experience/cloudmanager/execution-step-state",
+    "activitystreams:published": "",
+    "activitystreams:to": {
+      "xdmImsOrg:id": "1234567890@AdobeOrg",
+      "@type": "xdmImsOrg"
+    },
+    "activitystreams:object": {
+      "@id": "https://cloudmanager.adobe.io/api/program/1/pipeline/2/execution/3/phase/4/step/6",
+      "@type": "https://ns.adobe.com/experience/cloudmanager/execution-step-state"
+    }
+  }
+}
+

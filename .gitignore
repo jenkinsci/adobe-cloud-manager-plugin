@@ -1,3 +1,25 @@
+### Java ###
+*.class
+
+# Mobile Tools for Java (J2ME)
+.mtj.tmp/
+
+# Package Files #
+*.jar
+*.war
+*.ear
+
+# exclude jar for gradle wrapper
+!gradle/wrapper/*.jar
+
+# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+hs_err_pid*
+
+
+# OS Files
+.DS_Store
+
+### Maven ###
 target/
 pom.xml.tag
 pom.xml.releaseBackup
@@ -7,19 +29,41 @@ release.properties
 dependency-reduced-pom.xml
 buildNumber.properties
 .mvn/timing.properties
-# https://github.com/takari/maven-wrapper#usage-without-binary-jar
-.mvn/wrapper/maven-wrapper.jar
 
+### IntelliJ ###
 .idea/
+*.iml
 
-work/
+### Eclipse ###
+*.pydevproject
+.metadata
+.gradle
+bin/
+tmp/
+*.tmp
+*.bak
+*.swp
+*~.nib
+local.properties
+.settings/
+.loadpath
 
-.classpath
-
-.factorypath
-
+# Eclipse Core
 .project
 
-.settings/
+# External tool builders
+.externalToolBuilders/
 
-.DS_Store
+# Locally stored "Eclipse launch configurations"
+*.launch
+
+# Tests
+coverage/
+reports/
+
+# Jenkins local runs
+work/
+*.log
+
+# JEnv
+.java-version

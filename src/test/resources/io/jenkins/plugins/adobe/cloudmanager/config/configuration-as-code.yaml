@@ -1,0 +1,17 @@
+unclassified:
+
+  adobeioconfig:
+    projectConfigs:
+      - name: "Test Project 1"
+        clientId: "Client Id 1"
+        imsOrganizationId: "Ims Organization Id 1"
+        technicalAccountId: "Technical Account Id 1"
+        clientSecretCredentialsId: "Client Secret Credentials Id 1"
+        privateKeyCredentialsId: "Private Key Credentials Id 1"
+      - name: "Test Project 2"
+        apiUrl: "http://notdefault.adobe.io/url"
+        clientId: "Client Id 2"
+        imsOrganizationId: "Ims Organization Id 2"
+        technicalAccountId: "Technical Account Id 2"
+        clientSecretCredentialsId: "Client Secret Credentials Id 2"
+        privateKeyCredentialsId: "Private Key Credentials Id 2"

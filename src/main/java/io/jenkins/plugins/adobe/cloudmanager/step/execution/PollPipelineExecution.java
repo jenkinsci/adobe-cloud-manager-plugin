@@ -47,6 +47,8 @@ import org.jenkinsci.plugins.workflow.steps.StepContext;
  */
 public class PollPipelineExecution extends AbstractStepExecution {
 
+  private static final long serialVersionUID = 1L;
+
   private final long recurrencePeriod;
   private final boolean quiet;
   protected transient volatile ScheduledFuture<?> task;

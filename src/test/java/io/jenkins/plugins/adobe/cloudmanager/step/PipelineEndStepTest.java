@@ -367,7 +367,7 @@ public class PipelineEndStepTest {
       run.addAction(new CloudManagerBuildAction(AIO_PROJECT_NAME, new CloudManagerPipelineExecution("1", "1", "1")));
       SemaphoreStep.success("before/1", true);
 
-      PipelineEndExecution execution = null;
+      PipelineEndExecution execution;
       while ((execution = (PipelineEndExecution) run.getExecution().getCurrentExecutions(false).get().stream().filter(e -> e instanceof PipelineEndExecution).findFirst().orElse(null)) == null) {
         Thread.sleep(100);
       }

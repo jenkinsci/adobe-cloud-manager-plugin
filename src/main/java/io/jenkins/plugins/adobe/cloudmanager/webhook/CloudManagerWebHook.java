@@ -91,14 +91,22 @@ public class CloudManagerWebHook implements UnprotectedRootAction {
 
     // Do the notifications async - Don't block the Request thread.
     Timer.get().submit(() -> {
-      AdobeIOProjectConfig aioProject = AdobeIOConfig.configuration().getProjectConfigs().stream().filter(cfg -> cfg.getImsOrganizationId().equals(event.getImsOrg())).findFirst().orElse(null);
-      if (aioProject == null || StringUtils.isBlank(aioProject.getName())) {
+      String aioProjectName = AdobeIOConfig.configuration().getProjectConfigs()
+          .stream()
+          .filter(cfg -> {
+            String orgId = cfg.getImsOrganizationId();
+            return orgId != null && orgId.equals(event.getImsOrg());
+          })
+          .findFirst()
+          .map(AdobeIOProjectConfig::getName)
+          .orElse(null);
+      if (aioProjectName == null || StringUtils.isBlank(aioProjectName)) {
         LOGGER.error(Messages.CloudManagerWebHook_error_missingAIOProject(event.getImsOrg()));
         return;
       }
       Jenkins.get().getExtensionList(CloudManagerEventSubscriber.class).stream()
           .filter(CloudManagerEventSubscriber.interested(event.getEventType()))
-          .map(CloudManagerEventSubscriber.process(new CloudManagerSubscriberEvent(aioProject.getName(), event.getEventType(), event.getPayload())))
+          .map(CloudManagerEventSubscriber.process(new CloudManagerSubscriberEvent(aioProjectName, event.getEventType(), event.getPayload())))
           .collect(Collectors.toList());
     });
     return HttpResponses.ok();

@@ -42,6 +42,7 @@ import javax.annotation.Nonnull;
 
 import org.apache.commons.lang3.StringUtils;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.model.Run;
 import io.jenkins.plugins.adobe.cloudmanager.step.execution.PipelineStepStateExecution;
 import jenkins.model.RunAction2;
@@ -62,6 +63,7 @@ public class PipelineWaitingAction implements RunAction2, Serializable {
   private static final Logger LOGGER = LoggerFactory.getLogger(PipelineWaitingAction.class);
   private static final long serialVersionUID = 1L;
 
+  @SuppressFBWarnings(value = "SE_TRANSIENT_FIELD_NOT_RESTORED", justification = "Reloaded during onLoad(Run)")
   private transient List<PipelineStepStateExecution> executions = new ArrayList<>();
   private transient Run<?, ?> run;
   private List<String> ids = new CopyOnWriteArrayList<>();

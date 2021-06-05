@@ -26,6 +26,8 @@ package io.jenkins.plugins.adobe.cloudmanager;
  * #L%
  */
 
+import java.io.Serializable;
+
 import org.apache.commons.lang3.StringUtils;
 
 import io.adobe.cloudmanager.PipelineExecution;
@@ -35,7 +37,10 @@ import lombok.Value;
  * Representation of a Cloud Manager Pipeline Execution. Used to reduce repetition logic.
  */
 @Value
-public class CloudManagerPipelineExecution {
+public class CloudManagerPipelineExecution implements Serializable {
+
+  private static final long serialVersionUID = 1L;
+
   String programId;
   String pipelineId;
   String executionId;

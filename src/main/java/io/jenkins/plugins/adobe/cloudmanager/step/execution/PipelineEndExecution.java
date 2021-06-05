@@ -48,6 +48,8 @@ import static io.adobe.cloudmanager.PipelineExecution.Status.*;
  */
 public class PipelineEndExecution extends AbstractStepExecution {
 
+  private static final long serialVersionUID = 1L;
+
   private final boolean mirror;
   private final boolean empty;
   // Event status' which are associated with a remote pipeline failure.

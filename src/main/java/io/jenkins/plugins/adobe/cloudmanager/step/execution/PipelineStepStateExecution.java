@@ -73,6 +73,8 @@ import static io.adobe.cloudmanager.PipelineExecutionStepState.Status.*;
  */
 public class PipelineStepStateExecution extends AbstractStepExecution {
 
+  private static final long serialVersionUID = 1L;
+
   private static final Logger LOGGER = LoggerFactory.getLogger(PipelineStepStateExecution.class);
   // We can only handle a few of the waiting actions. If more come up, add them here.
   private static final Set<StepAction> WAITING_ACTIONS =
@@ -275,7 +277,8 @@ public class PipelineStepStateExecution extends AbstractStepExecution {
 
   // Process the request to complete the wait event as "successful."
   private HttpResponse proceed() throws IOException, InterruptedException {
-    String userId = User.current() != null ? User.current().getId() : "anonymous";
+    User current = User.current();
+    String userId = current != null ? current.getId() : "anonymous";
     Run<?, ?> run = getRun();
     TaskListener listener = getTaskListener();
 

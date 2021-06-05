@@ -28,6 +28,7 @@ package io.jenkins.plugins.adobe.cloudmanager.webhook.subscriber;
 
 import javax.annotation.Nonnull;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.adobe.cloudmanager.event.CloudManagerEvent;
 import lombok.Value;
 
@@ -35,6 +36,7 @@ import lombok.Value;
  * An event which Subscribers can process.
  */
 @Value
+@SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE", justification = "Generated code.")
 public class CloudManagerSubscriberEvent {
   @Nonnull
   String aioProjectName;

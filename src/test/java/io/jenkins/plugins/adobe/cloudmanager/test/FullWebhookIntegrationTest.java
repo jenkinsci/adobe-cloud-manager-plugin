@@ -132,7 +132,10 @@ public class FullWebhookIntegrationTest {
 
   private static void advanceWaiting(JenkinsRule rule, WorkflowRun run, Boolean approve) throws Exception {
 
-    PipelineStepStateExecution execution = (PipelineStepStateExecution) run.getExecution().getCurrentExecutions(false).get().stream().filter(e -> e instanceof PipelineStepStateExecution).findFirst().orElse(null);
+    PipelineStepStateExecution execution;
+    while ((execution = (PipelineStepStateExecution) run.getExecution().getCurrentExecutions(false).get().stream().filter(e -> e instanceof PipelineStepStateExecution).findFirst().orElse(null)) == null) {
+      Thread.sleep(100);
+    }
     PipelineWaitingAction action = run.getAction(PipelineWaitingAction.class);
     String operation = approve ? "proceed" : "cancel";
     String url = String.format("%s%s%s/%s/%s", rule.getURL(), run.getUrl(), action.getUrlName(), execution.getId(), operation);

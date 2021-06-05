@@ -34,6 +34,8 @@ import jenkins.model.CauseOfInterruption;
  */
 public class RemoteStateInterruption extends CauseOfInterruption {
 
+  private static final long serialVersionUID = 1L;
+
   private final PipelineExecution.Status reason;
 
   public RemoteStateInterruption(PipelineExecution.Status reason) {

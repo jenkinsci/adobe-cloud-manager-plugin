@@ -61,10 +61,10 @@ public abstract class CloudManagerEventSubscriber implements ExtensionPoint {
   /**
    * Function for processing events via streams.
    */
-  public static Function<CloudManagerEventSubscriber, Void> process(final CloudManagerSubscriberEvent event) {
+  public static Function<CloudManagerEventSubscriber, CloudManagerSubscriberEvent> process(final CloudManagerSubscriberEvent event) {
     return (subscriber) -> {
       subscriber.onEvent(event);
-      return null;
+      return event;
     };
   }
 

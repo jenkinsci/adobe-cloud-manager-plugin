@@ -118,7 +118,8 @@ public class CloudManagerBuildAction implements PersistentAction, Serializable {
   }
 
   private boolean canDownload() {
-    return getOwningRun().getParent().hasPermission(Job.READ);
+    Run<?, ?> owningRun = getOwningRun();
+    return owningRun != null && owningRun.getParent().hasPermission(Job.READ);
   }
 
   public HttpResponse doGetLog() {
@@ -192,15 +193,6 @@ public class CloudManagerBuildAction implements PersistentAction, Serializable {
 
     public String getStatus() {
       return Messages.CloudManagerBuildAction_PipelineStep_status(action, status);
-    }
-
-    public String getLogName() {
-      CloudManagerBuildAction buildData = Stapler.getCurrentRequest().findAncestorObject(CloudManagerBuildAction.class);
-      String format = "%s-%s";
-      if (buildData == null) {
-        format = "%s";
-      }
-      return String.format(format, buildData.getUrlName(), action);
     }
 
     public boolean isHasQualityData() {

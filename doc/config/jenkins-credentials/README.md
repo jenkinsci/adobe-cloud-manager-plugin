@@ -12,9 +12,9 @@ This plugin requires that credentials (private key and client secret) be added u
 1. Click `OK` to save.
 
 <p align="center">
-  <br>
+  <br/>
   <img src="add-adobe-io-domain.gif">
-  <br>
+  <br/>
 </p>
 
 ## Add the Adobe IO Client Secret
@@ -27,9 +27,9 @@ This plugin requires that credentials (private key and client secret) be added u
 1. Give it any ID you like, but it should be something meaningful and representative of the Adobe IO project. (We went with `cm-client-secret`)
 
 <p align="center">
-  <br>
+  <br/>
   <img src="add-client-secret-creds.gif">
-  <br>
+  <br/>
 </p>
 
 ## Add the Adobe IO Private Key
@@ -42,7 +42,7 @@ This plugin requires that credentials (private key and client secret) be added u
 1. Give it any ID you like,  but it should be something meaningful and representative of the Adobe IO project. (We went with `cm-private-key`)
 
 <p align="center">
-  <br>
+  <br/>
   <img src="add-client-secret-creds.gif">
-  <br>
+  <br/>
 </p>

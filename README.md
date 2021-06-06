@@ -29,7 +29,7 @@ Before using any of the builders or steps in this plugin, Jenkins needs to be co
 
 ### AdobeIO WebHook
 
-This plugin supports receiving AdobeIO Cloud Manager events. See the [Adobe IO Project configuration](/doc/adobeio-project/README.md#enable-webhook) for details on the WebHook operation, and the [Adobe IO documentation](https://www.adobe.io/apis/experienceplatform/events/docs.html#!adobedocs/adobeio-events/master/intro/webhooks_intro.md) on configuring a webhook endpoint.
+This plugin supports receiving AdobeIO Cloud Manager events. See the [Adobe IO Project configuration](/doc/config/adobeio-project/README.md#enable-webhook) for details on the WebHook operation, and the [Adobe IO documentation](https://www.adobe.io/apis/experienceplatform/events/docs.html#!adobedocs/adobeio-events/master/intro/webhooks_intro.md) on configuring a webhook endpoint.
 
 ## Usage
 

@@ -316,6 +316,7 @@ public class PipelineStepStateStepTest {
   }
 
   @Test
+  @Category(RestartTest.class)
   public void notificationHandlesAbort() {
     story.then(this::setupRun);
     story.then(rule -> {

@@ -31,7 +31,7 @@ This is a global property, it toggles whether or not the WebHook will process Ad
 
 #### Event Validation
 
-**All* requests received by the WebHook are validated according to the [AdobeIO Documentation](https://www.adobe.io/apis/experienceplatform/events/docs.html#!adobedocs/adobeio-events/master/intro/webhooks_intro.md#authenticating-events). Any event that cannot be validated returns an error; this includes the *Challenge* request.
+**All requests** received by the WebHook are validated according to the [AdobeIO Documentation](https://www.adobe.io/apis/experienceplatform/events/docs.html#!adobedocs/adobeio-events/master/intro/webhooks_intro.md#authenticating-events). Any event that cannot be validated returns an error; this includes the *Challenge* request.
 
 This feature can not be disabled.
 
@@ -39,7 +39,7 @@ This feature can not be disabled.
 
 When enabled, the WebHook to process requests and pass them on to known subscribers. The WebHook endpoint is based on the Jenkins URL, which is found on the Jenkins Global configuration page. The WebHook is registered at:
 
-> {{Jenkins Url}}/aio-cloud-manager-webhook/
+`{{Jenkins Url}}/aio-cloud-manager-webhook/`
 
 #### Disabled
 

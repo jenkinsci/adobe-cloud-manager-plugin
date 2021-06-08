@@ -60,7 +60,7 @@ Coming soon.
 
 ## Issues
 
-Report issues and enhancements in the [Jenkins issue tracker](https://issues.jenkins-ci.org/). The Component is `adobe-cloud-manager-plugin`.
+Report issues and enhancements in the [Jenkins issue tracker](https://issues.jenkins.io/issues/?jql=project%20%3D%20JENKINS%20AND%20resolution%20%3D%20Unresolved%20AND%20component%20%3D%20adobe-cloud-manager-plugin). The Component is `adobe-cloud-manager-plugin`.
 
 ## Contributing
 

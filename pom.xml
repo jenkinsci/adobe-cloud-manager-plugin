@@ -28,7 +28,7 @@
         <jgit.version>5.11.0.202103091610-r</jgit.version>
         <jmockit.version>1.49</jmockit.version>
 
-        <jackson.version>2.12.1</jackson.version>
+        <jackson.version>2.12.3</jackson.version>
     </properties>
 
     <name>Adobe Cloud Manager Plugin</name>

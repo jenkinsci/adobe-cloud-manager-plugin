@@ -86,15 +86,17 @@ public class PipelineStepStateExecution extends AbstractStepExecution {
   private final Set<StepAction> actions;
   private final boolean autoApprove;
   private final boolean advance;
+  private final boolean waitingPause;
 
   // Used as the reason for a waiting action. If its set - then we're waiting for user input.
   private StepAction reason;
 
-  public PipelineStepStateExecution(StepContext context, Set<StepAction> actions, boolean autoApprove, boolean advance) {
+  public PipelineStepStateExecution(StepContext context, Set<StepAction> actions, boolean autoApprove, boolean advance, boolean waitingPause) {
     super(context);
     this.actions = actions;
     this.autoApprove = autoApprove;
     this.advance = advance;
+    this.waitingPause = waitingPause;
   }
 
   @CheckForNull
@@ -175,11 +177,15 @@ public class PipelineStepStateExecution extends AbstractStepExecution {
    * Process an <i>waiting</i> event. Waiting events pause this step/pipeline/run until a user action is taken.
    */
   public void waiting(@Nonnull PipelineExecution pe, @Nonnull PipelineExecutionStepState state) throws IOException, InterruptedException, TimeoutException {
+
     try {
       reason = StepAction.valueOf(state.getAction());
       logStepAction(pe, state);
       if (WAITING_ACTIONS.contains(reason)) {
-        if (autoApprove) {
+        if (!waitingPause) {
+          doFinish();
+          getContext().onSuccess(null);
+        } else if (autoApprove) {
           approveStep();
           getTaskListener().getLogger().println(Messages.PipelineStepStateExecution_autoApprove());
           doFinish();

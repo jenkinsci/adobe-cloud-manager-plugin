@@ -908,6 +908,64 @@ public class PipelineStepStateStepTest {
   }
 
   @Test
+  public void waitingPauseFalse() {
+    story.then(rule -> {
+      new Expectations() {{
+        pipelineExecution.getId();
+        result = "ExecutionId";
+        stepState.getAction();
+        result = StepAction.codeQuality.name();
+        stepState.getStatusState();
+        result = PipelineExecutionStepState.Status.WAITING;
+      }};
+
+      WorkflowJob job = rule.jenkins.createProject(WorkflowJob.class, "test");
+      CpsFlowDefinition flow = new CpsFlowDefinition(
+          "node {\n" +
+              "    semaphore 'before'\n" +
+              "    acmPipelineStepState(waitingPause: false)\n" +
+              "}",
+          true);
+      job.setDefinition(flow);
+      WorkflowRun run = job.scheduleBuild2(0).waitForStart();
+      SemaphoreStep.waitForStart("before/1", run);
+      CloudManagerBuildAction action = new CloudManagerBuildAction(AIO_PROJECT_NAME, new CloudManagerPipelineExecution("1", "1", "1"));
+      run.addAction(action);
+      SemaphoreStep.success("before/1", true);
+      rule.waitForMessage(Messages.PipelineStepStateExecution_waiting(), run);
+
+      PipelineStepStateExecution execution;
+      while ((execution = (PipelineStepStateExecution) run.getExecution().getCurrentExecutions(false).get().stream().filter(e -> e instanceof PipelineStepStateExecution).findFirst().orElse(null)) == null) {
+        Thread.sleep(100);
+      }
+
+      execution.waiting(pipelineExecution, stepState);
+      rule.waitForMessage(Messages.PipelineStepStateExecution_occurred("ExecutionId", "codeQuality", "WAITING"), run);
+      assertNull(execution.getReason());
+      rule.waitForCompletion(run);
+      rule.assertBuildStatusSuccess(run);
+    });
+  }
+
+  @Test
+  public void invalidStateAutoApproveAndNotWaiting() {
+    story.then(rule -> {
+
+      WorkflowJob job = rule.jenkins.createProject(WorkflowJob.class, "test");
+      CpsFlowDefinition flow = new CpsFlowDefinition(
+          "node {\n" +
+              "    acmPipelineStepState(autoApprove: true, waitingPause: false)\n" +
+              "}",
+          true);
+      job.setDefinition(flow);
+      WorkflowRun run = job.scheduleBuild2(0).waitForStart();
+      rule.waitForCompletion(run);
+      rule.assertBuildStatus(Result.FAILURE, run);
+    });
+  }
+
+
+  @Test
   public void handlesActionSubset() {
     story.then(rule -> {
       new Expectations() {{

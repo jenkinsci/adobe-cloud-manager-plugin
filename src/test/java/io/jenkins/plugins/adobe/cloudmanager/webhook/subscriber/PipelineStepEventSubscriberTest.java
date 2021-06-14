@@ -282,7 +282,7 @@ public class PipelineStepEventSubscriberTest {
       public transient TestRecordEventStep step;
 
       public Execution(StepContext context, TestRecordEventStep step) {
-        super(context, Collections.emptySet(), false, true);
+        super(context, Collections.emptySet(), false, true, true);
         this.step = step;
       }
 

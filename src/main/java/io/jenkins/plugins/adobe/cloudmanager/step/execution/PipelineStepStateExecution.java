@@ -33,6 +33,7 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.TimeoutException;
+import java.util.function.BiFunction;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import javax.servlet.ServletException;
@@ -66,7 +67,9 @@ import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.core.parameters.P;
 import static io.adobe.cloudmanager.PipelineExecutionStepState.Status.*;
+import static io.adobe.cloudmanager.event.CloudManagerEvent.EventType.*;
 
 /**
  * Execution for a {@link io.jenkins.plugins.adobe.cloudmanager.step.PipelineStepStateStep}. Handles the any associated events.
@@ -149,16 +152,25 @@ public class PipelineStepStateExecution extends AbstractStepExecution {
   }
 
   // Event handling
+  public void process(PipelineExecution pe, PipelineExecutionStepState stepState) throws IOException, InterruptedException, TimeoutException {
+    if (isApplicable(pe) && isApplicable(stepState)) {
+      if (waitingPause && stepState.getStatusState() == WAITING) {
+        waiting(pe, stepState);
+      } else {
+        occurred(pe, stepState);
+      }
+    }
+  }
 
   /**
    * Process an <i>occurred</i> event. Essentially, an event that does not require user input, but that should generate some informational message.
    */
-  public void occurred(@Nonnull PipelineExecution pe, @Nonnull PipelineExecutionStepState state) throws IOException, InterruptedException {
+  private void occurred(@Nonnull PipelineExecution pe, @Nonnull PipelineExecutionStepState state) throws IOException, InterruptedException {
     try {
       PipelineExecutionStepState.Status status = logStepAction(pe, state);
       doFinish();
-      if (advance && ENDED_STATUS.contains(status)) {
-        if (status == FINISHED || status == ROLLED_BACK) {
+      if (advance && (ENDED_STATUS.contains(status) || status == WAITING)) {
+        if (status == FINISHED || status == ROLLED_BACK || status == WAITING) {
           getContext().onSuccess(null);
         } else if (status == CANCELLED) {
           FlowInterruptedException e = new FlowInterruptedException(Result.ABORTED, new Cancellation());
@@ -176,16 +188,12 @@ public class PipelineStepStateExecution extends AbstractStepExecution {
   /**
    * Process an <i>waiting</i> event. Waiting events pause this step/pipeline/run until a user action is taken.
    */
-  public void waiting(@Nonnull PipelineExecution pe, @Nonnull PipelineExecutionStepState state) throws IOException, InterruptedException, TimeoutException {
-
+  private void waiting(@Nonnull PipelineExecution pe, @Nonnull PipelineExecutionStepState state) throws IOException, InterruptedException, TimeoutException {
     try {
       reason = StepAction.valueOf(state.getAction());
       logStepAction(pe, state);
       if (WAITING_ACTIONS.contains(reason)) {
-        if (!waitingPause) {
-          doFinish();
-          getContext().onSuccess(null);
-        } else if (autoApprove) {
+        if (autoApprove) {
           approveStep();
           getTaskListener().getLogger().println(Messages.PipelineStepStateExecution_autoApprove());
           doFinish();

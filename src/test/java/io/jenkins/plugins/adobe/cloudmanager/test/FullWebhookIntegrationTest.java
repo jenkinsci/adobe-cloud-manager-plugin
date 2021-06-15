@@ -101,7 +101,13 @@ public class FullWebhookIntegrationTest {
   private PipelineExecution pipelineExecution;
 
   @Mocked
-  private PipelineExecutionStepState pipelineExecutionStepState;
+  private PipelineExecutionStepState startEvent;
+  @Mocked
+  private PipelineExecutionStepState waitingEvent;
+  @Mocked
+  private PipelineExecutionStepState finishedEvent;
+
+
 
   @BeforeClass
   public static void beforeClass() throws Exception {
@@ -229,19 +235,36 @@ public class FullWebhookIntegrationTest {
       pipelineExecution.getId();
       result = EXECUTION_ID;
       api.getExecutionStepState(withInstanceOf(PipelineExecutionStepStartEvent.class));
-      result = pipelineExecutionStepState;
+      result = startEvent;
       api.getExecutionStepState(withInstanceOf(PipelineExecutionStepWaitingEvent.class));
-      result = pipelineExecutionStepState;
+      result = waitingEvent;
       api.getExecutionStepState(withInstanceOf(PipelineExecutionStepEndEvent.class));
-      result = pipelineExecutionStepState;
+      result = finishedEvent;
       api.getExecution(withInstanceOf(PipelineExecutionEndEvent.class));
       result = pipelineExecution;
       pipelineExecution.getStatusState();
       result = PipelineExecution.Status.FINISHED;
-      pipelineExecutionStepState.getAction();
-      returns("codeQuality", "codeQuality", "codeQuality");
-      pipelineExecutionStepState.getStatusState();
-      returns(RUNNING, WAITING, FINISHED);
+
+      startEvent.getAction();
+      result =  StepAction.codeQuality.toString();
+      minTimes = 1;
+      startEvent.getStatusState();
+      result = RUNNING;
+      minTimes = 1;
+
+      waitingEvent.getAction();
+      result =  StepAction.codeQuality.toString();
+      minTimes = 1;
+      waitingEvent.getStatusState();
+      result = WAITING;
+      minTimes = 1;
+
+      finishedEvent.getAction();
+      result =  StepAction.codeQuality.toString();
+      minTimes = 1;
+      finishedEvent.getStatusState();
+      result = FINISHED;
+      minTimes = 1;
     }};
 
     WorkflowJob job = rule.createProject(WorkflowJob.class, "full");
@@ -307,17 +330,35 @@ public class FullWebhookIntegrationTest {
       pipelineExecution.getId();
       result = EXECUTION_ID;
       api.getExecutionStepState(withInstanceOf(PipelineExecutionStepStartEvent.class));
-      result = pipelineExecutionStepState;
+      result = startEvent;
       api.getExecutionStepState(withInstanceOf(PipelineExecutionStepWaitingEvent.class));
-      result = pipelineExecutionStepState;
+      result = waitingEvent;
       api.getExecution(withInstanceOf(PipelineExecutionEndEvent.class));
       result = pipelineExecution;
       pipelineExecution.getStatusState();
       result = PipelineExecution.Status.ERROR;
-      pipelineExecutionStepState.getAction();
-      returns("codeQuality", "codeQuality", "codeQuality");
-      pipelineExecutionStepState.getStatusState();
-      returns(RUNNING, WAITING, FINISHED);
+
+
+      startEvent.getAction();
+      result =  StepAction.codeQuality.toString();
+      minTimes = 1;
+      startEvent.getStatusState();
+      result = RUNNING;
+      minTimes = 1;
+
+      waitingEvent.getAction();
+      result =  StepAction.codeQuality.toString();
+      minTimes = 1;
+      waitingEvent.getStatusState();
+      result = WAITING;
+      minTimes = 1;
+
+      finishedEvent.getAction();
+      result =  StepAction.codeQuality.toString();
+      minTimes = 1;
+      finishedEvent.getStatusState();
+      result = FINISHED;
+      minTimes = 1;
     }};
 
     WorkflowJob job = rule.createProject(WorkflowJob.class, "full");

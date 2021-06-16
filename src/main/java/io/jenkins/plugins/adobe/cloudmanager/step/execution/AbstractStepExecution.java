@@ -137,7 +137,7 @@ public abstract class AbstractStepExecution extends StepExecution {
   public final boolean start() throws Exception {
     validateData();
     doStart();
-    return false;
+    return !isAsync();
   }
 
   /**
@@ -176,4 +176,11 @@ public abstract class AbstractStepExecution extends StepExecution {
    * Subclasses should override this to require specific logic during a stop operation.
    */
   public void doStop() throws Exception {}
+
+  /**
+   * Subclasses should override this to indicate if it is an Async step. Default is {@code true}
+   */
+  public boolean isAsync() {
+    return true;
+  }
 }

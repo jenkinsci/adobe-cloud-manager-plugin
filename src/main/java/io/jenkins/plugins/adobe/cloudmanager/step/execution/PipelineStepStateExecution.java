@@ -33,14 +33,12 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.TimeoutException;
-import java.util.function.BiFunction;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import javax.servlet.ServletException;
 
 import hudson.AbortException;
 import hudson.console.HyperlinkNote;
-import hudson.console.ModelHyperlinkNote;
 import hudson.model.Failure;
 import hudson.model.Job;
 import hudson.model.Result;
@@ -67,9 +65,7 @@ import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.core.parameters.P;
 import static io.adobe.cloudmanager.PipelineExecutionStepState.Status.*;
-import static io.adobe.cloudmanager.event.CloudManagerEvent.EventType.*;
 
 /**
  * Execution for a {@link io.jenkins.plugins.adobe.cloudmanager.step.PipelineStepStateStep}. Handles the any associated events.

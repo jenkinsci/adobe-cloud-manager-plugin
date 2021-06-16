@@ -28,6 +28,8 @@ acmPipelineStepState(
   * An empty list constitutes all actions.
 * `advance`: Flag to indicate if this step should advance when receiving a *end* action.
 * `autoApprove`: Flag to indicate that when a *waiting* event occurs, it should advance the Cloud Manager build.
+* `waitingPause`: Flag to indicate if this step should pause the pipeline for user input, when a *waiting* event occurs.
+  * When using this property, the `advance` property should be set to *true*.
 
 ## Use Cases
 
@@ -37,6 +39,12 @@ This step can be used directly in a pipeline to wait for a specific Cloud Manage
 
 ```
 acmPipelineStepState(actions: ['codeQuality'])
+```
+
+If you wait to wait for a specific step, but do not want this pipeline to pause for user input, then disable the waiting pause.
+
+```
+acmPipelineStepState(actions: ['codeQuality'], waitingPause: false)
 ```
 
 ### Pipeline End Step Block

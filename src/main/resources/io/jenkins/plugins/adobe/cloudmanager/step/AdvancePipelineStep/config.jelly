@@ -28,5 +28,7 @@
 <j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form" >
     <f:entry field="actions" title="${%actions.title}">
         <f:enumSet />
+        <i><strong>Note:</strong> There is a display issue with this helper. This list contains more items than are permitted in the context.
+            <br />The only valid values are <strong>codeQuality</strong> or <strong>approval</strong>.</i>
     </f:entry>
 </j:jelly>

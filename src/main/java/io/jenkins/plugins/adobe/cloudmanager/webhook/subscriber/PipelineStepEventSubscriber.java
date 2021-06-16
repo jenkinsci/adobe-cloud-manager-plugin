@@ -96,13 +96,7 @@ public class PipelineStepEventSubscriber extends CloudManagerEventSubscriber {
       final PipelineExecution pipelineExecution = stepState.getExecution();
       StepExecution.applyAll(PipelineStepStateExecution.class, (execution) -> {
         try {
-          if (execution.isApplicable(stepState) && execution.isApplicable(pipelineExecution)) {
-            if (event.getType() == STEP_STARTED || event.getType() == STEP_ENDED) {
-              execution.occurred(pipelineExecution, stepState);
-            } else {
-              execution.waiting(pipelineExecution, stepState);
-            }
-          }
+          execution.process(pipelineExecution, stepState);
         } catch (IOException | InterruptedException | TimeoutException ex) {
           LOGGER.error(Messages.CloudManagerEventSubscriber_error_notifyExecution(ex.getLocalizedMessage()));
         }

@@ -25,17 +25,8 @@
 
 -->
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form" >
-    <f:entry field="actions" title="${%actions.title}">
-        <f:enumSet />
-    </f:entry>
-    <f:entry field="advance" title="${%advance.title}">
-        <f:checkbox default="true" />
-    </f:entry>
-    <f:entry field="autoApprove" title="${%autoApprove.title}">
-        <f:checkbox default="false" />
-    </f:entry>
-    <f:entry field="waitingPause" title="${%waitingPause.title}">
-        <f:checkbox default="true" />
-    </f:entry>
+<j:jelly xmlns:j="jelly:core">
+    <div>
+        ${%help.text}
+    </div>
 </j:jelly>

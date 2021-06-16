@@ -39,7 +39,6 @@ import javax.servlet.ServletException;
 
 import hudson.AbortException;
 import hudson.console.HyperlinkNote;
-import hudson.console.ModelHyperlinkNote;
 import hudson.model.Failure;
 import hudson.model.Job;
 import hudson.model.Result;
@@ -86,15 +85,17 @@ public class PipelineStepStateExecution extends AbstractStepExecution {
   private final Set<StepAction> actions;
   private final boolean autoApprove;
   private final boolean advance;
+  private final boolean waitingPause;
 
   // Used as the reason for a waiting action. If its set - then we're waiting for user input.
   private StepAction reason;
 
-  public PipelineStepStateExecution(StepContext context, Set<StepAction> actions, boolean autoApprove, boolean advance) {
+  public PipelineStepStateExecution(StepContext context, Set<StepAction> actions, boolean autoApprove, boolean advance, boolean waitingPause) {
     super(context);
     this.actions = actions;
     this.autoApprove = autoApprove;
     this.advance = advance;
+    this.waitingPause = waitingPause;
   }
 
   @CheckForNull
@@ -147,16 +148,25 @@ public class PipelineStepStateExecution extends AbstractStepExecution {
   }
 
   // Event handling
+  public void process(PipelineExecution pe, PipelineExecutionStepState stepState) throws IOException, InterruptedException, TimeoutException {
+    if (isApplicable(pe) && isApplicable(stepState)) {
+      if (waitingPause && stepState.getStatusState() == WAITING) {
+        waiting(pe, stepState);
+      } else {
+        occurred(pe, stepState);
+      }
+    }
+  }
 
   /**
    * Process an <i>occurred</i> event. Essentially, an event that does not require user input, but that should generate some informational message.
    */
-  public void occurred(@Nonnull PipelineExecution pe, @Nonnull PipelineExecutionStepState state) throws IOException, InterruptedException {
+  private void occurred(@Nonnull PipelineExecution pe, @Nonnull PipelineExecutionStepState state) throws IOException, InterruptedException {
     try {
       PipelineExecutionStepState.Status status = logStepAction(pe, state);
       doFinish();
-      if (advance && ENDED_STATUS.contains(status)) {
-        if (status == FINISHED || status == ROLLED_BACK) {
+      if (advance && (ENDED_STATUS.contains(status) || status == WAITING)) {
+        if (status == FINISHED || status == ROLLED_BACK || status == WAITING) {
           getContext().onSuccess(null);
         } else if (status == CANCELLED) {
           FlowInterruptedException e = new FlowInterruptedException(Result.ABORTED, new Cancellation());
@@ -174,7 +184,7 @@ public class PipelineStepStateExecution extends AbstractStepExecution {
   /**
    * Process an <i>waiting</i> event. Waiting events pause this step/pipeline/run until a user action is taken.
    */
-  public void waiting(@Nonnull PipelineExecution pe, @Nonnull PipelineExecutionStepState state) throws IOException, InterruptedException, TimeoutException {
+  private void waiting(@Nonnull PipelineExecution pe, @Nonnull PipelineExecutionStepState state) throws IOException, InterruptedException, TimeoutException {
     try {
       reason = StepAction.valueOf(state.getAction());
       logStepAction(pe, state);

@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Set;
 import javax.annotation.Nonnull;
 
+import hudson.AbortException;
 import hudson.Extension;
 import hudson.model.Run;
 import hudson.model.TaskListener;
@@ -65,6 +66,7 @@ public class PipelineStepStateStep extends Step {
   private List<StepAction> actions;
   private boolean autoApprove = false;
   private boolean advance = true;
+  private boolean waitingPause = true;
 
   @DataBoundConstructor
   public PipelineStepStateStep() {
@@ -72,7 +74,7 @@ public class PipelineStepStateStep extends Step {
   }
 
   /**
-   * List of actions to which this Step will respond. <strong>Default:</strong> all events.
+   * List of actions to which this Step will respond. <strong>Default:</strong> all actions.
    */
   @Nonnull
   public List<StepAction> getActions() {
@@ -112,6 +114,14 @@ public class PipelineStepStateStep extends Step {
   }
 
   /**
+   * Flag to indicate if the pipeline should pause on a <strong>waiting</strong> event.
+   */
+  public boolean isWaitingPause() { return this.waitingPause; }
+
+  @DataBoundSetter
+  public void setWaitingPause(boolean waitingPause) { this.waitingPause = waitingPause; }
+
+  /**
    * List all actions for the UI generator example.
    */
   @Nonnull
@@ -121,7 +131,10 @@ public class PipelineStepStateStep extends Step {
 
   @Override
   public StepExecution start(StepContext context) throws Exception {
-    return new PipelineStepStateExecution(context, new HashSet<>(getActions()), autoApprove, advance);
+    if (autoApprove && !waitingPause) {
+      throw new AbortException(Messages.PipelineStepStateStep_failure_approveAndNoWait());
+    }
+    return new PipelineStepStateExecution(context, new HashSet<>(getActions()), autoApprove, advance, waitingPause);
   }
 
   @Extension

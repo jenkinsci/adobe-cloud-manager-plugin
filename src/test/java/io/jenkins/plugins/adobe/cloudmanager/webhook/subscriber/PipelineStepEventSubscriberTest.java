@@ -12,10 +12,10 @@ package io.jenkins.plugins.adobe.cloudmanager.webhook.subscriber;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,15 +26,12 @@ package io.jenkins.plugins.adobe.cloudmanager.webhook.subscriber;
  * #L%
  */
 
-import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.TimeoutException;
-import javax.annotation.Nonnull;
 
 import org.apache.commons.io.IOUtils;
 
@@ -151,8 +148,7 @@ public class PipelineStepEventSubscriberTest {
 
     rule.waitForCompletion(run);
     rule.assertBuildStatus(Result.SUCCESS, run);
-    assertEquals(stepState, ex.step.occurred);
-    assertNull(ex.step.waiting);
+    assertEquals(stepState, ex.step.state);
   }
 
   @Test
@@ -205,8 +201,7 @@ public class PipelineStepEventSubscriberTest {
 
     rule.waitForCompletion(run);
     rule.assertBuildStatus(Result.SUCCESS, run);
-    assertEquals(stepState, ex.step.waiting);
-    assertNull(ex.step.occurred);
+    assertEquals(stepState, ex.step.state);
   }
 
   @Test
@@ -259,14 +254,12 @@ public class PipelineStepEventSubscriberTest {
 
     rule.waitForCompletion(run);
     rule.assertBuildStatus(Result.SUCCESS, run);
-    assertEquals(stepState, ex.step.occurred);
-    assertNull(ex.step.waiting);
+    assertEquals(stepState, ex.step.state);
   }
 
   public static final class TestRecordEventStep extends Step {
 
-    public PipelineExecutionStepState occurred;
-    public PipelineExecutionStepState waiting;
+    public PipelineExecutionStepState state;
 
     @DataBoundConstructor
     public TestRecordEventStep() {
@@ -282,7 +275,7 @@ public class PipelineStepEventSubscriberTest {
       public transient TestRecordEventStep step;
 
       public Execution(StepContext context, TestRecordEventStep step) {
-        super(context, Collections.emptySet(), false, true);
+        super(context, Collections.emptySet(), false, true, true);
         this.step = step;
       }
 
@@ -292,14 +285,8 @@ public class PipelineStepEventSubscriberTest {
       }
 
       @Override
-      public void occurred(@Nonnull PipelineExecution pe, @Nonnull PipelineExecutionStepState state) throws IOException, InterruptedException {
-        this.step.occurred = state;
-        getContext().onSuccess(null);
-      }
-
-      @Override
-      public void waiting(@Nonnull PipelineExecution pe, @Nonnull PipelineExecutionStepState state) throws IOException, InterruptedException, TimeoutException {
-        this.step.waiting = state;
+      public void process(PipelineExecution pe, PipelineExecutionStepState stepState) {
+        step.state = stepState;
         getContext().onSuccess(null);
       }
 

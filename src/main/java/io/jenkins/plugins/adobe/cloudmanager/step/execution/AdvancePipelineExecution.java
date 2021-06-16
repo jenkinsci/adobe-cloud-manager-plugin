@@ -42,6 +42,8 @@ import org.jenkinsci.plugins.workflow.steps.StepContext;
  */
 public class AdvancePipelineExecution extends AbstractStepExecution {
 
+  private static final long serialVersionUID = 1L;
+
   private final List<StepAction> actions;
 
   public AdvancePipelineExecution(StepContext context, List<StepAction> actions) {

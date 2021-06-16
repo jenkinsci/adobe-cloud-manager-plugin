@@ -74,7 +74,7 @@ public class PipelineStepStateStep extends Step {
   }
 
   /**
-   * List of actions to which this Step will respond. <strong>Default:</strong> all events.
+   * List of actions to which this Step will respond. <strong>Default:</strong> all actions.
    */
   @Nonnull
   public List<StepAction> getActions() {

@@ -23,6 +23,9 @@
   THE SOFTWARE.
   #L%
   -->
-<div>
-    ${%help.text}
-</div>
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core">
+    <div>
+        ${%help.text}
+    </div>
+</j:jelly>

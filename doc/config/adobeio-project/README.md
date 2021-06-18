@@ -4,7 +4,7 @@ An Adobe IO Project configuration is required for build steps to authenticate to
 
 ## Configure Project
 
-Configuring a project is done by copying the values from the AIO Console to Jenkins. The example below shows the use of the example Client Secret and Private Key for the configuration.
+Configuring a project is done by copying the values from the AIO Console to Jenkins. The example below shows the use of the example Client Secret and Private Key for the configuration. As a Jenkins Admin, navigate to `Manage Jenkins` -> `Configure System` and scroll down to the section called `Adobe IO`, click on `Add Adobe IO Project` and enter the values accordingly
 
 <p align="center">
   <br/>

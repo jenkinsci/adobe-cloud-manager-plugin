@@ -39,9 +39,9 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 
-import com.gargoylesoftware.htmlunit.HttpMethod;
-import com.gargoylesoftware.htmlunit.Page;
-import com.gargoylesoftware.htmlunit.WebRequest;
+import org.htmlunit.HttpMethod;
+import org.htmlunit.Page;
+import org.htmlunit.WebRequest;
 import hudson.security.GlobalMatrixAuthorizationStrategy;
 import io.jenkins.plugins.adobe.cloudmanager.test.TestHelper;
 import jenkins.model.Jenkins;

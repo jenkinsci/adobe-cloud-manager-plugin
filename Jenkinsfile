@@ -1,5 +1,7 @@
 buildPlugin(
-    useAci: true,
-    failFast: false,
-    configurations: buildPlugin.recommendedConfigurations()
-)
+  useContainerAgent: true,
+  failFast: false,  
+  configurations: [
+    [platform: 'linux', jdk: 8],
+    [platform: 'windows', jdk: 8],
+])

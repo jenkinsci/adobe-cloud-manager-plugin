@@ -81,3 +81,11 @@ This will tell you of any files with missing license headers.
 ## LICENSE
 
 Licensed under MIT, see [LICENSE](LICENSE)
+
+## SUPPORT
+
+The Adobe Cloud Manager Jenkins Plugin is an open-source, community supported library.
+
+    The Adobe Cloud Manager Jenkins Plugin NOT supported or warrantied by Adobe Systems Inc.
+
+For reporting bugs, contributing, or other questions about this project, please see the [contribution guidelines](https://github.com/jenkinsci/.github/blob/master/CONTRIBUTING.md).

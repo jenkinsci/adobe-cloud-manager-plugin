@@ -33,7 +33,7 @@ import java.util.List;
 
 import org.apache.commons.io.FileUtils;
 
-import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import org.htmlunit.html.HtmlPage;
 import hudson.model.Executor;
 import hudson.model.Result;
 import hudson.util.Secret;

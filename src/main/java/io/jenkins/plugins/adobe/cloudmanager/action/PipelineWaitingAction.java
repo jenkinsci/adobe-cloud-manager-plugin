@@ -63,8 +63,9 @@ public class PipelineWaitingAction implements RunAction2, Serializable {
   private static final Logger LOGGER = LoggerFactory.getLogger(PipelineWaitingAction.class);
   private static final long serialVersionUID = 1L;
 
-  @SuppressFBWarnings(value = "SE_TRANSIENT_FIELD_NOT_RESTORED", justification = "Reloaded during onLoad(Run)")
+  @SuppressFBWarnings(value = "SE_TRANSIENT_FIELD_NOT_RESTORED", justification = "Reloaded during onAttached/onLoad(Run)")
   private transient List<PipelineStepStateExecution> executions = new ArrayList<>();
+  @SuppressFBWarnings(value = "UWF_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR", justification = "Reloaded during onAttached/onLoad(Run)")
   private transient Run<?, ?> run;
   private List<String> ids = new CopyOnWriteArrayList<>();
 
@@ -165,7 +166,7 @@ public class PipelineWaitingAction implements RunAction2, Serializable {
     return getExecution(id);
   }
 
-  // Load all of the executions. Be careful with the logic here, can sometimes block the VM thread - don't want that.
+  // Load all the executions. Be careful with the logic here, can sometimes block the VM thread - don't want that.
   private synchronized void loadExecutions() throws InterruptedException, TimeoutException {
     if (executions == null) { // Loaded after restart.
       try {

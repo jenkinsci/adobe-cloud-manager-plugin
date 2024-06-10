@@ -56,7 +56,10 @@ public class DescriptorHelper {
     lbm.add(Messages.DescriptorHelper_defaultListItem(), "");
     AdobeIOConfig aio = AdobeIOConfig.configuration();
     for (AdobeIOProjectConfig cfg : aio.getProjectConfigs()) {
-      lbm.add(cfg.getDisplayName(), cfg.getName());
+      String name = cfg.getName();
+      if (name != null) {
+        lbm.add(cfg.getDisplayName(), name);
+      }
     }
     return lbm;
   }

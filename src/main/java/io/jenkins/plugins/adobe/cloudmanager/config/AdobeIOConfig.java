@@ -34,6 +34,7 @@ import javax.annotation.Nonnull;
 
 import org.apache.commons.lang3.StringUtils;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import io.jenkins.plugins.adobe.cloudmanager.webhook.CloudManagerWebHook;
 import jenkins.model.GlobalConfiguration;
@@ -59,6 +60,7 @@ public class AdobeIOConfig extends GlobalConfiguration {
   // Webhook is disabled by default - make a conscious decision to enable it.
   private boolean webhookEnabled = false;
 
+  @SuppressFBWarnings("MC_OVERRIDABLE_METHOD_CALL_IN_CONSTRUCTOR")
   public AdobeIOConfig() {
     getConfigFile().getXStream().alias("adobe-io-project-config", AdobeIOProjectConfig.class);
     load();

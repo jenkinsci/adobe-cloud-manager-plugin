@@ -67,3 +67,6 @@ work/
 
 # JEnv
 .java-version
+
+.DS_Store
+*.dylib

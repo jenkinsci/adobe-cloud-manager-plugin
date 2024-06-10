@@ -351,11 +351,11 @@ public class RepositorySyncBuilderTest {
     server.start();
 
     String host = connector.getHost() == null ? "localhost" : connector.getHost();
-    String repoUrl = "http://" + host + ":" + connector.getLocalPort() + "/repo";
+    String repoUrl = "http://127.0.0.1:" + connector.getLocalPort() + "/repo";
 
     String pipeline =
         "pipeline {\n" +
-        "    agent { label 'master' }\n" +
+        "    agent any\n" +
         "    stages {\n" +
         "        stage('sync') {\n" +
         "            steps {\n" +

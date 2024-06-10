@@ -94,9 +94,12 @@ public class RepositorySyncBuilderTest {
 
   @Before
   public void before() throws Exception {
+    srcRepo.git("init");
+    srcRepo.git("config", "--local", "commit.gpgsign", "false");
     srcRepo.init();
     srcRepo.git("checkout", "-b", defaultBranch);
     bareDestRepo.git("init", "--bare");
+    bareDestRepo.git("config", "--local", "commit.gpgsign", "false");
     bareDestRepo.git("symbolic-ref", "HEAD", "refs/heads/" + defaultBranch);
 
     CredentialsStore store = CredentialsProvider.lookupStores(rule.jenkins).iterator().next();
@@ -161,6 +164,7 @@ public class RepositorySyncBuilderTest {
 
     destRepo.git("clone", bareDestRepo.toString(), ".");
     destRepo.git("checkout", "-b", defaultBranch);
+    destRepo.git("config", "--local", "commit.gpgsign", "false");
     destRepo.git("config", "user.name", "Git SampleRepoRule");
     destRepo.git("config", "user.email", "gits@mplereporule");
     destRepo.write("testfile", "testfilecontents");
@@ -193,6 +197,7 @@ public class RepositorySyncBuilderTest {
 
     destRepo.git("clone", bareDestRepo.toString(), ".");
     destRepo.git("checkout", "-b", defaultBranch);
+    destRepo.git("config", "--local", "commit.gpgsign", "false");
     destRepo.git("config", "user.name", "Git SampleRepoRule");
     destRepo.git("config", "user.email", "gits@mplereporule");
     destRepo.write("testfile", "testfilecontents");
@@ -227,6 +232,7 @@ public class RepositorySyncBuilderTest {
     srcRepo.git("commit", "--message=file");
 
     destRepo.git("clone", bareDestRepo.toString(), ".");
+    destRepo.git("config", "--local", "commit.gpgsign", "false");
     destRepo.git("config", "user.name", "Git SampleRepoRule");
     destRepo.git("config", "user.email", "gits@mplereporule");
     destRepo.write("testfile", "testfilecontents");
@@ -255,6 +261,8 @@ public class RepositorySyncBuilderTest {
 
   @Test
   public void multipleScmsWarning() throws Exception {
+    destRepo.git("init");
+    destRepo.git("config", "--local", "commit.gpgsign", "false");
     destRepo.init();
 
     WorkflowJob job = rule.jenkins.createProject(WorkflowJob.class, "test");
@@ -333,6 +341,7 @@ public class RepositorySyncBuilderTest {
   public void pipelineCredentialed() throws Exception {
     Server server = new Server();
     ServerConnector connector = new ServerConnector(server);
+    connector.setHost("127.0.0.1");
     server.addConnector(connector);
     ServletContextHandler handler = new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
     handler.setContextPath("/*");
@@ -342,11 +351,11 @@ public class RepositorySyncBuilderTest {
     server.start();
 
     String host = connector.getHost() == null ? "localhost" : connector.getHost();
-    String repoUrl = "http://" + host + ":" + connector.getLocalPort() + "/repo";
+    String repoUrl = "http://127.0.0.1:" + connector.getLocalPort() + "/repo";
 
-    String pipeline = "" +
+    String pipeline =
         "pipeline {\n" +
-        "    agent { label 'master' }\n" +
+        "    agent any\n" +
         "    stages {\n" +
         "        stage('sync') {\n" +
         "            steps {\n" +

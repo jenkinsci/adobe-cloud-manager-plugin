@@ -43,6 +43,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.entity.ContentType;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.adobe.cloudmanager.CloudManagerApiException;
 import io.adobe.cloudmanager.event.CloudManagerEvent;
 import io.adobe.cloudmanager.event.CloudManagerEvent.EventType;
@@ -68,6 +69,7 @@ public @interface CMEventPayload {
   /**
    * Annotation Handler for processing the payload.
    */
+  @SuppressFBWarnings("DCN_NULLPOINTER_EXCEPTION") // See note.
   class PayloadHandler extends AnnotationHandler<CMEventPayload> {
     private static final Logger LOGGER = LoggerFactory.getLogger(CMEventPayload.PayloadHandler.class);
 
